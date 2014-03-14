@@ -1,0 +1,8 @@
+# moksha configuration without fedmsg
+
+[app:main]
+# Stomp broker configuration.
+stomp_broker = localhost
+stomp_port = 123456
+stomp_user = username
+stomp_pass = password
