@@ -66,6 +66,16 @@ class BugzillaConsumer(moksha.hub.api.Consumer):
             self.log.debug("DROP: %r not in %r" % (bug.product, self.products))
             return
 
+        # TODO -- before getting in to all this I need to convert
+        # python-bugzilla's weird DateTime object into a stdlib
+        # datetime.datetime object.  I need to do this for two reasons:
+        #
+        # - I want to do comparisons in ``find_relevant_event``, but I don't
+        #   know how python-bugzilla's weird DateTime object will work.
+        #
+        # - fedmsg knows how to encode a datetime.datetime object at the end
+        #
+
         history = bug.get_history()['bugs'][0]['history']
         event = self.find_relevant_event(msg, history)
 
