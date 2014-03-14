@@ -83,7 +83,7 @@ class BugzillaConsumer(moksha.hub.api.Consumer):
             modname='bugzilla',
             topic=topic,
             msg=dict(
-                bug=bug,
+                bug=bug.__dict__,
                 event=event,
             ),
         )
