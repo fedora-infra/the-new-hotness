@@ -111,6 +111,11 @@ class BugzillaConsumer(moksha.hub.api.Consumer):
         self.log.info("Main thread received %r.  Queueing." % msg)
         self.incoming.put(msg)
 
+    def stop(self):
+        # Drop N quit signals in the queue, one for each worker.
+        for worker in self.workers:
+            self.incoming.put(StopIteration)
+
 
 class WorkerThread(object):
     def __init__(self, idx, incoming, log, config):
@@ -151,8 +156,11 @@ class WorkerThread(object):
         while True:
             # This is a blocking call.  It waits until a msg is available.
             msg = self.incoming.get()
-            # TODO -- introduce some kind of sentinel value that can be used to
-            # tell this thread to exit cleanly.
+
+            # Then we are being asked to quit
+            if msg is StopIteration:
+                break
+
             topic, msg = msg['topic'], msg['body']
             self.debug("Worker thread picking up %r" % msg)
             try:
