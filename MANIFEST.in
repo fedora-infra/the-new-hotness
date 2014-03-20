@@ -1,2 +1,2 @@
 graft fedmsg.d
-include *.ini.example
+include *.ini.example *.rst
