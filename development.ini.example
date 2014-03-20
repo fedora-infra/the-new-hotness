@@ -1,6 +1,12 @@
 # moksha configuration without fedmsg
 
 [app:main]
+
+# Some configuration for our workers
+bugzilla.products = Fedora, Fedora EPEL
+# If you have 8 worker threads you *also* need 8 fedmsg endpoints in fedmsg.d/
+bugzilla.num_workers = 2
+
 # Stomp broker configuration.
 stomp_broker = localhost
 stomp_port = 123456
