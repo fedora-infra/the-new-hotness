@@ -7,6 +7,11 @@ bugzilla.products = Fedora, Fedora EPEL
 # If you have 8 worker threads you *also* need 8 fedmsg endpoints in fedmsg.d/
 bugzilla.num_workers = 2
 
+## These are credentials used to log in to bugzilla
+bugzilla.url = https://bugzilla.redhat.com
+#bugzilla.username = foo@foo.com
+#bugzilla.password = bunbunbun
+
 # Stomp broker configuration.
 stomp_broker = localhost
 stomp_port = 123456

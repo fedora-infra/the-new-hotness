@@ -135,8 +135,16 @@ class WorkerThread(object):
         hostname = socket.gethostname().split('.', 1)[0]
         fedmsg.init(name='bugzilla.%s' % hostname)
 
-        self.bugzilla = bugzilla.Bugzilla(url=self.config.get(
-            'bugzilla.url', 'https://bugzilla.redhat.com'))
+        url = self.config.get('bugzilla.url', 'https://bugzilla.redhat.com')
+        username = self.config.get('bugzilla.username', None)
+        password = self.config.get('bugzilla.password', None)
+
+        self.bugzilla = bugzilla.Bugzilla(url=url)
+        if username and password:
+            self.debug("Logging in to %s" % url)
+            self.bugzilla.login(username, password)
+        else:
+            self.debug("No credentials found.  Not logging in to %s" % url)
 
         # Then, start working, forever.
         self.debug("bz2fm worker thread waiting on incoming queue.")
