@@ -10,6 +10,7 @@ setup(
     install_requires=[
         "fedmsg",
         "python-bugzilla",
+        "moksha.hub",
         "stomper",
     ],
     packages=[],
