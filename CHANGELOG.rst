@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.1.3
+-----
+
+- License LGPLv2+. `31a552b35 <https://github.com/fedora-infra/bugzilla2fedmsg/commit/31a552b35b873243cf9b013bdf2e6f9ab3bc6bea>`_
+
 0.1.2
 -----
 

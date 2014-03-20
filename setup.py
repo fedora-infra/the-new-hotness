@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='bugzilla2fedmsg',
-    version='0.1.2',
+    version='0.1.3',
     description='Consume BZ messages over STOMP and republish to fedmsg',
     license='LGPLv2+',
     author='Ralph Bean',
