@@ -14,6 +14,7 @@ setup(
         "stomper",
     ],
     packages=[],
+    py_modules=['bugzilla2fedmsg'],
     entry_points="""
     [moksha.consumer]
     bugzilla2fedmsg = bugzilla2fedmsg:BugzillaConsumer

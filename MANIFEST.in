@@ -1,0 +1,2 @@
+graft fedmsg.d
+include *.ini.example
