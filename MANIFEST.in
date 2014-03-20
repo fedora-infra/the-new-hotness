@@ -1,2 +1,3 @@
 graft fedmsg.d
 include *.ini.example *.rst
+include LICENSE
