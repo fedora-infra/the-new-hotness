@@ -5,8 +5,10 @@ Authors:    Ralph Bean <rbean@redhat.com>
 
 """
 
+import datetime
 import Queue as queue  # stdlib
 import socket
+import time
 
 import bugzilla
 import fedmsg
@@ -16,10 +18,56 @@ import moksha.hub.reactor
 
 class BugzillaConsumer(moksha.hub.api.Consumer):
 
-    # Really, we want to use this specific topic to listen to.
-    #topic = 'bugzilla.please'
-    # But for testing, we'll just listen to all topics with this:
-    topic = '*'
+    # This is /topic/bugzilla in STOMP land.
+    topic = '/topic/bugzilla'
+
+    bug_fields = [
+        'alias',
+        'assigned_to',
+        'attachments',
+        'blocks',
+        'cc',
+        'classification',
+        'comments',
+        'component',
+        'components',
+        'creation_time',
+        'creator',
+        'depends_on',
+        'description',
+        'docs_contact',
+        'estimated_time',
+        'external_bugs',
+        'fixed_in',
+        'flags',
+        'groups',
+        'id',
+        'is_cc_accessible',
+        'is_confirmed',
+        'is_creator_accessible',
+        'is_open',
+        'keywords',
+        'last_change_time',
+        'op_sys',
+        'platform',
+        'priority',
+        'product',
+        'qa_contact',
+        'actual_time',
+        'remaining_time',
+        'resolution',
+        'see_also',
+        'severity',
+        'status',
+        'summary',
+        'target_milestone',
+        'target_release',
+        'url',
+        'version',
+        'versions',
+        'weburl',
+        'whiteboard',
+    ]
 
     def __init__(self, hub):
         super(BugzillaConsumer, self).__init__(hub)
@@ -37,9 +85,8 @@ class BugzillaConsumer(moksha.hub.api.Consumer):
 
     def consume(self, msg):
         """ Receive a STOMP message and put it on the queue for the worker """
-        topic, msg = msg['topic'], msg['body']
-        self.log.info("Main thread received %r" % topic)
-        self.queue.put((topic, msg,))
+        self.log.info("Main thread received %r.  Queueing." % msg)
+        self.queue.put([msg])
 
     def worker(self):
         """ A worker thread that pulls stuff off the main thread's queue. """
@@ -55,35 +102,50 @@ class BugzillaConsumer(moksha.hub.api.Consumer):
 
         # Then, start working, forever.
         self.log.info("bugzilla2fedmsg worker thread listening to the queue.")
-        for topic, msg in self.queue.get():
-            self.log.info("Worker thread picking up %r" % topic)
+        for msg in self.queue.get():
+            topic, msg = msg['topic'], msg['body']
+            self.log.info("Worker thread picking up %r" % msg)
             self.handle(topic, msg)
 
     def handle(self, topic, msg):
+
+        # First, look up our bug in bugzilla.
         bug = self.bugzilla.getbug(msg['bug_id'])
 
+        # Drop it if we don't care about it.
         if bug.product not in self.products:
-            self.log.debug("DROP: %r not in %r" % (bug.product, self.products))
+            self.log.info("* DROP: %r not in %r" % (
+                bug.product, self.products))
             return
 
-        # TODO -- before getting in to all this I need to convert
-        # python-bugzilla's weird DateTime object into a stdlib
-        # datetime.datetime object.  I need to do this for two reasons:
-        #
-        # - I want to do comparisons in ``find_relevant_event``, but I don't
-        #   know how python-bugzilla's weird DateTime object will work.
-        #
-        # - fedmsg knows how to encode a datetime.datetime object at the end
-        #
+        # Parse the timestamp in msg.  It looks like 2013-05-17T02:33:00
+        fmt = '%Y-%m-%dT%H:%M:%S'
+        msg['timestamp'] = datetime.datetime.strptime(msg['timestamp'], fmt)
 
+        # Find the event from the bz history that most likely corresponds here.
+        self.log.info("* Gathering history for #%s" % msg['bug_id'])
         history = bug.get_history()['bugs'][0]['history']
+        history = self.convert_datetimes(history)
         event = self.find_relevant_event(msg, history)
 
+        # If there are no events in the history, then this is a new bug.
+        topic = 'bug.update'
+        if not event:
+            topic = 'bug.new'
+
+        self.log.info("* Gathering metadata for #%s" % msg['bug_id'])
+        bug = dict([
+            (field, getattr(bug, field, None))
+            for field in self.bug_fields
+        ])
+        bug = self.convert_datetimes(bug)
+
+        self.log.info("* Republishing #%s" % msg['bug_id'])
         fedmsg.publish(
             modname='bugzilla',
             topic=topic,
             msg=dict(
-                bug=bug.__dict__,
+                bug=bug,
                 event=event,
             ),
         )
@@ -99,11 +161,28 @@ class BugzillaConsumer(moksha.hub.api.Consumer):
             return {}
 
         best = history[0]
-        best_delta = math.fabs(best['when'] - msg['timestamp'])
+        best_delta = abs(best['when'] - msg['timestamp'])
 
         for event in history[1:]:
-            if math.fabs(event['when'] - msg['timestamp']) < best_delta:
+            if abs(event['when'] - msg['timestamp']) < best_delta:
                 best = event
-                best_delta = math.fabs(best['when'] - msg['timestamp'])
+                best_delta = abs(best['when'] - msg['timestamp'])
 
         return best
+
+    @staticmethod
+    def convert_datetimes(obj):
+        """ Recursively convert bugzilla DateTimes to stdlib datetimes. """
+
+        if isinstance(obj, list):
+            return [BugzillaConsumer.convert_datetimes(item) for item in obj]
+        elif isinstance(obj, dict):
+            return dict([
+                (k, BugzillaConsumer.convert_datetimes(v))
+                for k, v in obj.items()
+            ])
+        elif hasattr(obj, 'timetuple'):
+            timestamp = time.mktime(obj.timetuple())
+            return datetime.datetime.fromtimestamp(timestamp)
+        else:
+            return obj
