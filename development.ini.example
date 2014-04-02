@@ -17,3 +17,5 @@ stomp_broker = localhost
 stomp_port = 123456
 stomp_user = username
 stomp_pass = password
+stomp_ssl_crt = /path/to/an/optional.crt
+stomp_ssl_key = /path/to/an/optional.key
