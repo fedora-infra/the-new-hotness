@@ -3,3 +3,6 @@
 *.egg*
 development.ini
 dist
+*.crt
+*.key
+*.gpg
