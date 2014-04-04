@@ -13,8 +13,14 @@ bugzilla.url = https://bugzilla.redhat.com
 #bugzilla.password = bunbunbun
 
 # Stomp broker configuration.
-stomp_broker = localhost
-stomp_port = 123456
+
+## Single broker
+#stomp_broker = localhost
+#stomp_port = 59597
+
+## or with failover..
+stomp_uri = localhost:59597,localhost:59598
+
 stomp_user = username
 stomp_pass = password
 stomp_ssl_crt = /path/to/an/optional.crt
