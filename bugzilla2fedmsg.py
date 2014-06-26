@@ -84,8 +84,8 @@ def convert_datetimes(obj):
 
 class BugzillaConsumer(moksha.hub.api.Consumer):
 
-    # This is /topic/bugzilla in STOMP land.
-    topic = '/topic/bugzilla'
+    # This is /topic/com.redhat.bugzilla in STOMP land.
+    topic = '/topic/com.redhat.bugzilla'
 
     def __init__(self, hub):
         super(BugzillaConsumer, self).__init__(hub)
@@ -115,6 +115,8 @@ class BugzillaConsumer(moksha.hub.api.Consumer):
         # Drop N quit signals in the queue, one for each worker.
         for worker in self.workers:
             self.incoming.put(StopIteration)
+
+        super(BugzillaConsumer, self).stop()
 
 
 class WorkerThread(object):
