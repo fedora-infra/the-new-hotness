@@ -192,16 +192,18 @@ class WorkerThread(object):
         self.debug("Gathering history for #%s" % msg['bug_id'])
         history = bug.get_history()['bugs'][0]['history']
         history = convert_datetimes(history)
-        event = self.find_relevant_event(msg, history)
-
-        # If there are no events in the history, then this is a new bug.
-        topic = 'bug.update'
-        if not event:
-            topic = 'bug.new'
 
         self.debug("Organizing metadata for #%s" % msg['bug_id'])
         bug = dict([(attr, getattr(bug, attr, None)) for attr in bug_fields])
         bug = convert_datetimes(bug)
+
+        comment = self.find_relevant_item(msg, bug['comments'], 'time')
+        event = self.find_relevant_item(msg, history, 'when')
+
+        # If there are no events in the history, then this is a new bug.
+        topic = 'bug.update'
+        if not event and len(bug['comments']) == 1:
+            topic = 'bug.new'
 
         self.debug("Republishing #%s" % msg['bug_id'])
         fedmsg.publish(
@@ -210,25 +212,30 @@ class WorkerThread(object):
             msg=dict(
                 bug=bug,
                 event=event,
+                comment=comment,
             ),
         )
 
     @staticmethod
-    def find_relevant_event(msg, history):
+    def find_relevant_item(msg, history, key):
         """ Find the change from the BZ history with the closest timestamp to a
         given message.  Unfortunately, we can't rely on matching the timestamps
-        exactly.
+        exactly so instead we say that if the best match is within 60s of the
+        message, then return it.  Otherwise return None.
         """
 
         if not history:
-            return {}
+            return None
 
         best = history[0]
-        best_delta = abs(best['when'] - msg['timestamp'])
+        best_delta = abs(best[key] - msg['timestamp'])
 
         for event in history[1:]:
-            if abs(event['when'] - msg['timestamp']) < best_delta:
+            if abs(event[key] - msg['timestamp']) < best_delta:
                 best = event
-                best_delta = abs(best['when'] - msg['timestamp'])
+                best_delta = abs(best[key] - msg['timestamp'])
 
-        return best
+        if best_delta < datetime.timedelta(seconds=60):
+            return best
+        else:
+            return None
