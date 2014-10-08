@@ -71,6 +71,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         self.repoid = self.config.get('hotness.repoid')
         self.log.info("Using hotness.repoid=%r" % self.repoid)
+        self.distro = self.config.get('hotness.distro', 'Fedora')
+        self.log.info("Using hotness.distro=%r" % self.distro)
 
         self.log.info("That new hotness ticket filer is all initialized")
 
@@ -82,11 +84,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         topic, msg = msg['topic'], msg['body']
         self.log.info("Received %r" % msg.get('msg_id', None))
 
-        # What is this thing called in Fedora land?
+        # What is this thing called in our distro?
         mappings = dict([
             (p['distro'], p['package_name']) for p in msg['msg']['packages']
         ])
-        if not 'Fedora' in mappings:
+        if not self.distro in mappings:
             self.log.info("No Fedora for %r" % msg['msg']['project']['name'])
             return
 
