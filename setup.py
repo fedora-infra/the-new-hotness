@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='the-new-hotness',
@@ -11,11 +11,11 @@ setup(
     install_requires=[
         "fedmsg",
         "python-bugzilla",
+        "dogpile.cache",
     ],
-    packages=[],
-    py_modules=['the_new_hotness'],
+    packages=find_packages(),
     entry_points="""
     [moksha.consumer]
-    bug_filer = the_new_hotness:BugzillaTicketFiler
+    bug_filer = hotness.consumers:BugzillaTicketFiler
     """,
 )
