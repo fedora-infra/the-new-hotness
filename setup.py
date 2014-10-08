@@ -1,23 +1,21 @@
 from setuptools import setup
 
 setup(
-    name='bugzilla2fedmsg',
-    version='0.2.0',
-    description='Consume BZ messages over STOMP and republish to fedmsg',
+    name='the-new-hotness',
+    version='0.1.0',
+    description='Consume anitya fedmsg messages to file bugzilla bugs'
     license='LGPLv2+',
     author='Ralph Bean',
     author_email='rbean@redhat.com',
-    url='https://github.com/fedora-infra/bugzilla2fedmsg',
+    url='https://github.com/fedora-infra/the-new-hotness',
     install_requires=[
         "fedmsg",
         "python-bugzilla",
-        "moksha.hub",
-        "stomper",
     ],
     packages=[],
-    py_modules=['bugzilla2fedmsg'],
+    py_modules=['the_new_hotness'],
     entry_points="""
     [moksha.consumer]
-    bugzilla2fedmsg = bugzilla2fedmsg:BugzillaConsumer
+    bug_filer = the_new_hotness:BugzillaTicketFiler
     """,
 )
