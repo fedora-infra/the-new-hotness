@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='the-new-hotness',
     version='0.1.0',
-    description='Consume anitya fedmsg messages to file bugzilla bugs'
+    description='Consume anitya fedmsg messages to file bugzilla bugs',
     license='LGPLv2+',
     author='Ralph Bean',
     author_email='rbean@redhat.com',
