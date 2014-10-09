@@ -174,9 +174,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         bug = self.inexact_bug(**kwargs)
         if bug:
-            self.log.info("Found inexact bug %r" % bug.weburl)
-            # TODO -- update an inexact bug if we found one.
-            raise NotImplementedError
+            self.log.info("Found and updating bug %r" % bug.weburl)
+            self.update_bug(bug, **kwargs)
             return
 
         bug, change_status = self.create_bug(**kwargs)
@@ -214,6 +213,31 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         bugs = self.bugzilla.query(query)
         if bugs:
             return bugs[0]
+
+    def update_bug(self, bug, **package):
+        short_desc = bug.short_desc
+
+        # short_desc should be '<name>-<version> <some text>'
+        # To extract the version get everything before the first space
+        # with split and then remove the name and '-' via slicing
+        bug_version = short_desc.split(" ")[0][len(package['name']) + 1:]
+
+        self.log.info("Comparing %r, %r" % (bug_version, package['upstream']))
+        if bug_version != package['upstream']:
+            update = {
+                'summary': self.short_desc_template % package,
+                'comment': {
+                    'body': self.description_template % package,
+                    'is_private': False,
+                },
+                'ids': [bug.bug_id],
+            }
+            self.log.debug("Updating bug %r with %r" % (bug.bug_id, update))
+            res = self.bugzilla._proxy.Bug.update(update)
+            self.log.debug("Result from bug update: %r" % res)
+            self.log.info("Updated bug: %s" % bug.weburl)
+        else:
+            self.log.warn("Nope %r == %r" % (bug_version, package['upstream']))
 
     def create_bug(self, **package):
         bug_dict = {
