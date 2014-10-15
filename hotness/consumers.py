@@ -22,11 +22,11 @@ Authors:    Ralph Bean <rbean@redhat.com>
 import copy
 import socket
 
-import bugzilla
-
 import fedmsg
 import fedmsg.consumers
 
+import hotness.buildsys
+import hotness.bz
 import hotness.cache
 import hotness.helpers
 import hotness.repository
@@ -34,30 +34,26 @@ import hotness.repository
 
 class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
-    # This is the real production topic
-    # topic = 'org.release-monitoring.prod.anitya.project.version.update'
 
-    # For development, I am using this so I can test with this command:
-    # $ fedmsg-dg-replay --msg-id 2014-77ff95ff-3373-4926-bf23-bf0754b0925c
-    topic = 'org.fedoraproject.dev.anitya.project.version.update'
+    # Moksha *should* be able to handle a list of topics, but it lost that
+    # somewhere along the way.  We'll need to patch it to get that back.
+    #topic = [
+    #    # This is the real production topic
+    #    # topic = 'org.release-monitoring.prod.anitya.project.version.update'
+
+    #    # For development, I am using this so I can test with this command:
+    #    # $ fedmsg-dg-replay --msg-id 2014-77ff95ff-3373-4926-bf23-bf0754b0925c
+    #    'org.fedoraproject.dev.anitya.project.version.update',
+
+    #    # Anyways, we also listen for koji scratch builds to circle back:
+    #    'org.fedoraproject.prod.buildsys.task.state.change',
+    #]
+
+    # In the meantime, just subscribe to all messages and throw away the ones
+    # we don't want.
+    topic = '*'
 
     config_key = 'hotness.bugzilla.enabled'
-
-    base_query = {
-        'query_format': 'advanced',
-        'emailreporter1': '1',
-        'emailtype1': 'exact',
-    }
-
-    bug_status_open = ['NEW', 'ASSIGNED', 'MODIFIED', 'ON_DEV', 'ON_QA',
-                       'VERIFIED', 'FAILS_QA', 'RELEASE_PENDING', 'POST']
-    bug_status_closed = ['CLOSED']
-
-    new_bug = {
-        'op_sys': 'Unspecified',
-        'platform': 'Unspecified',
-        'bug_severity': 'unspecified',
-    }
 
     def __init__(self, hub):
         super(BugzillaTicketFiler, self).__init__(hub)
@@ -72,26 +68,10 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         hostname = socket.gethostname().split('.', 1)[0]
         fedmsg.init(name='hotness.%s' % hostname)
 
-        self.bz_config = self.config['hotness.bugzilla']
-        default = 'https://partner-bugzilla.redhat.com'
-        url = self.bz_config.get('url', default)
-        username = self.bz_config['user']
-        password = self.bz_config['password']
-        self.bugzilla = bugzilla.Bugzilla(url=url)
-        self.log.info("Logging in to %s" % url)
-        self.bugzilla.login(username, password)
-
-        self.base_query['product'] = self.bz_config['product']
-        self.base_query['email1'] = self.bz_config['user']
-
-        self.new_bug['product'] = self.bz_config['product']
-        if "keywords" in self.bz_config:
-            self.new_bug['keywords'] = self.bz_config['keywords']
-        self.new_bug['version'] = self.bz_config['version']
-        self.new_bug['status'] = self.bz_config['bug_status']
-
-        self.short_desc_template = self.bz_config['short_desc_template']
-        self.description_template = self.bz_config['description_template']
+        self.bugzilla = hotness.bz.Bugzilla(
+            consumer=self, config=self.config['hotness.bugzilla'])
+        self.buildsys = hotness.buildsys.Koji(
+            consumer=self, config=self.config['hotness.koji'])
 
         # Also, set up our global cache object.
         self.log.info("Configuring cache.")
@@ -104,6 +84,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.distro = self.config.get('hotness.distro', 'Fedora')
         self.log.info("Using hotness.distro=%r" % self.distro)
 
+        # Build a little store where we'll keep track of what koji scratch
+        # builds we have kicked off.  We'll look later for messages indicating
+        # that they have completed.
+        self.triggered_task_ids = {}
+
         self.log.info("That new hotness ticket filer is all initialized")
 
     def publish(self, topic, msg):
@@ -112,14 +97,27 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
     def consume(self, msg):
         topic, msg = msg['topic'], msg['body']
-        self.log.info("Received %r" % msg.get('msg_id', None))
+        self.log.debug("Received %r" % msg.get('msg_id', None))
 
-        # What is this thing called in our distro?
+        if topic.endswith('anitya.project.version.update'):
+            self.handle_anitya(msg)
+        elif topic.endswith('buildsys.task.state.change'):
+            self.handle_buildsys(msg)
+        else:
+            self.log.debug("Dropping %r %r" % (topic, msg['msg_id']))
+            pass
+
+    def handle_anitya(self, msg):
+        self.log.info("Handling anitya msg %r" % msg.get('msg_id', None))
+        # First, What is this thing called in our distro?
+        # (we do this little inner.get(..) trick to handle legacy messages)
+        inner = msg['msg'].get('message', msg['msg'])
         mappings = dict([
-            (p['distro'], p['package_name']) for p in msg['msg']['packages']
+            (p['distro'], p['package_name']) for p in inner['packages']
         ])
         if self.distro not in mappings:
-            self.log.info("No Fedora for %r" % msg['msg']['project']['name'])
+            self.log.info("No %r mapping for %r.  Dropping." % (
+                self.distro, msg['msg']['project']['name']))
             return
 
         package = mappings['Fedora']
@@ -132,134 +130,38 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             upstream, version, release))
         diff = hotness.helpers.cmp_upstream_repo(upstream, (version, release))
 
+        # If so, then poke bugzilla and start a scratch build
         if diff == 1:
             self.log.info("OK, %s is newer than %s-%s" % (
                 upstream, version, release))
-            self.handle_bugzilla(package, upstream, version, release, url, msg)
-        else:
-            self.publish("noop", msg=dict(
-                anitya=msg, current_version=current_version
-            ))
 
-    def handle_bugzilla(self, package, upstream, version, release, url, msg):
-        """ Push updates to bugzilla.
+            bz = self.bugzilla.handle(package, upstream, version, release, url)
+            if not bz:
+                self.log.info("No RHBZ change detected (odd).  Aborting.")
+                return
 
-        We could be in one of three states:
+            self.log.info("Now with RHBZ %r, time to do koji stuff" % bz)
+            task_id = self.buildsys.handle(package, upstream, version, bz)
 
-        - There is a bug filed for this exact version, we do nothing.
-        - There is a bug filed for an intermediate version.  Update it.
-        - There is no bug and we need to file one.
-        """
-        kwargs = copy.copy(self.bz_config)
-        kwargs.update(dict(
-            package=package,
-            name=package,
-            version=version,
-            release=release,
+            # Map that koji task_id to the bz ticket we want to follow up on
+            self.triggered_task_ids[task_id] = bz
 
-            repo_name=self.repoid,
-            repo_version=version,
-            repo_release=release,
-
-            upstream=upstream,
-            latest_upstream=upstream,
-
-            url=url,
-        ))
-
-        bug = self.exact_bug(**kwargs)
-        if bug:
-            self.log.info("Found exact bug %r" % bug.weburl)
+    def handle_buildsys(self, msg):
+        # Is this a scratch build that we triggered a couple minutes ago?
+        task_id = msg['msg']['info']['id']
+        if task_id not in self.triggered_task_ids:
+            self.log.debug("Koji task_id=%r is not ours.  Drop it." % task_id)
             return
 
-        bug = self.inexact_bug(**kwargs)
-        if bug:
-            self.log.info("Found and updating bug %r" % bug.weburl)
-            self.update_bug(bug, **kwargs)
+        self.log.info("Handling koji msg %r" % msg.get('msg_id', None))
+
+        # see koji.TASK_STATES for all values
+        done_states = ['FAILED', 'CANCELED', 'CLOSED']
+        state = msg['msg']['new']
+        self.log.info("Heard word that our task %r is %r." % (task_id, state))
+        if state not in done_states:
             return
 
-        bug, change_status = self.create_bug(**kwargs)
-        self.log.info("Filed new bug %r" % bug.weburl)
-
-    # @hotness.cache.cache.cache_on_arguments()
-    def exact_bug(self, **package):
-        short_desc_pattern = '%(name)s-%(upstream)s ' % package
-        query = {
-            'component': package['name'],
-            'bug_status': self.bug_status_open + self.bug_status_closed,
-            'short_desc': short_desc_pattern,
-            'short_desc_type': 'substring',
-        }
-
-        query.update(self.base_query)
-        bugs = self.bugzilla.query(query)
-        bugs = bugs or []
-        for bug in bugs:
-            # The short_desc_pattern contains a space at the end, which is
-            # currently not recognized by bugzilla. Therefore this test is
-            # required:
-            if bug.short_desc.startswith(short_desc_pattern):
-                return bug
-
-    # @hotness.cache.cache.cache_on_arguments()
-    def inexact_bug(self, **package):
-        # TODO - write on the whiteboard to try and figure this out...
-        query = {
-            'component': [package['name']],
-            'bug_status': [self.bz_config['bug_status']],
-        }
-
-        query.update(self.base_query)
-        bugs = self.bugzilla.query(query)
-        if bugs:
-            return bugs[0]
-
-    def update_bug(self, bug, **package):
-        short_desc = bug.short_desc
-
-        # short_desc should be '<name>-<version> <some text>'
-        # To extract the version get everything before the first space
-        # with split and then remove the name and '-' via slicing
-        bug_version = short_desc.split(" ")[0][len(package['name']) + 1:]
-
-        self.log.info("Comparing %r, %r" % (bug_version, package['upstream']))
-        if bug_version != package['upstream']:
-            update = {
-                'summary': self.short_desc_template % package,
-                'comment': {
-                    'body': self.description_template % package,
-                    'is_private': False,
-                },
-                'ids': [bug.bug_id],
-            }
-            self.log.debug("Updating bug %r with %r" % (bug.bug_id, update))
-            res = self.bugzilla._proxy.Bug.update(update)
-            self.log.debug("Result from bug update: %r" % res)
-            self.log.info("Updated bug: %s" % bug.weburl)
-        else:
-            self.log.warn("Nope %r == %r" % (bug_version, package['upstream']))
-
-    def create_bug(self, **package):
-        bug_dict = {
-            'component': package['name'],
-            'short_desc': self.short_desc_template % package,
-            'description': self.description_template % package,
-        }
-        bug_dict.update(self.new_bug)
-        new_bug = self.bugzilla.createbug(**bug_dict)
-        change_status = None
-        self.log.info("Created bug: %s" % new_bug)
-
-        if new_bug.bug_status != self.bz_config['bug_status']:
-            change_status = self.bugzilla._proxy.bugzilla.changeStatus(
-                new_bug.bug_id,
-                self.bz_config['bug_status'],
-                self.bz_config['user'],
-                "",
-                "",
-                False,
-                False,
-                1,
-            )
-            self.log.info("Changed bug status %r" % change_status)
-        return (new_bug, change_status)
+        bug = self.triggered_task_ids.pop(task_id)
+        url = self.buildsys.url_for(task_id)
+        self.bugzilla.follow_up(url, state, bug)
