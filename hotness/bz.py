@@ -145,7 +145,6 @@ class Bugzilla(object):
                 return bug
 
     def inexact_bug(self, **package):
-        # TODO - write on the whiteboard to try and figure this out...
         query = {
             'component': [package['name']],
             'bug_status': [self.config['bug_status']],
