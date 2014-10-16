@@ -18,7 +18,6 @@ class Koji(object):
         self.consumer = consumer
         self.config = config
         self.log = logging.getLogger('fedmsg')
-        # TODO -- get all of these from the config, still
         self.server = config['server']
         self.weburl = config['weburl']
         self.cert = config['cert']
