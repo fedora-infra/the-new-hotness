@@ -1,3 +1,4 @@
+import os
 import socket
 hostname = socket.gethostname().split('.', 1)[0]
 
@@ -32,6 +33,19 @@ config = {
         'explanation_url': 'https://fedoraproject.org/wiki/Upstream_release_monitoring',
         'short_desc_template': "%(name)s-%(latest_upstream)s is available",
         'description_template': description_template,
+    },
+
+    'hotness.koji': {
+        'server': 'https://koji.fedoraproject.org/kojihub',
+        'weburl': 'http://koji.fedoraproject.org/koji',
+        'cert': os.path.expanduser('~/.fedora.cert'),
+        'ca_cert': os.path.expanduser('~/.fedora-server-ca.cert'),
+        'git_url': 'http://pkgs.fedoraproject.org/cgit/{package}.git',
+        'userstring': ('Fedora Release Monitoring '
+                       '<release-monitoring@fedoraproject.org>'),
+        'opts': {'scratch': True},
+        'priority': 30,
+        'target_tag': 'rawhide',
     },
 
     "hotness.cache": {
