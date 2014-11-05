@@ -92,8 +92,7 @@ class Koji(object):
 
             specfile = tmp + '/' + package + '.spec'
 
-            # This requires the latest rpmdevtools from git
-            # https://fedorahosted.org/rpmdevtools/
+            # This requires rpmdevtools-8.5 or greater
             cmd = [
                 '/usr/bin/rpmdev-bumpspec',
                 '--new', upstream,
