@@ -12,6 +12,7 @@ setup(
         "fedmsg",
         "python-bugzilla",
         "dogpile.cache",
+        "requests",
     ],
     packages=find_packages(),
     entry_points="""
