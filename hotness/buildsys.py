@@ -101,8 +101,11 @@ class Koji(object):
                 specfile,
             ]
             output = self.run(cmd)
+
+            # For these to work, it requires that rpmmacros be redefined to
+            # find source files in the tmp directory.  See:  http://da.gd/1MWt
             output = self.run(['spectool', '-g', specfile], cwd=tmp)
-            output = self.run(['fedpkg', 'srpm'], cwd=tmp)
+            output = self.run(['rpmbuild', '-bs', specfile], cwd=tmp)
 
             srpm = output.strip().split()[-1]
             self.log.debug("Got srpm %r" % srpm)
