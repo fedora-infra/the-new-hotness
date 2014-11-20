@@ -123,6 +123,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         if self.distro not in mappings:
             self.log.info("No %r mapping for %r.  Dropping." % (
                 self.distro, msg['msg']['project']['name']))
+            self.publish("update.drop", msg=dict(trigger=msg, reason="anitya"))
             return
 
         package = mappings['Fedora']
@@ -131,6 +132,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # Is it something that we're being asked not to act on:
         if not self.is_monitored(package):
             self.log.info("Pkgdb says not to monitor %r.  Dropping." % package)
+            self.publish("update.drop", msg=dict(trigger=msg, reason="pkgdb"))
             return
 
         # Is it new to us?
@@ -149,7 +151,12 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             bz = self.bugzilla.handle(package, upstream, version, release, url)
             if not bz:
                 self.log.info("No RHBZ change detected (odd).  Aborting.")
+                self.publish("update.drop", msg=dict(
+                    trigger=msg, reason="bugzilla"))
                 return
+
+            self.publish("update.bug.file", msg=dict(
+                trigger=msg, bug=dict(bug_id=bz.bug_id))
 
             self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
             task_id = self.buildsys.handle(package, upstream, version, bz)
@@ -176,6 +183,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         bug = self.triggered_task_ids.pop(task_id)
         url = self.buildsys.url_for(task_id)
         self.bugzilla.follow_up(url, state, bug)
+        self.publish("update.bug.followup", msg=dict(
+            trigger=msg, bug=dict(bug_id=bz.bug_id))
 
     def is_monitored(self, package):
         """ Returns True if a package is marked as 'monitored' in pkgdb2. """
