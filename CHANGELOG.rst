@@ -1,6 +1,17 @@
 Changelog
 =========
 
+0.2.0
+-----
+
+- Specbump. `47c1d6de7 <https://github.com/fedora-infra/the-new-hotness/commit/47c1d6de7eda487c6ffa3dd7208148df2ab09393>`_
+- Tell bugzilla not to save cookies or tokens. `effcb613a <https://github.com/fedora-infra/the-new-hotness/commit/effcb613a85841946a945d3a283486465399b461>`_
+- Remove dependence on fedpkg. `398135f9e <https://github.com/fedora-infra/the-new-hotness/commit/398135f9e96482653c3542195bcbc663d86a35e5>`_
+- Tell koji the fully-qualified path to the srpm. `6761db430 <https://github.com/fedora-infra/the-new-hotness/commit/6761db430f8b9c2d106b310b4cd97aaf6c4e1eee>`_
+- We can't send an email every time here. `b86ea985d <https://github.com/fedora-infra/the-new-hotness/commit/b86ea985dcf61496f17e91dfc747dc06e49d011c>`_
+- Condense log. `f3938580b <https://github.com/fedora-infra/the-new-hotness/commit/f3938580be3ce974e470baeff2e422d87822e01a>`_
+- Add some fedmsg messages in there. `e8290306e <https://github.com/fedora-infra/the-new-hotness/commit/e8290306e4fc5d810415bc7e755410d729604295>`_
+
 0.1.3
 -----
 
