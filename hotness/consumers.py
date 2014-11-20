@@ -151,7 +151,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 self.log.info("No RHBZ change detected (odd).  Aborting.")
                 return
 
-            self.log.info("Now with RHBZ %r, time to do koji stuff" % bz)
+            self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
             task_id = self.buildsys.handle(package, upstream, version, bz)
 
             # Map that koji task_id to the bz ticket we want to follow up on
