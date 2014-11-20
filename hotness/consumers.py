@@ -156,7 +156,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 return
 
             self.publish("update.bug.file", msg=dict(
-                trigger=msg, bug=dict(bug_id=bz.bug_id))
+                trigger=msg, bug=dict(bug_id=bz.bug_id)))
 
             self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
             task_id = self.buildsys.handle(package, upstream, version, bz)
@@ -184,7 +184,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         url = self.buildsys.url_for(task_id)
         self.bugzilla.follow_up(url, state, bug)
         self.publish("update.bug.followup", msg=dict(
-            trigger=msg, bug=dict(bug_id=bz.bug_id))
+            trigger=msg, bug=dict(bug_id=bz.bug_id)))
 
     def is_monitored(self, package):
         """ Returns True if a package is marked as 'monitored' in pkgdb2. """
