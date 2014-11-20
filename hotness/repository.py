@@ -5,22 +5,20 @@ from hotness.cache import cache
 
 log = logging.getLogger('fedmsg')
 
-def get_version(package_name, repoid):
-    nvr_dict = build_nvr_dict(repoid)
+def get_version(package_name, yumconfig):
+    nvr_dict = build_nvr_dict(yumconfig)
     return nvr_dict[package_name]
 
 
 @cache.cache_on_arguments()
-def build_nvr_dict(repoid):
+def build_nvr_dict(yumconfig):
     cmdline = ["/usr/bin/repoquery",
+               "--config", yumconfig,
                "--quiet",
                "--archlist=src",
                "--all",
                "--qf",
                "%{name}\t%{version}\t%{release}"]
-
-    if repoid:
-        cmdline.append('--repoid=%s' % repoid)
 
     log.info("Running %r" % ' '.join(cmdline))
     repoquery = subprocess.Popen(cmdline, stdout=subprocess.PIPE)

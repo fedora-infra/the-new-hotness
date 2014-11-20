@@ -82,8 +82,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             if not hasattr(hotness.cache.cache, 'backend'):
                 hotness.cache.cache.configure(**self.config['hotness.cache'])
 
-        self.repoid = self.config.get('hotness.repoid')
-        self.log.info("Using hotness.repoid=%r" % self.repoid)
+        self.yumconfig = self.config.get('hotness.yumconfig')
+        self.log.info("Using hotness.yumconfig=%r" % self.yumconfig)
         self.distro = self.config.get('hotness.distro', 'Fedora')
         self.log.info("Using hotness.distro=%r" % self.distro)
 
@@ -132,7 +132,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             return
 
         # Is it new to us?
-        version, release = hotness.repository.get_version(package, self.repoid)
+        fname = self.yumconfig
+        version, release = hotness.repository.get_version(package, fname)
         upstream = msg['msg']['upstream_version']
         self.log.info("Comparing upstream %s against repo %s-%s" % (
             upstream, version, release))

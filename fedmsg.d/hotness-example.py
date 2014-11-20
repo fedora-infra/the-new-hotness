@@ -50,6 +50,8 @@ config = {
 
     'hotness.pkgdb_url': 'https://admin.fedoraproject.org/pkgdb/api',
 
+    'hotness.yumconfig': './yum-config',
+
     "hotness.cache": {
         "backend": "dogpile.cache.dbm",
         "expiration_time": 300,
