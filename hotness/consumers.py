@@ -136,7 +136,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # Is it new to us?
         fname = self.yumconfig
         version, release = hotness.repository.get_version(package, fname)
-        upstream = msg['msg']['upstream_version']
+        upstream = inner['upstream_version']
         self.log.info("Comparing upstream %s against repo %s-%s" % (
             upstream, version, release))
         diff = hotness.helpers.cmp_upstream_repo(upstream, (version, release))
@@ -191,7 +191,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         try:
             data = r.json()
             package = data['packages'][0]
-            return package['package']['monitor']
+            return package['package'].get('monitor', True)
         except:
             self.log.exception("Problem interacting with pkgdb.")
             return False
