@@ -13,6 +13,7 @@ setup(
         "python-bugzilla",
         "dogpile.cache",
         "requests",
+        "sh",
     ],
     packages=find_packages(),
     entry_points="""
