@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.2.1
+-----
+
+- bumpspec. `f869c2ac9 <https://github.com/fedora-infra/the-new-hotness/commit/f869c2ac964e4223d82f27a01ce355c8b66f8153>`_
+- Add forgotten parens. `1325d5484 <https://github.com/fedora-infra/the-new-hotness/commit/1325d5484a8e4284e13c383232e8d7a90d81bdc7>`_
+
 0.2.0
 -----
 
