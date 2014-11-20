@@ -84,6 +84,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         self.yumconfig = self.config.get('hotness.yumconfig')
         self.log.info("Using hotness.yumconfig=%r" % self.yumconfig)
+        self.repoid = self.config.get('hotness.repoid', 'rawhide')
+        self.log.info("Using hotness.repoid=%r" % self.repoid)
         self.distro = self.config.get('hotness.distro', 'Fedora')
         self.log.info("Using hotness.distro=%r" % self.distro)
 
