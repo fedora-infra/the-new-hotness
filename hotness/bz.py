@@ -50,7 +50,8 @@ class Bugzilla(object):
         url = self.config.get('url', default)
         username = self.config['user']
         password = self.config['password']
-        self.bugzilla = bugzilla.Bugzilla(url=url)
+        self.bugzilla = bugzilla.Bugzilla(
+            url=url, cookiefile=None, tokenfile=None)
         self.log.info("Logging in to %s" % url)
         self.bugzilla.login(username, password)
 
