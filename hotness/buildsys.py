@@ -107,7 +107,7 @@ class Koji(object):
             output = self.run(['spectool', '-g', specfile], cwd=tmp)
             output = self.run(['rpmbuild', '-bs', specfile], cwd=tmp)
 
-            srpm = output.strip().split()[-1]
+            srpm = os.path.join(tmp, output.strip().split()[-1])
             self.log.debug("Got srpm %r" % srpm)
 
             session = self.session_maker()
