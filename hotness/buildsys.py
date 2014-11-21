@@ -102,6 +102,10 @@ class Koji(object):
             ]
             output = self.run(cmd)
 
+            # First, get all patches and other sources from dist-git
+            output = self.run(['fedpkg', 'sources'], cwd=tmp)
+
+            # Then go and get the *new* tarball from upstream.
             # For these to work, it requires that rpmmacros be redefined to
             # find source files in the tmp directory.  See:  http://da.gd/1MWt
             output = self.run(['spectool', '-g', specfile], cwd=tmp)
