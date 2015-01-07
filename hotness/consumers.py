@@ -67,6 +67,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # First, initialize fedmsg and bugzilla in this thread's context.
         hostname = socket.gethostname().split('.', 1)[0]
         fedmsg.init(name='hotness.%s' % hostname)
+        fedmsg.meta.make_processors(**self.hub.config)
 
         self.bugzilla = hotness.bz.Bugzilla(
             consumer=self, config=self.config['hotness.bugzilla'])
