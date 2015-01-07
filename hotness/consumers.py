@@ -35,23 +35,19 @@ import hotness.repository
 class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
 
-    # Moksha *should* be able to handle a list of topics, but it lost that
-    # somewhere along the way.  We'll need to patch it to get that back.
-    #topic = [
-    #    # This is the real production topic
-    #    # topic = 'org.release-monitoring.prod.anitya.project.version.update'
+    # We can do multiple topics like this as of moksha.hub-1.4.4
+    # https://github.com/mokshaproject/moksha/pull/25
+    topic = [
+        # This is the real production topic
+        'org.release-monitoring.prod.anitya.project.version.update',
 
-    #    # For development, I am using this so I can test with this command:
-    #    # $ fedmsg-dg-replay --msg-id 2014-77ff95ff-3373-4926-bf23-bf0754b0925c
-    #    'org.fedoraproject.dev.anitya.project.version.update',
+        # For development, I use this so I can test with this command:
+        # $ fedmsg-dg-replay --msg-id 2014-77ff95ff-3373-4926-bf23-bf0754b0925c
+        #'org.fedoraproject.dev.anitya.project.version.update',
 
-    #    # Anyways, we also listen for koji scratch builds to circle back:
-    #    'org.fedoraproject.prod.buildsys.task.state.change',
-    #]
-
-    # In the meantime, just subscribe to all messages and throw away the ones
-    # we don't want.
-    topic = '*'
+        # Anyways, we also listen for koji scratch builds to circle back:
+        'org.fedoraproject.prod.buildsys.task.state.change',
+    ]
 
     config_key = 'hotness.bugzilla.enabled'
 
