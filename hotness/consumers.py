@@ -103,7 +103,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         if topic.endswith('anitya.project.version.update'):
             self.handle_anitya(msg)
         elif topic.endswith('buildsys.task.state.change'):
-            self.handle_buildsys(msg)
+            self.handle_buildsys_scratch(msg)
         else:
             self.log.debug("Dropping %r %r" % (topic, msg['msg_id']))
             pass
@@ -160,17 +160,21 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             # Map that koji task_id to the bz ticket we want to follow up on
             self.triggered_task_ids[task_id] = bz
 
-    def handle_buildsys(self, msg):
+    def handle_buildsys_scratch(self, msg):
         # Is this a scratch build that we triggered a couple minutes ago?
         task_id = msg['msg']['info']['id']
         if task_id not in self.triggered_task_ids:
             self.log.debug("Koji task_id=%r is not ours.  Drop it." % task_id)
             return
 
-        self.log.info("Handling koji msg %r" % msg.get('msg_id', None))
+        self.log.info("Handling koji scratch msg %r" % msg.get('msg_id', None))
 
         # see koji.TASK_STATES for all values
-        done_states = ['FAILED', 'CANCELED', 'CLOSED']
+        done_states = {
+            'CLOSED': 'succeeded',
+            'FAILED': 'failed',
+            'CANCELLED': 'canceled',
+        }
         state = msg['msg']['new']
         self.log.info("Heard word that our task %r is %r." % (task_id, state))
         if state not in done_states:
@@ -178,7 +182,10 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         bug = self.triggered_task_ids.pop(task_id)
         url = self.buildsys.url_for(task_id)
-        self.bugzilla.follow_up(url, state, bug)
+
+        text = "Scratch build %s %s" % (done_states.get(state, state), url)
+
+        self.bugzilla.follow_up(text, bug)
         self.publish("update.bug.followup", msg=dict(
             trigger=msg, bug=dict(bug_id=bug.bug_id)))
 
