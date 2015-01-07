@@ -108,16 +108,10 @@ class Bugzilla(object):
         self.log.info("Filed new bug %r" % bug.weburl)
         return bug
 
-    def follow_up(self, url, state, bug):
-        conclusions = {
-            'CLOSED': 'succeeded',
-            'FAILED': 'failed',
-            'CANCELLED': 'canceled',
-        }
-        conclusion = conclusions.get(state, state)
+    def follow_up(self, text, bug):
         update = {
             'comment': {
-                'body': 'Scratch build %s %s' % (conclusion, url),
+                'body': text,
                 'is_private': False,
             },
             'ids': [bug.bug_id],
