@@ -1,6 +1,21 @@
 Changelog
 =========
 
+0.2.2
+-----
+
+- bumpspec. `bb3a6d1f0 <https://github.com/fedora-infra/the-new-hotness/commit/bb3a6d1f093a2913a0cefbd2c90bf26b842ff6c6>`_
+- Typofix. `6dddc60fc <https://github.com/fedora-infra/the-new-hotness/commit/6dddc60fc15150e3547d05d2f12b65ad6b835e6a>`_
+- Add a call to fedpkg sources. `645f5e717 <https://github.com/fedora-infra/the-new-hotness/commit/645f5e71705289288d20daf3784e77d824710948>`_
+- Merge pull request #7 from fedora-infra/feature/fedpkg-patches `2be36e1bc <https://github.com/fedora-infra/the-new-hotness/commit/2be36e1bc63a8d3458454faafe4dbbef5f07d1aa>`_
+- Add some hacking instructions. `692cc10fb <https://github.com/fedora-infra/the-new-hotness/commit/692cc10fb65434e50f85f22226d04ec8fd9df944>`_
+- Use the multiple-topics feature from moksha.hub-1.4.4 `82780ac80 <https://github.com/fedora-infra/the-new-hotness/commit/82780ac8017ed9a845a05bb7aee15b2ad350e7dd>`_
+- Merge pull request #8 from fedora-infra/feature/multiple-topics `af38b3b2d <https://github.com/fedora-infra/the-new-hotness/commit/af38b3b2dd918f8eca7f1de9d8bb3cf4d9f8f19a>`_
+- Reorganize where formatting of followup-text lives. `1bf3448f3 <https://github.com/fedora-infra/the-new-hotness/commit/1bf3448f38d1d29442763ab52a344a8e967da2bf>`_
+- Comment on real koji builds, not just scratch ones.  Fixes #4. `0e7f5cc01 <https://github.com/fedora-infra/the-new-hotness/commit/0e7f5cc01ac4411255f30eac3a7108f5577f814a>`_
+- Install and initialize fedmsg.meta since we use it here now. `2972bf618 <https://github.com/fedora-infra/the-new-hotness/commit/2972bf618b6a1997d1d0183a7f78bea72393ed93>`_
+- Merge pull request #9 from fedora-infra/feature/comment-on-build `a22e051c1 <https://github.com/fedora-infra/the-new-hotness/commit/a22e051c1b3af46565b7a6fd0410d388090087e1>`_
+
 0.2.1
 -----
 
