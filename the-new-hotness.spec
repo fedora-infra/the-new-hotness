@@ -25,10 +25,12 @@ BuildRequires:      python-setuptools
 BuildRequires:      python-bugzilla
 BuildRequires:      python-dogpile-cache
 BuildRequires:      fedmsg
+BuildRequires:      python-fedmsg-meta-fedora-infrastructure
 
 Requires:           python-bugzilla
 Requires:           python-dogpile-cache
 Requires:           fedmsg
+Requires:           python-fedmsg-meta-fedora-infrastructure
 
 %description
 Fedmsg consumer that listens to release-monitoring.org and files bugzilla bugs
