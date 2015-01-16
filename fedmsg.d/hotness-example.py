@@ -48,6 +48,12 @@ config = {
         'target_tag': 'rawhide',
     },
 
+    'hotness.anitya': {
+        'url': 'https://release-monitoring.org',
+        #'username': '....',
+        #'password': '....',
+    },
+
     'hotness.pkgdb_url': 'https://admin.fedoraproject.org/pkgdb/api',
 
     'hotness.yumconfig': './yum-config',

@@ -25,6 +25,7 @@ import fedmsg
 import fedmsg.consumers
 import requests
 
+import hotness.anitya
 import hotness.buildsys
 import hotness.bz
 import hotness.cache
@@ -51,6 +52,12 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # Furthermore, we look for official builds and also circle back
         # and comment about those (when they succeed).
         'org.fedoraproject.prod.buildsys.build.state.change',
+
+        # Lastly, we look for new packages being added to Fedora for the very
+        # first time so that we can double-check that they have an entry in
+        # release-monitoring.org.  If they don't, then we try to add them when
+        # we can.
+        'org.fedoraproject.prod.pkgdb.package.new',
     ]
 
     config_key = 'hotness.bugzilla.enabled'
@@ -76,6 +83,12 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         default = 'https://admin.fedoraproject.org/pkgdb/api'
         self.pkgdb_url = self.config.get('hotness.pkgdb_url', default)
+
+        anitya_config = self.config.get('hotness.anitya', {})
+        default = 'https://release-monitoring.org'
+        self.anitya_url = anitya_config.get('url', default)
+        self.anitya_username = anitya_config.get('username', default)
+        self.anitya_password = anitya_config.get('password', default)
 
         # Also, set up our global cache object.
         self.log.info("Configuring cache.")
@@ -111,6 +124,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.handle_buildsys_scratch(msg)
         elif topic.endswith('buildsys.build.state.change'):
             self.handle_buildsys_real(msg)
+        elif topic.endswith('pkgdb.package.new'):
+            self.handle_new_package(msg)
         else:
             self.log.debug("Dropping %r %r" % (topic, msg['msg_id']))
             pass
@@ -231,6 +246,27 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.bugzilla.follow_up(text, bug)
         self.publish("update.bug.followup", msg=dict(
             trigger=msg, bug=dict(bug_id=bug.bug_id)))
+
+    def handle_new_package(self, msg):
+        listing = msg['msg']['package_listing']
+        if listing['collection']['branchname'] != 'master':
+            self.log.debug("Ignoring non-rawhide new package...")
+            return
+
+        package = listing['package']['name']
+        homepage = listing['package']['upstream_url']
+
+        anitya = hotness.anitya.Anitya(self.anitya_url)
+        results = anitya.search(package, homepage)
+
+        total = results['total']
+        if total != 0:
+            self.log.info("Done, saw %i matching projects on anitya." % total)
+            return
+
+        self.log.info("Saw 0 matching projects on anitya.  Attempting to add.")
+        anitya.login(self.anitya_username, self.anitya_password)
+        anitya.add_new_project(package, homepage)
 
     def is_monitored(self, package):
         """ Returns True if a package is marked as 'monitored' in pkgdb2. """
