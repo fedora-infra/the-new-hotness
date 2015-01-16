@@ -213,10 +213,42 @@ class Anitya(object):
         response = self.__send_request(url, method='GET')
         return response.json()
 
+    def map_new_package(self, name, project):
+        if not self.is_logged_in:
+            log.error('Could not add new anitya project.  Not logged in.')
+            return False
+
+        idx = project['id']
+        url = self.url + '/project/%i/map' % idx
+        response = self.__send_request(url, method='GET')
+        if not response.status_code == 200:
+            code = response.status_code
+            log.error("Couldn't get form page to get csrf token %r" % code)
+            return False
+
+        soup = bs4.BeautifulSoup(response.text)
+        data = dict(
+            distro='Fedora',
+            package_name=name,
+            csrf_token=soup.form.find(id='csrf_token').attrs['value'],
+        )
+        response = self.__send_request(url, method='POST', data=data)
+
+        if not response.status_code == 200:
+            code = response.status_code
+            log.error('Failed to map in anitya, status %r: %r' % (code, data))
+            return False
+        elif 'Could not' in response.text:
+            log.error('Failed to map in anitya, validation failure: %r' % data)
+            return False
+        else:
+            log.info('Successfully mapped %r in anitya' % name)
+            return True
+
     def add_new_project(self, name, homepage):
         if not self.is_logged_in:
             log.error('Could not add new anitya project.  Not logged in.')
-            return
+            return False
 
         data = dict(
             name=name,
@@ -233,7 +265,7 @@ class Anitya(object):
 
         if 'backend' not in data:
             log.error('Could not determine backend for %r' % homepage)
-            return
+            return False
 
         # It's not always the case that these need removed, but often
         # enough...
@@ -249,20 +281,23 @@ class Anitya(object):
 
         url = self.url + '/project/new'
         response = self.__send_request(url, method='GET')
+
         if not response.status_code == 200:
             code = response.status_code
             log.error("Couldn't get form page to get csrf token %r" % code)
-            return
-
+            return False
 
         soup = bs4.BeautifulSoup(response.text)
         data['csrf_token'] = soup.form.find(id='csrf_token').attrs['value']
 
-        # TODO -- remove this
-        import pprint; pprint.pprint(data)
-
         response = self.__send_request(url, method='POST', data=data)
+
         if not response.status_code == 200:
             log.error('Failed to add to anitya: %r' % data)
+            return False
+        elif 'Could not' in response.text:
+            log.error('Failed to add to anitya: %r' % data)
+            return False
         else:
             log.info('Successfully added %r to anitya' % data['name'])
+            return True

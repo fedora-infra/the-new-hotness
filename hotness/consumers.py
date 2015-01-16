@@ -253,20 +253,36 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.log.debug("Ignoring non-rawhide new package...")
             return
 
-        package = listing['package']['name']
+        name = listing['package']['name']
         homepage = listing['package']['upstream_url']
+        self.log.info("Considering new package %r with %r" % (name, homepage))
 
         anitya = hotness.anitya.Anitya(self.anitya_url)
-        results = anitya.search(package, homepage)
+        results = anitya.search(name, homepage)
 
+        projects = results['projects']
         total = results['total']
-        if total != 0:
-            self.log.info("Done, saw %i matching projects on anitya." % total)
+        if total > 1:
+            self.log.warning("Fail. %i matching projects on anitya." % total)
+            self.publish("project.map", msg=dict(
+                trigger=msg, total=total, success=False))
             return
+        elif total == 1:
+            self.log.info("Found one match on Anitya.")
+            project = projects[0]
+            anitya.login(self.anitya_username, self.anitya_password)
+            success = anitya.map_new_package(name, project)
+            self.publish("project.map", msg=dict(
+                trigger=msg, project=project, success=success))
+            return
+
+        # ... else
 
         self.log.info("Saw 0 matching projects on anitya.  Attempting to add.")
         anitya.login(self.anitya_username, self.anitya_password)
-        anitya.add_new_project(package, homepage)
+        success = anitya.add_new_project(name, homepage)
+        self.publish("project.map", msg=dict(
+            trigger=msg, success=success))
 
     def is_monitored(self, package):
         """ Returns True if a package is marked as 'monitored' in pkgdb2. """
