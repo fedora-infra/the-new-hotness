@@ -209,7 +209,7 @@ class Anitya(object):
 
     def search(self, name, homepage):
         url = '{0}/api/projects/?homepage={1}'.format(self.url, homepage)
-        self.log.info("Looking for %r via %r" % (name, url))
+        log.info("Looking for %r via %r" % (name, url))
         response = self.__send_request(url, method='GET')
         return response.json()
 
