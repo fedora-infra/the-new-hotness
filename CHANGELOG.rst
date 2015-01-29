@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.3.0
+-----
+
+- specbump `3850a8813 <https://github.com/fedora-infra/the-new-hotness/commit/3850a8813204013d9eafa3aa10ff96d8fad26a9b>`_
+- Specfile should pull this in now. `c4b81f078 <https://github.com/fedora-infra/the-new-hotness/commit/c4b81f078abdec91ddae1c4187357c30eb0f9708>`_
+- Auto add new packages. `536049a7f <https://github.com/fedora-infra/the-new-hotness/commit/536049a7fed5f0302083875b2d1ad58a5de609a3>`_
+- Map package if the project already exists. `c4a323851 <https://github.com/fedora-infra/the-new-hotness/commit/c4a3238511405686ccc640d95b18d769b5745727>`_
+- Typofix. `6ca7fc20e <https://github.com/fedora-infra/the-new-hotness/commit/6ca7fc20e43a12959a99c3f695c584ef6393814e>`_
+- Merge pull request #10 from fedora-infra/feature/auto-add-new-packages `51e6735f7 <https://github.com/fedora-infra/the-new-hotness/commit/51e6735f7472ac214163fbc32b1f3a601daac872>`_
+
 0.2.2
 -----
 
