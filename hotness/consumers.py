@@ -20,6 +20,7 @@ Authors:    Ralph Bean <rbean@redhat.com>
 """
 
 import socket
+import traceback
 
 import fedmsg
 import fedmsg.consumers
@@ -177,10 +178,14 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 trigger=msg, bug=dict(bug_id=bz.bug_id)))
 
             self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
-            task_id = self.buildsys.handle(package, upstream, version, bz)
-
-            # Map that koji task_id to the bz ticket we want to follow up on
-            self.triggered_task_ids[task_id] = bz
+            try:
+                # Kick off a scratch build..
+                task_id = self.buildsys.handle(package, upstream, version, bz)
+                # Map that koji task_id to the bz ticket we want to pursue.
+                self.triggered_task_ids[task_id] = bz
+            except Exception:
+                self.log.warning("Failed to kick off scratch build.")
+                self.log.warning(traceback.format_exc())
 
     def handle_buildsys_scratch(self, msg):
         # Is this a scratch build that we triggered a couple minutes ago?
