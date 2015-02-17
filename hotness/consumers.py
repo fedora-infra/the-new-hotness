@@ -244,6 +244,13 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 package, version, release))
             return
 
+        # Don't followup on bugs that are already closed... otherwise we would
+        # followup for ALL ETERNITY.
+        if bug.status in self.bugzilla.bug_status_closed:
+            self.log.info("Bug %s is %s.  Dropping message." % (
+                bug.weburl, bug.status))
+            return
+
         url = fedmsg.meta.msg2link(msg, **self.hub.config)
         subtitle = fedmsg.meta.msg2subtitle(msg, **self.hub.config)
         text = "%s %s" % (subtitle, url)
