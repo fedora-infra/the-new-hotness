@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.3.1
+-----
+
+- specbump `e39e82db5 <https://github.com/fedora-infra/the-new-hotness/commit/e39e82db5caef2f1844e45bbc4d02d2f316127dd>`_
+- Suppress errors. `d669ecfd3 <https://github.com/fedora-infra/the-new-hotness/commit/d669ecfd3b6772b74219ae75be440e4019322596>`_
+- Merge pull request #11 from fedora-infra/feature/supress-errors `ef0a32dab <https://github.com/fedora-infra/the-new-hotness/commit/ef0a32dabb342d01bfe1e957b60cf39183bb1d27>`_
+- Only followup on bugs that are not already closed. `a78a6e916 <https://github.com/fedora-infra/the-new-hotness/commit/a78a6e9161c8f72377ad0dc4b3d6f61b591e0f79>`_
+- Merge pull request #12 from fedora-infra/feature/limited-followup `7b80bcbea <https://github.com/fedora-infra/the-new-hotness/commit/7b80bcbeaab9e966fe7149b5b7581f28e1fa5857>`_
+
 0.3.0
 -----
 
