@@ -300,7 +300,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         """ Returns True if a package is marked as 'monitored' in pkgdb2. """
 
         url = '{0}/package/{1}'.format(self.pkgdb_url, package)
-        self.log.info("Checking %r" % url)
+        self.log.debug("Checking %r" % url)
         r = requests.get(url)
 
         if not r.status_code == 200:
