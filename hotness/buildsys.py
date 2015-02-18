@@ -71,7 +71,7 @@ class Koji(object):
         if err:
             self.log.warning(err)
         if p.returncode != 0:
-            self.log.error('return code %s', p.returncode)
+            self.log.error('return code %s, %r', p.returncode, cmd)
             raise Exception
         return out
 
