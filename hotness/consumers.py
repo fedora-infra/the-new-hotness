@@ -103,9 +103,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.log.info("Using hotness.repoid=%r" % self.repoid)
         self.distro = self.config.get('hotness.distro', 'Fedora')
         self.log.info("Using hotness.distro=%r" % self.distro)
-        self.followup_suffixes = self.config['hotness.followup_suffixes']
-        self.log.info("Using hotness.followup_suffixes=%r",
-                      self.followup_suffixes)
 
         # Build a little store where we'll keep track of what koji scratch
         # builds we have kicked off.  We'll look later for messages indicating
@@ -229,9 +226,10 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.log.debug("Ignoring secondary arch build...")
             return
 
-        if not any([release.endswith(s) for s in self.followup_suffixes]):
-            self.log.debug("Koji build_id=%r, %r isn't in %r.  Drop it." % (
-                idx, release, self.followup_suffixes))
+        rawhide = self.get_dist_tag()
+        if not release.endswith(rawhide):
+            self.log.debug("Koji build=%r, %r is not rawhide(%r). Drop it." % (
+                idx, release, rawhide))
             return
 
         if state != 1:
@@ -323,3 +321,18 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         except:
             self.log.exception("Problem interacting with pkgdb.")
             return False
+
+    @hotness.cache.cache.cache_on_arguments()
+    def get_dist_tag(self):
+        url = '{0}/collections/master/'.format(self.pkgdb_url)
+        self.log.debug("Getting dist tag from %r" % url)
+        r = requests.get(url)
+
+        if not r.status_code == 200:
+            raise IOError('URL %s returned code %s', r.url, r.status_code)
+
+        data = r.json()
+        collection = data['collections'][0]
+        tag = collection['dist_tag']
+        self.log.info("Got rawhide suffix %r" % tag)
+        return tag
