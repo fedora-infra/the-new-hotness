@@ -103,6 +103,9 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.log.info("Using hotness.repoid=%r" % self.repoid)
         self.distro = self.config.get('hotness.distro', 'Fedora')
         self.log.info("Using hotness.distro=%r" % self.distro)
+        self.followup_suffixes = self.config['hotness.followup_suffixes']
+        self.log.info("Using hotness.followup_suffixes=%r",
+                      self.followup_suffixes)
 
         # Build a little store where we'll keep track of what koji scratch
         # builds we have kicked off.  We'll look later for messages indicating
@@ -219,10 +222,16 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
     def handle_buildsys_real(self, msg):
         idx = msg['msg']['build_id']
         state = msg['msg']['new']
+        release = msg['msg']['release']
         instance = msg['msg']['instance']
 
         if instance != 'primary':
             self.log.debug("Ignoring secondary arch build...")
+            return
+
+        if not any([release.endswith(s) for s in self.followup_suffixes]):
+            self.log.debug("Koji build_id=%r, %r isn't in %r.  Drop it." % (
+                idx, release, self.followup_suffixes))
             return
 
         if state != 1:

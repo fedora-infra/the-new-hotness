@@ -22,6 +22,11 @@ More information about the service that created this bug can be found at:
 config = {
     'hotness.bugzilla.enabled': True,
 
+    # Only followup about real builds with these release suffixes (rawhide)
+    'hotness.followup_suffixes': [
+        'fc23',
+    ],
+
     'hotness.bugzilla': {
         #'user': None,
         #'password': None,
