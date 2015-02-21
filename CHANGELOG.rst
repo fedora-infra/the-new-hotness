@@ -1,6 +1,17 @@
 Changelog
 =========
 
+0.3.2
+-----
+
+- Specbump. `fa0475659 <https://github.com/fedora-infra/the-new-hotness/commit/fa0475659eb797eaa1240d9c7047fea2d819bb09>`_
+- Demote this log statement. `75bb86263 <https://github.com/fedora-infra/the-new-hotness/commit/75bb86263d006f089e53fe966c1d5a482748a9a3>`_
+- When a command fails, I'd like to know what it was. `5e221b80c <https://github.com/fedora-infra/the-new-hotness/commit/5e221b80ce6c5ac3970ad265abd38266b9e107c6>`_
+- Still more information. `66e9f9bfe <https://github.com/fedora-infra/the-new-hotness/commit/66e9f9bfec9d6d151cc5543ed46916a5eb7323a2>`_
+- Only followup on rawhide builds. `ca4199e72 <https://github.com/fedora-infra/the-new-hotness/commit/ca4199e72226493a74d67efd4d354d3b69ae3166>`_
+- Get rawhide dist tag from pkgdb, not from config. `cd3ce37ff <https://github.com/fedora-infra/the-new-hotness/commit/cd3ce37ff06ecdf506a19168a3386936dbb449bc>`_
+- Merge pull request #15 from fedora-infra/feature/only-rawhide-thank-you `232015f36 <https://github.com/fedora-infra/the-new-hotness/commit/232015f36e9f82090ad78c078a8cef4e52aaadbe>`_
+
 0.3.1
 -----
 
