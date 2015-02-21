@@ -9,7 +9,7 @@
 %global modname the-new-hotness
 
 Name:               the-new-hotness
-Version:            0.3.1
+Version:            0.3.2
 Release:            1%{?dist}
 Summary:            Consume anitya fedmsg messages to file bugzilla bugs
 
@@ -55,6 +55,10 @@ rm -rf %{modname}.egg-info
 %{python2_sitelib}/the_new_hotness-%{version}*
 
 %changelog
+* Sat Feb 21 2015 Ralph Bean <rbean@redhat.com> - 0.3.2-1
+- Improved logging
+- Only followup on rawhide builds.
+
 * Tue Feb 17 2015 Ralph Bean <rbean@redhat.com> - 0.3.1-1
 - Minor bugfix to rawhide build followup.
 
