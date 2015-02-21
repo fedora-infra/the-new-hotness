@@ -334,5 +334,5 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         data = r.json()
         collection = data['collections'][0]
         tag = collection['dist_tag']
-        self.log.info("Got rawhide suffix %r" % tag)
+        self.log.debug("Got rawhide suffix %r" % tag)
         return tag
