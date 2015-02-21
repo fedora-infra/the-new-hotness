@@ -219,10 +219,17 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
     def handle_buildsys_real(self, msg):
         idx = msg['msg']['build_id']
         state = msg['msg']['new']
+        release = msg['msg']['release']
         instance = msg['msg']['instance']
 
         if instance != 'primary':
             self.log.debug("Ignoring secondary arch build...")
+            return
+
+        rawhide = self.get_dist_tag()
+        if not release.endswith(rawhide):
+            self.log.debug("Koji build=%r, %r is not rawhide(%r). Drop it." % (
+                idx, release, rawhide))
             return
 
         if state != 1:
@@ -314,3 +321,18 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         except:
             self.log.exception("Problem interacting with pkgdb.")
             return False
+
+    @hotness.cache.cache.cache_on_arguments()
+    def get_dist_tag(self):
+        url = '{0}/collections/master/'.format(self.pkgdb_url)
+        self.log.debug("Getting dist tag from %r" % url)
+        r = requests.get(url)
+
+        if not r.status_code == 200:
+            raise IOError('URL %s returned code %s', r.url, r.status_code)
+
+        data = r.json()
+        collection = data['collections'][0]
+        tag = collection['dist_tag']
+        self.log.info("Got rawhide suffix %r" % tag)
+        return tag
