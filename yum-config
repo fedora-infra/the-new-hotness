@@ -11,12 +11,26 @@ plugins=1
 installonly_limit=3
 
 # It is usually 90m.  We'll expire often..
-metadata_expire=10m
+metadata_expire=5m
 
-# We have only one repo to query...
-[rawhide-source]
-name=Rawhide Source
+# We have three repos to query...
+[rawhide-x86_64]
+name=Rawhide x86_64
 failovermethod=priority
-baseurl=http://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/source/SRPMS/
+baseurl=https://kojipkgs.fedoraproject.org/repos/rawhide/latest/x86_64/
+enabled=1
+gpgcheck=0
+
+[rawhide-i386]
+name=Rawhide i386
+failovermethod=priority
+baseurl=https://kojipkgs.fedoraproject.org/repos/rawhide/latest/i386/
+enabled=1
+gpgcheck=0
+
+[rawhide-armhfp]
+name=Rawhide armhfp
+failovermethod=priority
+baseurl=https://kojipkgs.fedoraproject.org/repos/rawhide/latest/armhfp/
 enabled=1
 gpgcheck=0
