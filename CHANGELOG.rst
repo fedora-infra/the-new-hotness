@@ -1,6 +1,20 @@
 Changelog
 =========
 
+0.3.3
+-----
+
+- specbump `a3171f209 <https://github.com/fedora-infra/the-new-hotness/commit/a3171f2099e8c99623481e69304f9b9b3cbeb118>`_
+- Demote this log statement. `f99f5f5f5 <https://github.com/fedora-infra/the-new-hotness/commit/f99f5f5f5cd3154ff8769c3be7eeb6448682ab41>`_
+- Use the kojira repos to get the latest rawhide info. `3b9d136c0 <https://github.com/fedora-infra/the-new-hotness/commit/3b9d136c0c8adf1ee2ea128ff0361b197671a471>`_
+- Merge pull request #20 from fedora-infra/feature/kojira `957298475 <https://github.com/fedora-infra/the-new-hotness/commit/957298475e211a79fb5022752c301eb464e96049>`_
+- Drop explicit archlist for now. `2c1caf83f <https://github.com/fedora-infra/the-new-hotness/commit/2c1caf83f99161ef2f1d17c50a1d3006d9834ecd>`_
+- Generate a nicer changelog for the scratch task srpm. `97b865e4d <https://github.com/fedora-infra/the-new-hotness/commit/97b865e4d5ee426e4caf9da2bced02b5351174fa>`_
+- It's not a duck! `4f3009821 <https://github.com/fedora-infra/the-new-hotness/commit/4f30098215cdd24aa7f8b4da3996f524282078d9>`_
+- Merge pull request #22 from fedora-infra/feature/nicer-changelog `9e110051f <https://github.com/fedora-infra/the-new-hotness/commit/9e110051f48df51c9c854536fca77b41abc11629>`_
+- For github backend, if the homepage is on github, specify the version_url to use `aa996242f <https://github.com/fedora-infra/the-new-hotness/commit/aa996242f3b80edbdc3f8afb38e988aca17505c4>`_
+- Merge pull request #24 from fedora-infra/github_info `10d25ebd6 <https://github.com/fedora-infra/the-new-hotness/commit/10d25ebd621fe1184bc5cd29fac8c8d30b5f1c32>`_
+
 0.3.2
 -----
 
