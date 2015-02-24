@@ -41,8 +41,8 @@ config = {
         'cert': os.path.expanduser('~/.fedora.cert'),
         'ca_cert': os.path.expanduser('~/.fedora-server-ca.cert'),
         'git_url': 'http://pkgs.fedoraproject.org/cgit/{package}.git',
-        'userstring': ('Fedora Release Monitoring '
-                       '<release-monitoring@fedoraproject.org>'),
+        'userstring': ('Upstream Monitor',
+                       '<upstream-release-monitoring@fedoraproject.org>'),
         'opts': {'scratch': True},
         'priority': 30,
         'target_tag': 'rawhide',
