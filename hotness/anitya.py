@@ -279,6 +279,9 @@ class Anitya(object):
                 data['name'] = data['homepage'].strip('/').split('/')[-1]
                 break
 
+        if data['backend'] == 'github' and 'github.com' in data['homepage']:
+            data['version_url'] = data['homepage']
+
         url = self.url + '/project/new'
         response = self.__send_request(url, method='GET')
 
