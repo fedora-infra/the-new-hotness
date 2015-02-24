@@ -15,7 +15,7 @@ def build_nvr_dict(yumconfig):
     cmdline = ["/usr/bin/repoquery",
                "--config", yumconfig,
                "--quiet",
-               "--archlist=src",
+               #"--archlist=src",
                "--all",
                "--qf",
                "%{name}\t%{version}\t%{release}"]
