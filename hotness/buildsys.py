@@ -96,7 +96,7 @@ class Koji(object):
             cmd = [
                 '/usr/bin/rpmdev-bumpspec',
                 '--new', upstream,
-                '-c', 'Update to %s (#%s)' % (upstream, rhbz.bug_id),
+                '-c', 'Update to %s (#%d)' % (upstream, rhbz.bug_id),
                 '-u', self.userstring,
                 specfile,
             ]
