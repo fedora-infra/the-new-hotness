@@ -46,6 +46,12 @@ config = {
         'opts': {'scratch': True},
         'priority': 30,
         'target_tag': 'rawhide',
+
+        # These are errors that we won't scream about.
+        'passable_errors': [
+            # This is the packager's problem, not ours.
+            'unclosed macro or bad line continuation',
+        ],
     },
 
     'hotness.anitya': {

@@ -27,6 +27,10 @@ class Koji(object):
         self.opts = config['opts']
         self.priority = config['priority']
         self.target_tag = config['target_tag']
+        self.passable_errors = config.get('passable_errors', [
+            # This is the packager's problem, not ours.
+            'unclosed macro or bad line continuation',
+        ])
 
     def session_maker(self):
         koji_session = koji.ClientSession(self.server, {'timeout': 3600})
@@ -71,8 +75,12 @@ class Koji(object):
         if err:
             self.log.warning(err)
         if p.returncode != 0:
-            self.log.error('code %s, cmd %r, err %r', p.returncode, cmd, err)
-            raise Exception
+            message = 'code %s, cmd %r, err %r'
+            if any([target in err for target in self.passable_errors]):
+                self.log.warning(message, p.returncode, cmd, err)
+            else:
+                self.log.error(message, p.returncode, cmd, err)
+                raise Exception
         return out
 
     def handle(self, package, upstream, version, rhbz):
