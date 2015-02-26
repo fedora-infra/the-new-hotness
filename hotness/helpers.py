@@ -245,6 +245,10 @@ def cmp_upstream_repo(upstream_v, repo_vr):
 
     repo_version = "%s%s%s" % (repo_vr[0], repo_rc[0], repo_rc[1])
 
+    # Strip a leading 'v' which is sometimes prefixed to github releases
+    # https://github.com/fedora-infra/anitya/issues/102
+    upstream_v = upstream_v.lstrip('v')
+
     return upstream_cmp(upstream_v, repo_version)
 
 
