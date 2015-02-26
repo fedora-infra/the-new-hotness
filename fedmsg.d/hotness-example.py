@@ -17,6 +17,13 @@ https://fedoraproject.org/wiki/Updates_Policy
 More information about the service that created this bug can be found at:
 
 %(explanation_url)s
+
+
+Please keep in mind that with any upstream change, there may also be packaging
+changes that need to be made. Specifically, please remember that it is your
+responsibility to review the new version to ensure that the licensing is still
+correct and that no non-free or legally problematic items have been added
+upstream.
 """
 
 config = {
