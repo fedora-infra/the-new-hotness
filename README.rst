@@ -62,6 +62,6 @@ Hacking
 9. Keep 'fedmsg-relay' open cause you'll need it.  Keep 'fedmsg-tail' open for debugging.
 10. Find anitya messages from the past here http://apps.fedoraproject.org/datagrepper/raw?category=anitya
 11. Get the 'msg-id' from one of them and replay it on your local fedmsg-relay
-   by running
-   ``fedmsg-dg-replay --msg-id 2014-cf0182f1-9ecb-48a7-a999-6f24a529b669``
+    by running
+    ``fedmsg-dg-replay --msg-id 2014-cf0182f1-9ecb-48a7-a999-6f24a529b669``
 12. Watch what happens in the 'fedmsg-hub' logs.  Did it file a bug?  Did it explode?  Hack!
