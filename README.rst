@@ -36,8 +36,7 @@ Hacking
    emails to people so we can spam test stuff in tickets without worry)
 3. If you can get it running, it will be useful to be able to locally fake
    messages from anitya (release-monitoring.org).., for that you'll need to:
-
-3.1. Add a new file to ``fedmsg.d/`` called ``fedmsg.d/relay.py`` and add these contents to it::
+4. Add a new file to ``fedmsg.d/`` called ``fedmsg.d/relay.py`` and add these contents to it::
 
     config = dict(
         endpoints={
@@ -55,14 +54,14 @@ Hacking
         ],
     )
 
-3.2. Open three terminals, activate your virtualenv in all three and cd into the the-new-hotness/ dir.
-3.3. In one terminal run ``fedmsg-relay`` with no arguments.  It should start in the foreground and show some logs and then sit there.  It shouldn't have any tracebacks going by.
-3.4. In another terminal run ``fedmsg-tail --really-pretty``.  It should start up and just sit there, waiting for messages to arrive.
-3.5. In the third terminal run ``echo "liberation" | fedmsg-logger``.  If you look at the second terminal from point 3.3, It should have a JSON blob show up. Success!  you just sent a fedmsg message locally to a fedmsg-relay which then got bounced over to fedmsg-tail.
+5. Open three terminals, activate your virtualenv in all three and cd into the the-new-hotness/ dir.
+6. In one terminal run ``fedmsg-relay`` with no arguments.  It should start in the foreground and show some logs and then sit there.  It shouldn't have any tracebacks going by.
+7. In another terminal run ``fedmsg-tail --really-pretty``.  It should start up and just sit there, waiting for messages to arrive.
+8. In the third terminal run ``echo "liberation" | fedmsg-logger``.  If you look at the second terminal from point 3.3, It should have a JSON blob show up. Success!  you just sent a fedmsg message locally to a fedmsg-relay which then got bounced over to fedmsg-tail.
 
-4. Keep 'fedmsg-relay' open cause you'll need it.  Keep 'fedmsg-tail' open for debugging.
-5. Find anitya messages from the past here http://apps.fedoraproject.org/datagrepper/raw?category=anitya
-6. Get the 'msg-id' from one of them and replay it on your local fedmsg-relay
+9. Keep 'fedmsg-relay' open cause you'll need it.  Keep 'fedmsg-tail' open for debugging.
+10. Find anitya messages from the past here http://apps.fedoraproject.org/datagrepper/raw?category=anitya
+11. Get the 'msg-id' from one of them and replay it on your local fedmsg-relay
    by running
    ``fedmsg-dg-replay --msg-id 2014-cf0182f1-9ecb-48a7-a999-6f24a529b669``
-7. Watch what happens in the 'fedmsg-hub' logs.  Did it file a bug?  Did it explode?  Hack!
+12. Watch what happens in the 'fedmsg-hub' logs.  Did it file a bug?  Did it explode?  Hack!
