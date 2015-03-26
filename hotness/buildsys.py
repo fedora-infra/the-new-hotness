@@ -127,8 +127,8 @@ class Koji(object):
             filename = filename.strip()
 
             # Copy the patch out of this doomed dir so bz can find it
-            destination = '/var/tmp/' + filename
-            shutil.move('/'.join([tmp, filename]), destination)
+            destination = os.path.join('/var/tmp', filename)
+            shutil.move(os.path.join(tmp, filename), destination)
 
             return task_id, destination, '[patch] ' + comment
         finally:
