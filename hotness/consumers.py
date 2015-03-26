@@ -183,9 +183,12 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 task_id = self.buildsys.handle(package, upstream, version, bz)
                 # Map that koji task_id to the bz ticket we want to pursue.
                 self.triggered_task_ids[task_id] = bz
-            except Exception:
-                self.log.warning("Failed to kick off scratch build.")
+            except Exception as e:
+                heading = "Failed to kick off scratch build."
+                note = heading + "\n\n" + str(e)
+                self.log.warning(heading)
                 self.log.warning(traceback.format_exc())
+                self.bugzilla.follow_up(note, bz)
 
     def handle_buildsys_scratch(self, msg):
         # Is this a scratch build that we triggered a couple minutes ago?
