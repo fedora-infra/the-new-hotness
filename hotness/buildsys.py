@@ -106,11 +106,33 @@ class Koji(object):
 
             # First, get all patches and other sources from dist-git
             output = self.run(['fedpkg', 'sources'], cwd=tmp)
+            oldfile = output.strip().split()[-1]
+            self.log.debug("fedpkg grabbed %r", oldfile)
 
             # Then go and get the *new* tarball from upstream.
             # For these to work, it requires that rpmmacros be redefined to
             # find source files in the tmp directory.  See:  http://da.gd/1MWt
             output = self.run(['spectool', '-g', specfile], cwd=tmp)
+            newfile = output.strip().split()[-1]
+            self.log.debug("spectool grabbed %r", oldfile)
+
+            # Now, handle an edge case before we proceed with building.
+            # Sometimes, the specfiles have versions hardcoded in them such
+            # that bumping the Version field and running spectool actually
+            # pulls down another copy of the old tarball, not the new one.
+            # https://github.com/fedora-infra/the-new-hotness/issues/29
+            # So, check that the sha sums of the tarballs are different.
+            oldsum = self.run(['sha256sum', os.path.join(tmp, oldfile)])
+            newsum = self.run(['sha256sum', os.path.join(tmp, newfile)])
+            oldsum, newsum = oldsum.split()[0], newsum.split()[0]
+            if oldsum == newsum:
+                raise ValueError(
+                    "spectool was unable to grab new sources\n\n"
+                    "old source: {oldfile}\nold sha256: {oldsum}\n\n"
+                    "new source: {newfile}\nnew sha256: {newsum}\n".format(
+                        oldfile=oldfile, oldsum=oldsum,
+                        newfile=newfile, newsum=newsum))
+
             output = self.run(['rpmbuild', '-bs', specfile], cwd=tmp)
 
             srpm = os.path.join(tmp, output.strip().split()[-1])
