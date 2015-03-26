@@ -27,10 +27,6 @@ class Koji(object):
         self.opts = config['opts']
         self.priority = config['priority']
         self.target_tag = config['target_tag']
-        self.passable_errors = config.get('passable_errors', [
-            # This is the packager's problem, not ours.
-            'unclosed macro or bad line continuation',
-        ])
 
     def session_maker(self):
         koji_session = koji.ClientSession(self.server, {'timeout': 3600})
@@ -67,7 +63,7 @@ class Koji(object):
         return task_id
 
     def run(self, cmd, cwd=None):
-        self.log.info("Running %r in %r" % (' '.join(cmd), cwd))
+        self.log.info("Running %r in %r", cmd, cwd)
         p = sp.Popen(cmd, cwd=cwd, stdout=sp.PIPE, stderr=sp.PIPE)
         out, err = p.communicate()
         if out:
@@ -75,12 +71,8 @@ class Koji(object):
         if err:
             self.log.warning(err)
         if p.returncode != 0:
-            message = 'code %s, cmd %r, err %r'
-            if any([target in err for target in self.passable_errors]):
-                self.log.warning(message, p.returncode, cmd, err)
-            else:
-                self.log.error(message, p.returncode, cmd, err)
-                raise Exception
+            message = 'cmd:  %s\nreturn code:  %r\nstdout:\n%s\nstderr:\n%s'
+            raise Exception(message % (' '.join(cmd), p.returncode, out, err))
         return out
 
     def handle(self, package, upstream, version, rhbz):
@@ -100,11 +92,13 @@ class Koji(object):
 
             specfile = tmp + '/' + package + '.spec'
 
+            comment = 'Update to %s (#%d)' % (upstream, rhbz.bug_id)
+
             # This requires rpmdevtools-8.5 or greater
             cmd = [
                 '/usr/bin/rpmdev-bumpspec',
                 '--new', upstream,
-                '-c', 'Update to %s (#%d)' % (upstream, rhbz.bug_id),
+                '-c', comment,
                 '-u', self.userstring,
                 specfile,
             ]
@@ -124,7 +118,19 @@ class Koji(object):
 
             session = self.session_maker()
             task_id = self.scratch_build(session, package, srpm)
-            return task_id
+
+            # Now, craft a patch to attach to the ticket
+            output = self.run(['git', 'commit', '-a',
+                               '-m', comment,
+                               '--author', self.userstring], cwd=tmp)
+            filename = self.run(['git', 'format-patch', 'HEAD^'], cwd=tmp)
+            filename = filename.strip()
+
+            # Copy the patch out of this doomed dir so bz can find it
+            destination = os.path.join('/var/tmp', filename)
+            shutil.move(os.path.join(tmp, filename), destination)
+
+            return task_id, destination, '[patch] ' + comment
         finally:
             self.log.debug("Removing %r" % tmp)
             shutil.rmtree(tmp)
