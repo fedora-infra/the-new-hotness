@@ -180,9 +180,14 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
             try:
                 # Kick off a scratch build..
-                task_id = self.buildsys.handle(package, upstream, version, bz)
+                task_id, patch_filename, description = self.buildsys.handle(
+                    package, upstream, version, bz)
+
                 # Map that koji task_id to the bz ticket we want to pursue.
                 self.triggered_task_ids[task_id] = bz
+
+                # Attach the patch to the ticket
+                self.bugzilla.attach_patch(patch_filename, description, bz)
             except Exception as e:
                 heading = "Failed to kick off scratch build."
                 note = heading + "\n\n" + str(e)

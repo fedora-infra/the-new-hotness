@@ -117,8 +117,13 @@ class Bugzilla(object):
             'ids': [bug.bug_id],
         }
         self.log.debug("Following up on bug %r with %r" % (bug.bug_id, update))
-        res = self.bugzilla._proxy.Bug.update(update)
+        self.bugzilla._proxy.Bug.update(update)
         self.log.info("Followed up on bug: %s" % bug.weburl)
+
+    def attach_patch(self, filename, description, bug):
+        self.log.debug("Attaching patch to bug %r" % bug.bug_id)
+        self.bugzilla.attachfile(bug.bug_id, filename, description)
+        self.log.info("Attached patch to bug: %s" % bug.weburl)
 
     def exact_bug(self, **package):
         short_desc_pattern = '%(name)s-%(upstream)s ' % package
