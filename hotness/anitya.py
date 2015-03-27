@@ -213,6 +213,19 @@ class Anitya(object):
         response = self.__send_request(url, method='GET')
         return response.json()
 
+    def force_check(self, project):
+        """ Force anitya to check for a new upstream release. """
+        idx = project['id']
+        url = '%s/api/version/get' % self.url
+        resp = self.session.post(url, data=dict(id=idx))
+        data = resp.json()
+
+        if 'error' in data:
+            log.error('Anitya error: %r' % data['error'])
+        else:
+            log.info("Check yielded upstream version %s for %s" % (
+                data['version'], data['name']))
+
     def map_new_package(self, name, project):
         if not self.is_logged_in:
             log.error('Could not add new anitya project.  Not logged in.')
