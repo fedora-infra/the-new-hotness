@@ -228,14 +228,16 @@ class Anitya(object):
 
     def map_new_package(self, name, project):
         if not self.is_logged_in:
-            raise ValueError('Could not add anitya project.  Not logged in.')
+            raise AnityaException('Could not add anitya project.  '
+                                  'Not logged in.')
 
         idx = project['id']
         url = self.url + '/project/%i/map' % idx
         response = self.__send_request(url, method='GET')
         if not response.status_code == 200:
             code = response.status_code
-            raise ValueError("Couldn't get form to get csrf token %r" % code)
+            raise AnityaException("Couldn't get form to get "
+                                  "csrf token %r" % code)
 
         soup = bs4.BeautifulSoup(response.text)
         data = dict(
@@ -246,18 +248,23 @@ class Anitya(object):
         response = self.__send_request(url, method='POST', data=data)
 
         if not response.status_code == 200:
-            code = response.status_code
-            raise ValueError('Failed to map in anitya, '
-                             'status %r: %r' % (code, data))
+            # Hide this from stuff we republish to the bus
+            del data['csrf_token']
+            raise AnityaException('Bad status code from anitya when '
+                                  'mapping package: %r.  Sent %r' % (
+                                      response.status_code, data))
         elif 'Could not' in response.text:
-            raise ValueError('Failed to map in anitya, '
-                             'validation failure: %r' % data)
+            soup = bs4.BeautifulSoup(response.text)
+            tag = soup.find_all(attrs={'class': 'error'})[0]
+            err = ' '.join(tag.stripped_strings)
+            raise AnityaException(err)
 
         log.info('Successfully mapped %r in anitya' % name)
 
     def add_new_project(self, name, homepage):
         if not self.is_logged_in:
-            raise ValueError('Could not add anitya project.  Not logged in.')
+            raise AnityaException('Could not add anitya project.  '
+                                  'Not logged in.')
 
         data = dict(
             name=name,
@@ -273,7 +280,8 @@ class Anitya(object):
                 break
 
         if 'backend' not in data:
-            raise ValueError('Could not determine backend for %r' % homepage)
+            raise AnityaException('Could not determine backend '
+                                  'for %s' % homepage)
 
         # It's not always the case that these need removed, but often
         # enough...
@@ -295,19 +303,25 @@ class Anitya(object):
 
         if not response.status_code == 200:
             code = response.status_code
-            raise ValueError("Couldn't get form to get csrf token %r" % code)
+            raise AnityaException("Couldn't get form to get csrf "
+                                  "token %r" % code)
 
         soup = bs4.BeautifulSoup(response.text)
         data['csrf_token'] = soup.form.find(id='csrf_token').attrs['value']
 
         response = self.__send_request(url, method='POST', data=data)
 
-        # Hide this from stuff we republish to the bus
-        del data['csrf_token']
 
         if not response.status_code == 200:
-            raise ValueError('Failed to add to anitya: %r' % data)
+            # Hide this from stuff we republish to the bus
+            del data['csrf_token']
+            raise AnityaException('Bad status code from anitya when '
+                                  'adding project: %r.  Sent %r' % (
+                                      response.status_code, data))
         elif 'Could not' in response.text:
-            raise ValueError('Failed to add to anitya: %r' % data)
+            soup = bs4.BeautifulSoup(response.text)
+            tag = soup.find_all(attrs={'class': 'error'})[0]
+            err = ' '.join(tag.stripped_strings)
+            raise AnityaException(err)
 
         log.info('Successfully added %r to anitya' % data['name'])
