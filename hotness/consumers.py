@@ -305,18 +305,31 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.log.info("Found one match on Anitya.")
             project = projects[0]
             anitya.login(self.anitya_username, self.anitya_password)
-            success = anitya.map_new_package(name, project)
+            reason = None
+            try:
+                anitya.map_new_package(name, project)
+            except ValueError as e:
+                reason = str(e)
             self.publish("project.map", msg=dict(
-                trigger=msg, project=project, success=success))
+                trigger=msg,
+                project=project,
+                success=not bool(reason),
+                reason=reason))
             return
 
         # ... else
 
         self.log.info("Saw 0 matching projects on anitya.  Attempting to add.")
         anitya.login(self.anitya_username, self.anitya_password)
-        success = anitya.add_new_project(name, homepage)
+        reason = None
+        try:
+            anitya.add_new_project(name, homepage)
+        except ValueError as e:
+            reason = str(e)
         self.publish("project.map", msg=dict(
-            trigger=msg, success=success))
+            trigger=msg,
+            success=not bool(reason),
+            reason=reason))
 
     def handle_monitor_toggle(self, msg):
         status = msg['msg']['status']
@@ -343,9 +356,16 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             project = results['projects'][0]
 
             if not any([p['distro'] == 'Fedora' for p in project['packages']]):
-                success = anitya.map_new_package(name, project)
+                reason = None
+                try:
+                    anitya.map_new_package(name, project)
+                except ValueError as e:
+                    reason = str(e)
                 self.publish("project.map", msg=dict(
-                    trigger=msg, project=project, success=success))
+                    trigger=msg,
+                    project=project,
+                    success=not bool(reason),
+                    reason=reason))
 
             # After mapping, force a check for new tarballs
             anitya.force_check(project)
@@ -353,9 +373,15 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             # OTHERWISE, there is *nothing* on anitya about it, so add one.
             self.log.info("Saw 0 matching projects on anitya.  Adding.")
             anitya.login(self.anitya_username, self.anitya_password)
-            success = anitya.add_new_project(name, homepage)
+            reason = None
+            try:
+                anitya.add_new_project(name, homepage)
+            except ValueError as e:
+                reason = str(e)
             self.publish("project.map", msg=dict(
-                trigger=msg, success=success))
+                trigger=msg,
+                success=not bool(reason),
+                reason=reason))
 
     def is_monitored(self, package):
         """ Returns True if a package is marked as 'monitored' in pkgdb2. """
