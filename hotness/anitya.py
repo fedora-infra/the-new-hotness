@@ -221,7 +221,7 @@ class Anitya(object):
         data = resp.json()
 
         if 'error' in data:
-            log.error('Anitya error: %r' % data['error'])
+            log.warning('Anitya error: %r' % data['error'])
         else:
             log.info("Check yielded upstream version %s for %s" % (
                 data['version'], data['name']))
