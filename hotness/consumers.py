@@ -43,9 +43,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # This is the real production topic
         'org.release-monitoring.prod.anitya.project.version.update',
 
-        # For development, I use this so I can test with this command:
-        # $ fedmsg-dg-replay --msg-id 2014-77ff95ff-3373-4926-bf23-bf0754b0925c
-        #'org.fedoraproject.dev.anitya.project.version.update',
+        # Also listen for when projects are newly mapped to Fedora
+        'org.release-monitoring.prod.anitya.project.map.new',
 
         # Anyways, we also listen for koji scratch builds to circle back:
         'org.fedoraproject.prod.buildsys.task.state.change',
@@ -125,7 +124,9 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.log.debug("Received %r" % msg.get('msg_id', None))
 
         if topic.endswith('anitya.project.version.update'):
-            self.handle_anitya(msg)
+            self.handle_anitya_version_update(msg)
+        elif topic.endswith('anitya.project.map.new'):
+            self.handle_anitya_map_new(msg)
         elif topic.endswith('buildsys.task.state.change'):
             self.handle_buildsys_scratch(msg)
         elif topic.endswith('buildsys.build.state.change'):
@@ -138,14 +139,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.log.debug("Dropping %r %r" % (topic, msg['msg_id']))
             pass
 
-    def handle_anitya(self, msg):
+    def handle_anitya_version_update(self, msg):
         self.log.info("Handling anitya msg %r" % msg.get('msg_id', None))
         # First, What is this thing called in our distro?
         # (we do this little inner.get(..) trick to handle legacy messages)
         inner = msg['msg'].get('message', msg['msg'])
-        mappings = dict([
-            (p['distro'], p['package_name']) for p in inner['packages']
-        ])
         if not self.distro in [p['distro'] for p in inner['packages']]:
             self.log.info("No %r mapping for %r.  Dropping." % (
                 self.distro, msg['msg']['project']['name']))
@@ -157,13 +155,37 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # https://github.com/fedora-infra/the-new-hotness/issues/33
         for package in inner['packages']:
             if package['distro'] == self.distro:
-                self._handle_anitya(msg, package['package_name'])
+                inner = msg['msg'].get('message', msg['msg'])
+                pname = package['package_name']
 
-    def _handle_anitya(self, msg, package):
-        inner = msg['msg'].get('message', msg['msg'])
+                upstream = inner['upstream_version']
+                self._handle_anitya_update(upstream, pname, msg)
+
+    def handle_anitya_map_new(self, msg):
+        message = msg['msg']['message']
+        if message['distro'] != self.distro:
+            self.log.info("New mapping on %s, not for %s.  Dropping." % (
+                message['distro'], self.distro))
+            return
+
+        project = message['project']
+        package = message['new']
+        upstream = msg['msg']['project']['version']
+
+        self.log.info("Newly mapped %r to %r bears version %r" % (
+            project, package, upstream))
+
+        if upstream:
+            self._handle_anitya_update(upstream, package, msg)
+        else:
+            self.log.info("Forcing an anitya upstream check.")
+            anitya = hotness.anitya.Anitya(self.anitya_url)
+            anitya.force_check(msg['msg']['project'])
+
+    def _handle_anitya_update(self, upstream, package, msg):
         url = msg['msg']['project']['homepage']
 
-        # Is it something that we're being asked not to act on:
+        # Is it something that we're being asked not to act on?
         if not self.is_monitored(package):
             self.log.info("Pkgdb says not to monitor %r.  Dropping." % package)
             self.publish("update.drop", msg=dict(trigger=msg, reason="pkgdb"))
@@ -172,7 +194,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # Is it new to us?
         fname = self.yumconfig
         version, release = hotness.repository.get_version(package, fname)
-        upstream = inner['upstream_version']
         self.log.info("Comparing upstream %s against repo %s-%s" % (
             upstream, version, release))
         diff = hotness.helpers.cmp_upstream_repo(upstream, (version, release))
