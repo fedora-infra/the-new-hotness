@@ -54,11 +54,16 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # and comment about those (when they succeed).
         'org.fedoraproject.prod.buildsys.build.state.change',
 
-        # Lastly, we look for new packages being added to Fedora for the very
+        # We look for new packages being added to Fedora for the very
         # first time so that we can double-check that they have an entry in
         # release-monitoring.org.  If they don't, then we try to add them when
         # we can.
         'org.fedoraproject.prod.pkgdb.package.new',
+
+        # Lastly, look for packages that get their monitoring flag switched on
+        # and off.  We'll use that as another opportunity to map stuff in
+        # anitya.
+        'org.fedoraproject.prod.pkgdb.package.monitor.update',
     ]
 
     config_key = 'hotness.bugzilla.enabled'
@@ -127,6 +132,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.handle_buildsys_real(msg)
         elif topic.endswith('pkgdb.package.new'):
             self.handle_new_package(msg)
+        elif topic.endswith('pkgdb.package.monitor.update'):
+            self.handle_monitor_toggle(msg)
         else:
             self.log.debug("Dropping %r %r" % (topic, msg['msg_id']))
             pass
@@ -293,23 +300,92 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.log.warning("Fail. %i matching projects on anitya." % total)
             self.publish("project.map", msg=dict(
                 trigger=msg, total=total, success=False))
-            return
         elif total == 1:
             self.log.info("Found one match on Anitya.")
             project = projects[0]
             anitya.login(self.anitya_username, self.anitya_password)
-            success = anitya.map_new_package(name, project)
+
+            reason = None
+            try:
+                anitya.map_new_package(name, project)
+            except hotness.anitya.AnityaException as e:
+                reason = str(e)
+
             self.publish("project.map", msg=dict(
-                trigger=msg, project=project, success=success))
+                trigger=msg,
+                project=project,
+                success=not bool(reason),
+                reason=reason))
+        else:
+            self.log.info("Saw 0 matching projects on anitya.  Adding.")
+            anitya.login(self.anitya_username, self.anitya_password)
+
+            reason = None
+            try:
+                anitya.add_new_project(name, homepage)
+            except hotness.anitya.AnityaException as e:
+                reason = str(e)
+
+            self.publish("project.map", msg=dict(
+                trigger=msg,
+                success=not bool(reason),
+                reason=reason))
+
+    def handle_monitor_toggle(self, msg):
+        status = msg['msg']['status']
+        name = msg['msg']['package']['name']
+        homepage = msg['msg']['package']['upstream_url']
+
+        self.log.info("Considering monitored %r with %r" % (name, homepage))
+
+        if not status:
+            self.log.info(".. but it was turned off.  Dropping.")
             return
 
-        # ... else
+        anitya = hotness.anitya.Anitya(self.anitya_url)
+        results = anitya.search(name, homepage)
+        total = results['total']
 
-        self.log.info("Saw 0 matching projects on anitya.  Attempting to add.")
-        anitya.login(self.anitya_username, self.anitya_password)
-        success = anitya.add_new_project(name, homepage)
-        self.publish("project.map", msg=dict(
-            trigger=msg, success=success))
+        if total > 1:
+            self.log.info("%i projects with %r %r already exist in anitya." % (
+                total, name, homepage))
+            return
+        elif total == 1:
+            # The project might exist in anitya, but it might not be mapped to
+            # a Fedora package yet, so map it if necessary.
+            project = results['projects'][0]
+
+            anitya.login(self.anitya_username, self.anitya_password)
+
+            reason = None
+            try:
+                anitya.map_new_package(name, project)
+            except hotness.anitya.AnityaException as e:
+                reason = str(e)
+
+            self.publish("project.map", msg=dict(
+                trigger=msg,
+                project=project,
+                success=not bool(reason),
+                reason=reason))
+
+            # After mapping, force a check for new tarballs
+            anitya.force_check(project)
+        else:
+            # OTHERWISE, there is *nothing* on anitya about it, so add one.
+            self.log.info("Saw 0 matching projects on anitya.  Adding.")
+            anitya.login(self.anitya_username, self.anitya_password)
+
+            reason = None
+            try:
+                anitya.add_new_project(name, homepage)
+            except hotness.anitya.AnityaException as e:
+                reason = str(e)
+
+            self.publish("project.map", msg=dict(
+                trigger=msg,
+                success=not bool(reason),
+                reason=reason))
 
     def is_monitored(self, package):
         """ Returns True if a package is marked as 'monitored' in pkgdb2. """
