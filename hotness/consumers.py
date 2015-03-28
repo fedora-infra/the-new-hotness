@@ -146,13 +146,21 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         mappings = dict([
             (p['distro'], p['package_name']) for p in inner['packages']
         ])
-        if self.distro not in mappings:
+        if not self.distro in [p['distro'] for p in inner['packages']]:
             self.log.info("No %r mapping for %r.  Dropping." % (
                 self.distro, msg['msg']['project']['name']))
             self.publish("update.drop", msg=dict(trigger=msg, reason="anitya"))
             return
 
-        package = mappings['Fedora']
+        # Sometimes, an upstream is mapped to multiple fedora packages
+        # File a bug on each one...
+        # https://github.com/fedora-infra/the-new-hotness/issues/33
+        for package in inner['packages']:
+            if package['distro'] == self.distro:
+                self._handle_anitya(msg, package['package_name'])
+
+    def _handle_anitya(self, msg, package):
+        inner = msg['msg'].get('message', msg['msg'])
         url = msg['msg']['project']['homepage']
 
         # Is it something that we're being asked not to act on:
