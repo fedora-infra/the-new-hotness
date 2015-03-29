@@ -1,6 +1,35 @@
 Changelog
 =========
 
+0.4.0
+-----
+
+- Specbump. `b498c637e <https://github.com/fedora-infra/the-new-hotness/commit/b498c637e7f07fd4d19576fd4730d235117c5ab2>`_
+- Suppress some errors from rpmbuild and friends. `b0b7c0c1c <https://github.com/fedora-infra/the-new-hotness/commit/b0b7c0c1c88edda93850c6da16837360f72003e8>`_
+- Merge pull request #25 from fedora-infra/feature/suppress-some-errors `a1ba74a63 <https://github.com/fedora-infra/the-new-hotness/commit/a1ba74a63ef49033273288299bcae5533a4c6723>`_
+- Note on the default message posted on bugzilla about packaging and legal changes `ba4ef2220 <https://github.com/fedora-infra/the-new-hotness/commit/ba4ef22205bf74419476e28e5570851e64868ea6>`_
+- Strip leading v. `4f10baed7 <https://github.com/fedora-infra/the-new-hotness/commit/4f10baed700eee823ff5c0d971fed0b04674f30f>`_
+- Merge pull request #27 from fedora-infra/legal_be_nice `6a9566302 <https://github.com/fedora-infra/the-new-hotness/commit/6a9566302246c4703e89139471538f3d2199296d>`_
+- Merge pull request #28 from fedora-infra/feature/strip-leading-v `016b0c57e <https://github.com/fedora-infra/the-new-hotness/commit/016b0c57ed4e5d2f7b3c8861a33aa61d68b31b23>`_
+- This should actually be cached. `c9853a41c <https://github.com/fedora-infra/the-new-hotness/commit/c9853a41c999e89c74a8d8cbe164715fc5eb9db2>`_
+- Merge pull request #30 from fedora-infra/feature/typofix-revert `9913cbea8 <https://github.com/fedora-infra/the-new-hotness/commit/9913cbea816902d328a3ce381916bb2fa51b5cd5>`_
+- Try to fix README rendering. `0d7f6ef85 <https://github.com/fedora-infra/the-new-hotness/commit/0d7f6ef8544378a02df6d60a060aa821cd4c5165>`_
+- Further fix. `9a213a4c6 <https://github.com/fedora-infra/the-new-hotness/commit/9a213a4c6a5e4e71016c1fa408b4cbc52c671858>`_
+- Propagate srpm-creation and koji-kickoff errors to the ticket. `41d187509 <https://github.com/fedora-infra/the-new-hotness/commit/41d187509c43d39f7c9abed7df5d350790ea72e3>`_
+- Create and attach patches to bz tickets we file. `daea3b076 <https://github.com/fedora-infra/the-new-hotness/commit/daea3b076b3c483c56c5a3eff7701984a8d349a2>`_
+- Use os.path.join. `f058e4800 <https://github.com/fedora-infra/the-new-hotness/commit/f058e48001c051f2b186c689d8888452b10b15f3>`_
+- Merge pull request #36 from fedora-infra/feature/patch-creation `f8b314a42 <https://github.com/fedora-infra/the-new-hotness/commit/f8b314a426fed660cf88e2899a17df390871b845>`_
+- Compare sum of new and old tarball. `ed32e48b4 <https://github.com/fedora-infra/the-new-hotness/commit/ed32e48b46c9ef9cbd9295728081f649e01edcd2>`_
+- Merge pull request #37 from fedora-infra/feature/not-april-1st `6d9b71279 <https://github.com/fedora-infra/the-new-hotness/commit/6d9b712792beabd0ea9855f5bdb0142867fd01c2>`_
+- Listen for pkgdb monitoring toggle events. `df8fddd16 <https://github.com/fedora-infra/the-new-hotness/commit/df8fddd16c134bd095dd15b941c274b7382408c2>`_
+- Use exceptions to propagate error messages to fedmsg `34dbb2e77 <https://github.com/fedora-infra/the-new-hotness/commit/34dbb2e77c15c3c0d448abc7cdbc57ecff0b810e>`_
+- Convert those ValueErrors to AnityaExceptions which just make more sense. `4a4bd1624 <https://github.com/fedora-infra/the-new-hotness/commit/4a4bd162441f38138f38c9bbb45a7368de5da04f>`_
+- Merge pull request #38 from fedora-infra/feature/pkgdb-monitor-toggle `02b72faa5 <https://github.com/fedora-infra/the-new-hotness/commit/02b72faa55afc1afe1456a5aa33376ac7a3e24c3>`_
+- Handle multiply mapped anitya projects. `a9eba188b <https://github.com/fedora-infra/the-new-hotness/commit/a9eba188b38481dff1517c2808e65d7599cb9e6b>`_
+- Demote this error message. `3630273bd <https://github.com/fedora-infra/the-new-hotness/commit/3630273bd8a953941dc9852adf7e8086312330c1>`_
+- Handle newly-mapped packages from anitya. `4cef2de3d <https://github.com/fedora-infra/the-new-hotness/commit/4cef2de3d31f49d63974df2e86cc5bf043cc000e>`_
+- Merge pull request #39 from fedora-infra/feature/multiply-mapped `dc5342307 <https://github.com/fedora-infra/the-new-hotness/commit/dc534230715e2aa24c150333b65c766f7166c567>`_
+
 0.3.3
 -----
 

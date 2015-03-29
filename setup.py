@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='the-new-hotness',
-    version='0.3.3',
+    version='0.4.0',
     description='Consume anitya fedmsg messages to file bugzilla bugs',
     license='LGPLv2+',
     author='Ralph Bean',
