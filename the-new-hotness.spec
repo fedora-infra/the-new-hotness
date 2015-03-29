@@ -9,7 +9,7 @@
 %global modname the-new-hotness
 
 Name:               the-new-hotness
-Version:            0.3.3
+Version:            0.4.0
 Release:            1%{?dist}
 Summary:            Consume anitya fedmsg messages to file bugzilla bugs
 
@@ -55,6 +55,13 @@ rm -rf %{modname}.egg-info
 %{python2_sitelib}/the_new_hotness-%{version}*
 
 %changelog
+* Sat Mar 28 2015 Ralph Bean <rbean@redhat.com> - 0.4.0-1
+- Map in anitya when monitoring flag is toggled.
+- File bugs when newly mapped in anitya.
+- Send patches to bugzilla.
+- Comment on the bug when we failed to kick off a scratch build.
+- Publish fedmsg messages about errors instead of emailing hapless admins.
+
 * Tue Feb 24 2015 Ralph Bean <rbean@redhat.com> - 0.3.3-1
 - Improved changelog format.
 - Provide correct information when mapping new github backends.
