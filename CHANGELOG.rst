@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.4.1
+-----
+
+- Specbump. `fdb2eebea <https://github.com/fedora-infra/the-new-hotness/commit/fdb2eebeab32a8fdd7615adfed8cadd4dace0c7b>`_
+- fix GitHub capitalization `812397ca1 <https://github.com/fedora-infra/the-new-hotness/commit/812397ca189fdb91ed5392dbf6c3ebf8e2be91da>`_
+- Merge pull request #41 from fedora-infra/feature/github-name `66ece5a1c <https://github.com/fedora-infra/the-new-hotness/commit/66ece5a1c33b5f0ea2b930e33deeb17237dc78f5>`_
+
 0.4.0
 -----
 
