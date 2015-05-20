@@ -186,7 +186,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         url = msg['msg']['project']['homepage']
 
         # Is it something that we're being asked not to act on?
-        if not self.is_monitored(package):
+        is_monitored = self.is_monitored(package)
+        if not is_monitored:
             self.log.info("Pkgdb says not to monitor %r.  Dropping." % package)
             self.publish("update.drop", msg=dict(trigger=msg, reason="pkgdb"))
             return
@@ -212,6 +213,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
             self.publish("update.bug.file", msg=dict(
                 trigger=msg, bug=dict(bug_id=bz.bug_id)))
+
+            if is_monitored == 'nobuild':
+                self.log.info("Monitor flag set to 'nobuild'.  "
+                              "Skipping scratch build.")
+                return
 
             self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
             try:
@@ -284,8 +290,13 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         version = msg['msg']['version']
         release = msg['msg']['release']
 
-        if not self.is_monitored(package):
+        is_monitored = self.is_monitored(package)
+        if not is_monitored:
             self.log.debug('%r not monitored, dropping koji build' % package)
+            return
+
+        if is_monitored == 'nobuild':
+            self.log.debug('%r set to "nobuild", dropping build' % package)
             return
 
         self.log.info("Handling koji build msg %r" % msg.get('msg_id', None))
