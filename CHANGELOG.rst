@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.5.0
+-----
+
+- Specbump. `1346ea086 <https://github.com/fedora-infra/the-new-hotness/commit/1346ea086350bc087d05a5a3f1687e4ba40e8ee4>`_
+- Use the new is_monitored "nobuild" flag. `441f78430 <https://github.com/fedora-infra/the-new-hotness/commit/441f78430e092590113cb104d56b7e5c90127bab>`_
+- Merge pull request #45 from fedora-infra/feature/nobuild `792078d71 <https://github.com/fedora-infra/the-new-hotness/commit/792078d719253609a0bf7f68f88322b2634bf5b6>`_
+
 0.4.1
 -----
 
