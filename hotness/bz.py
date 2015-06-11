@@ -122,7 +122,8 @@ class Bugzilla(object):
 
     def attach_patch(self, filename, description, bug):
         self.log.debug("Attaching patch to bug %r" % bug.bug_id)
-        self.bugzilla.attachfile(bug.bug_id, filename, description)
+        self.bugzilla.attachfile(bug.bug_id, filename, description,
+                is_patch=True)
         self.log.info("Attached patch to bug: %s" % bug.weburl)
 
     def exact_bug(self, **package):
