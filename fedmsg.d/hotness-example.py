@@ -63,6 +63,7 @@ config = {
 
     'hotness.anitya': {
         'url': 'https://release-monitoring.org',
+        'anitya:': 'https://release-monitoring.org/project/XXXX/'
         #'username': '....',
         #'password': '....',
     },
