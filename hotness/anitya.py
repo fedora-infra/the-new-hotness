@@ -128,7 +128,7 @@ class Anitya(object):
 
     @property
     def is_logged_in(self):
-        response = self.session.get(self.url + '/login/fedora')
+        response = self.session.get(self.url)
         return "logout" in response.text
 
     def login(self, username=None, password=None, openid_insecure=False,
