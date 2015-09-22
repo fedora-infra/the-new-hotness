@@ -339,6 +339,16 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         name = listing['package']['name']
         homepage = listing['package']['upstream_url']
+
+        if not homepage:
+            # If there is not homepage set at the outset in pkgdb, there's
+            # nothing smart we can do with respect to anitya, so.. wait.
+            # pkgdb has a cron script that runs weekly that updates the
+            # upstream url there, so when that happens, we'll be triggered
+            # and can try again.
+            self.log.warn("New package %r has no homepage.  Dropping." % name)
+            return
+
         self.log.info("Considering new package %r with %r" % (name, homepage))
 
         anitya = hotness.anitya.Anitya(self.anitya_url)
