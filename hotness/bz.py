@@ -31,9 +31,10 @@ class Bugzilla(object):
         'emailreporter1': '1',
         'emailtype1': 'exact',
     }
-
-    bug_status_open = ['NEW', 'ASSIGNED', 'MODIFIED', 'ON_DEV', 'ON_QA',
-                       'VERIFIED', 'FAILS_QA', 'RELEASE_PENDING', 'POST']
+    bug_status_early = ['NEW', 'ASSIGNED']
+    bug_status_open = bug_status_early + [
+        'MODIFIED', 'ON_DEV', 'ON_QA', 'VERIFIED', 'FAILS_QA',
+        'RELEASE_PENDING', 'POST']
     bug_status_closed = ['CLOSED']
 
     new_bug = {
@@ -168,9 +169,14 @@ class Bugzilla(object):
 
     def inexact_bug(self, **package):
         """ Return any upstream release ticket for a package. """
+        # We'll match bugs in the NEW or ASSIGNED state
+        # https://github.com/fedora-infra/the-new-hotness/issues/58
+        possible_statuses = list(set(
+            self.bug_status_early + [self.config['bug_status']]
+        ))
         query = {
             'component': [package['name']],
-            'bug_status': [self.config['bug_status']],
+            'bug_status': possible_statuses,
         }
 
         query.update(self.base_query)
