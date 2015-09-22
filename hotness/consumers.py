@@ -313,6 +313,16 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 bug.weburl, bug.status))
             return
 
+        # Don't followup on bugs that we have just recently followed up on.
+        # https://github.com/fedora-infra/the-new-hotness/issues/17
+        latest = bug.comments[-1]    # Check just the latest comment
+        target = 'completed http'    # Our comments have this in it
+        me = self.bugzilla.username  # Our comments are, obviously, by us.
+        if latest['creator'] == me and target in latest['text']:
+            self.log.info("Bug %s has a recent comment from me.  Dropping." % (
+                bug.weburl))
+            return
+
         url = fedmsg.meta.msg2link(msg, **self.hub.config)
         subtitle = fedmsg.meta.msg2subtitle(msg, **self.hub.config)
         text = "%s %s" % (subtitle, url)
