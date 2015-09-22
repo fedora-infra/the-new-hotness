@@ -106,7 +106,8 @@ class Koji(object):
 
             # First, get all patches and other sources from dist-git
             output = self.run(['fedpkg', 'sources'], cwd=tmp)
-            oldfile = output.strip().split()[-1]
+            # fedpkg sources output looks like "Downloading SOURCE\n#######"
+            oldfile = output.strip().split()[1]
             self.log.debug("fedpkg grabbed %r", oldfile)
 
             # Then go and get the *new* tarball from upstream.
