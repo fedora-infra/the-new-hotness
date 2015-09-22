@@ -300,36 +300,42 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             return
 
         self.log.info("Handling koji build msg %r" % msg.get('msg_id', None))
-        bug = self.bugzilla.exact_bug(name=package, upstream=version)
-        if not bug:
-            self.log.info("No bug found for %s-%s.%s, dropping message." % (
+        bugs = [
+            self.bugzilla.exact_bug(name=package, upstream=version),
+            self.bugzilla.ftbfs_bug(name=package),
+        ]
+        # Filter out None values
+        bugs = [bug for bug in bugs if bug]
+
+        if not bugs:
+            self.log.info("No bugs found for %s-%s.%s." % (
                 package, version, release))
-            return
-
-        # Don't followup on bugs that are already closed... otherwise we would
-        # followup for ALL ETERNITY.
-        if bug.status in self.bugzilla.bug_status_closed:
-            self.log.info("Bug %s is %s.  Dropping message." % (
-                bug.weburl, bug.status))
-            return
-
-        # Don't followup on bugs that we have just recently followed up on.
-        # https://github.com/fedora-infra/the-new-hotness/issues/17
-        latest = bug.comments[-1]    # Check just the latest comment
-        target = 'completed http'    # Our comments have this in it
-        me = self.bugzilla.username  # Our comments are, obviously, by us.
-        if latest['creator'] == me and target in latest['text']:
-            self.log.info("Bug %s has a recent comment from me.  Dropping." % (
-                bug.weburl))
             return
 
         url = fedmsg.meta.msg2link(msg, **self.hub.config)
         subtitle = fedmsg.meta.msg2subtitle(msg, **self.hub.config)
         text = "%s %s" % (subtitle, url)
 
-        self.bugzilla.follow_up(text, bug)
-        self.publish("update.bug.followup", msg=dict(
-            trigger=msg, bug=dict(bug_id=bug.bug_id)))
+        for bug in bugs:
+            # Don't followup on bugs that we have just recently followed up on.
+            # https://github.com/fedora-infra/the-new-hotness/issues/17
+            latest = bug.comments[-1]    # Check just the latest comment
+            target = 'completed http'    # Our comments have this in it
+            me = self.bugzilla.username  # Our comments are, obviously, by us.
+            if latest['creator'] == me and target in latest['text']:
+                self.log.info("%s has a recent comment from me." % bug.weburl)
+                continue
+
+            # Don't followup on bugs that are already closed... otherwise we
+            # would followup for ALL ETERNITY.
+            if bug.status in self.bugzilla.bug_status_closed:
+                self.log.info("Bug %s is %s.  Dropping." % (
+                    bug.weburl, bug.status))
+                continue
+
+            self.bugzilla.follow_up(text, bug)
+            self.publish("update.bug.followup", msg=dict(
+                trigger=msg, bug=dict(bug_id=bug.bug_id)))
 
     def handle_new_package(self, msg):
         listing = msg['msg']['package_listing']
