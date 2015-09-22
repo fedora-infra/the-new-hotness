@@ -59,6 +59,10 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # we can.
         'org.fedoraproject.prod.pkgdb.package.new',
 
+        # We also look for when packages get their upstream_url changed in
+        # Fedora and try to perform anitya modifications in response.
+        'org.fedoraproject.prod.pkgdb.package.update',
+
         # Lastly, look for packages that get their monitoring flag switched on
         # and off.  We'll use that as another opportunity to map stuff in
         # anitya.
@@ -132,7 +136,13 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         elif topic.endswith('buildsys.build.state.change'):
             self.handle_buildsys_real(msg)
         elif topic.endswith('pkgdb.package.new'):
-            self.handle_new_package(msg)
+            listing = msg['msg']['package_listing']
+            if listing['collection']['branchname'] != 'master':
+                self.log.debug("Ignoring non-rawhide new package...")
+                return
+            self.handle_new_package(msg, listing['package'])
+        elif topic.endswith('pkgdb.package.update'):
+            self.handle_updated_package(msg)
         elif topic.endswith('pkgdb.package.monitor.update'):
             self.handle_monitor_toggle(msg)
         else:
@@ -331,14 +341,9 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.publish("update.bug.followup", msg=dict(
             trigger=msg, bug=dict(bug_id=bug.bug_id)))
 
-    def handle_new_package(self, msg):
-        listing = msg['msg']['package_listing']
-        if listing['collection']['branchname'] != 'master':
-            self.log.debug("Ignoring non-rawhide new package...")
-            return
-
-        name = listing['package']['name']
-        homepage = listing['package']['upstream_url']
+    def handle_new_package(self, msg, package):
+        name = package['name']
+        homepage = package['upstream_url']
 
         if not homepage:
             # If there is not homepage set at the outset in pkgdb, there's
@@ -352,7 +357,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.log.info("Considering new package %r with %r" % (name, homepage))
 
         anitya = hotness.anitya.Anitya(self.anitya_url)
-        results = anitya.search(name, homepage)
+        results = anitya.search_by_homepage(name, homepage)
 
         projects = results['projects']
         total = results['total']
@@ -390,6 +395,48 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 trigger=msg,
                 success=not bool(reason),
                 reason=reason))
+
+    def handle_updated_package(self, msg):
+        self.log.info("Handling pkgdb update msg %r" % msg.get('msg_id'))
+
+        fields = msg['msg']['fields']
+        if not 'upstream_url' in fields:
+            self.log.info("Ignoring package edit with no url change.")
+            return
+
+        package = msg['msg']['package']
+        name = package['name']
+        homepage = package['upstream_url']
+
+        self.log.info("Trying url change on %s: %s" % (name, homepage))
+
+        # There are two possible scenarios here.
+        # 1) the package already *is mapped* in anitya, in which case we can
+        #    update the old url there
+        # 2) the package is not mapped there, in which case we handle this like
+        #    a new package (and try to create it and map it)
+
+        anitya = hotness.anitya.Anitya(self.anitya_url)
+        results = anitya.search_by_package(name)
+        projects = results['projects']
+
+        self.log.info("Found %i with name %s" % (len(projects), name))
+
+        if projects:
+            # Our package could be mapped to multiple projects.
+            anitya.login(self.anitya_username, self.anitya_password)
+            for project in projects:
+                if project['homepage'] == homepage:
+                    self.log.info("No need to update anitya for %s.  Homepages"
+                                  " are already in sync." % project['name'])
+                    continue
+
+                self.log.info("Updating anitya url on %s" % project['name'])
+                anitya.update_url(project, homepage)
+                anitya.force_check(project)
+        else:
+            # Just pretend like it's a new package, since its not in anitya.
+            self.handle_new_package(msg, package)
 
     def handle_monitor_toggle(self, msg):
         status = msg['msg']['status']
