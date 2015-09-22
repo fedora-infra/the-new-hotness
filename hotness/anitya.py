@@ -69,7 +69,7 @@ class AnityaAuthException(AnityaException, AuthError):
 
 
 def _parse_service_form(response):
-    parsed = bs4.BeautifulSoup(response.text)
+    parsed = bs4.BeautifulSoup(response.text, "lxml")
     inputs = {}
     for child in parsed.form.find_all(name='input'):
         if child.attrs['type'] == 'submit':
@@ -239,7 +239,7 @@ class Anitya(object):
             raise AnityaException("Couldn't get form to get "
                                   "csrf token %r" % code)
 
-        soup = bs4.BeautifulSoup(response.text)
+        soup = bs4.BeautifulSoup(response.text, "lxml")
         data = dict(
             distro='Fedora',
             package_name=name,
@@ -254,10 +254,12 @@ class Anitya(object):
                                   'mapping package: %r.  Sent %r' % (
                                       response.status_code, data))
         elif 'Could not' in response.text:
-            soup = bs4.BeautifulSoup(response.text)
-            tag = soup.find_all(attrs={'class': 'error'})[0]
+            soup = bs4.BeautifulSoup(response.text, "lxml")
+            # This is the css class on the error flash messages from anitya
+            tag = soup.find_all(attrs={'class': 'list-group-item-danger'})[0]
             err = ' '.join(tag.stripped_strings)
             raise AnityaException(err)
+
 
         log.info('Successfully mapped %r in anitya' % name)
 
@@ -306,11 +308,10 @@ class Anitya(object):
             raise AnityaException("Couldn't get form to get csrf "
                                   "token %r" % code)
 
-        soup = bs4.BeautifulSoup(response.text)
+        soup = bs4.BeautifulSoup(response.text, "lxml")
         data['csrf_token'] = soup.form.find(id='csrf_token').attrs['value']
 
         response = self.__send_request(url, method='POST', data=data)
-
 
         if not response.status_code == 200:
             # Hide this from stuff we republish to the bus
@@ -319,7 +320,7 @@ class Anitya(object):
                                   'adding project: %r.  Sent %r' % (
                                       response.status_code, data))
         elif 'Could not' in response.text:
-            soup = bs4.BeautifulSoup(response.text)
+            soup = bs4.BeautifulSoup(response.text, "lxml")
             tag = soup.find_all(attrs={'class': 'error'})[0]
             err = ' '.join(tag.stripped_strings)
             raise AnityaException(err)
