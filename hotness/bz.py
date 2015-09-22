@@ -131,7 +131,7 @@ class Bugzilla(object):
         short_desc_pattern = '%s: FTBFS in rawhide' % name
         query = {
             'component': name,
-            'bug_status': self.bug_status_open + self.bug_status_closed,
+            'bug_status': self.bug_status_open,
             'short_desc': short_desc_pattern,
             'short_desc_type': 'substring',
             'product': self.config['product'],
