@@ -127,7 +127,7 @@ class Bugzilla(object):
         self.log.info("Attached patch to bug: %s" % bug.weburl)
 
     def ftbfs_bug(self, name):
-        """ Return the first FTBFS bug we find for a package """
+        """ Return all FTBFS bugs we find for a package """
         short_desc_pattern = '%s: FTBFS in rawhide' % name
         query = {
             'component': name,
@@ -144,7 +144,7 @@ class Bugzilla(object):
             # currently not recognized by bugzilla. Therefore this test is
             # required:
             if bug.short_desc.startswith(short_desc_pattern):
-                return bug
+                yield bug
 
     def exact_bug(self, **package):
         """ Return a particular upstream release ticket for a package. """

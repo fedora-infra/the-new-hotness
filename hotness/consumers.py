@@ -300,9 +300,10 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             return
 
         self.log.info("Handling koji build msg %r" % msg.get('msg_id', None))
-        bugs = [
+
+        # Search for all FTBFS bugs and any upstream bugs we filed earlier.
+        bugs = list(self.bugzilla.ftbfs_bug(name=package)) + [
             self.bugzilla.exact_bug(name=package, upstream=version),
-            self.bugzilla.ftbfs_bug(name=package),
         ]
         # Filter out None values
         bugs = [bug for bug in bugs if bug]
