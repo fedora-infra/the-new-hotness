@@ -241,7 +241,7 @@ class Anitya(object):
         if not response.status_code == 200:
             del data['csrf_token']
             raise AnityaException('Bad status code from anitya when '
-                                  'adding project: %r.  Sent %r' % (
+                                  'updating project: %r.  Sent %r' % (
                                       response.status_code, data))
         elif 'Could not' in response.text:
             soup = bs4.BeautifulSoup(response.text, "lxml")
