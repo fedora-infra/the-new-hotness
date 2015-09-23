@@ -214,11 +214,15 @@ class Anitya(object):
         response = self.__send_request(url, method='GET')
         return response.json()
 
-    def search_by_package(self, name):
-        url = '{0}/api/projects/?pattern={1}'.format(self.url, name)
+    def get_project_by_package(self, name):
+        url = '{0}/api/project/Fedora/{1}'.format(self.url, name)
         log.info("Looking for %r via %r" % (name, url))
         response = self.__send_request(url, method='GET')
-        return response.json()
+        if not response.status_code == 200:
+            log.warn('No existing anitya project found mapped to %r' % name)
+            return None
+        else:
+            return response.json()
 
     def update_url(self, project, homepage):
         if not self.is_logged_in:

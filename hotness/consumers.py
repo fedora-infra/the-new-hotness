@@ -417,23 +417,19 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         #    a new package (and try to create it and map it)
 
         anitya = hotness.anitya.Anitya(self.anitya_url)
-        results = anitya.search_by_package(name)
-        projects = results['projects']
+        project = anitya.get_project_by_package(name)
 
-        self.log.info("Found %i with name %s" % (len(projects), name))
-
-        if projects:
-            # Our package could be mapped to multiple projects.
+        if project:
+            self.log.info("Found project with name %s" % project['name'])
             anitya.login(self.anitya_username, self.anitya_password)
-            for project in projects:
-                if project['homepage'] == homepage:
-                    self.log.info("No need to update anitya for %s.  Homepages"
-                                  " are already in sync." % project['name'])
-                    continue
+            if project['homepage'] == homepage:
+                self.log.info("No need to update anitya for %s.  Homepages"
+                                " are already in sync." % project['name'])
+                continue
 
-                self.log.info("Updating anitya url on %s" % project['name'])
-                anitya.update_url(project, homepage)
-                anitya.force_check(project)
+            self.log.info("Updating anitya url on %s" % project['name'])
+            anitya.update_url(project, homepage)
+            anitya.force_check(project)
         else:
             # Just pretend like it's a new package, since its not in anitya.
             self.handle_new_package(msg, package)
