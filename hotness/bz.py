@@ -126,7 +126,28 @@ class Bugzilla(object):
                 is_patch=True)
         self.log.info("Attached patch to bug: %s" % bug.weburl)
 
+    def ftbfs_bug(self, name):
+        """ Return all FTBFS bugs we find for a package """
+        short_desc_pattern = '%s: FTBFS in rawhide' % name
+        query = {
+            'component': name,
+            'bug_status': self.bug_status_open,
+            'short_desc': short_desc_pattern,
+            'short_desc_type': 'substring',
+            'product': self.config['product'],
+            'query_format': 'advanced',
+        }
+        bugs = self.bugzilla.query(query)
+        bugs = bugs or []
+        for bug in bugs:
+            # The short_desc_pattern contains a space at the end, which is
+            # currently not recognized by bugzilla. Therefore this test is
+            # required:
+            if bug.short_desc.startswith(short_desc_pattern):
+                yield bug
+
     def exact_bug(self, **package):
+        """ Return a particular upstream release ticket for a package. """
         short_desc_pattern = '%(name)s-%(upstream)s ' % package
         query = {
             'component': package['name'],
@@ -146,6 +167,7 @@ class Bugzilla(object):
                 return bug
 
     def inexact_bug(self, **package):
+        """ Return any upstream release ticket for a package. """
         query = {
             'component': [package['name']],
             'bug_status': [self.config['bug_status']],
