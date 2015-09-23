@@ -249,8 +249,11 @@ class Anitya(object):
                                       response.status_code, data))
         elif 'Could not' in response.text:
             soup = bs4.BeautifulSoup(response.text, "lxml")
-            tag = soup.find_all(attrs={'class': 'error'})[0]
-            err = ' '.join(tag.stripped_strings)
+            err = 'Unknown error updating project in anitya'
+            # This is the css class on the error flash messages from anitya
+            tags = soup.find_all(attrs={'class': 'list-group-item-danger'})
+            if tags:
+                err = ' '.join(tags[0].stripped_strings)
             raise AnityaException(err)
 
         log.info('Successfully updated anitya url for %r' % data['name'])
@@ -297,9 +300,11 @@ class Anitya(object):
                                       response.status_code, data))
         elif 'Could not' in response.text:
             soup = bs4.BeautifulSoup(response.text, "lxml")
+            err = 'Unknown error mapping package in anitya'
             # This is the css class on the error flash messages from anitya
-            tag = soup.find_all(attrs={'class': 'list-group-item-danger'})[0]
-            err = ' '.join(tag.stripped_strings)
+            tags = soup.find_all(attrs={'class': 'list-group-item-danger'})
+            if tags:
+                err = ' '.join(tags[0].stripped_strings)
             raise AnityaException(err)
 
         log.info('Successfully mapped %r in anitya' % name)
@@ -362,8 +367,11 @@ class Anitya(object):
                                       response.status_code, data))
         elif 'Could not' in response.text:
             soup = bs4.BeautifulSoup(response.text, "lxml")
-            tag = soup.find_all(attrs={'class': 'error'})[0]
-            err = ' '.join(tag.stripped_strings)
+            err = 'Unknown error adding project to anitya'
+            # This is the css class on the error flash messages from anitya
+            tags = soup.find_all(attrs={'class': 'list-group-item-danger'})
+            if tags:
+                err = ' '.join(tags[0].stripped_strings)
             raise AnityaException(err)
 
         log.info('Successfully added %r to anitya' % data['name'])
