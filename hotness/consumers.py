@@ -432,7 +432,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             if project['homepage'] == homepage:
                 self.log.info("No need to update anitya for %s.  Homepages"
                                 " are already in sync." % project['name'])
-                continue
+                return
 
             self.log.info("Updating anitya url on %s" % project['name'])
             anitya.update_url(project, homepage)
