@@ -279,7 +279,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
     def handle_buildsys_real(self, msg):
         idx = msg['msg']['build_id']
         state = msg['msg']['new']
-        release = msg['msg']['release']
+        release = msg['msg']['release'].split('.')[-1]
         instance = msg['msg']['instance']
 
         if instance != 'primary':
@@ -527,6 +527,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         data = r.json()
         collection = data['collections'][0]
-        tag = collection['dist_tag']
+        tag = collection['dist_tag'][1:]
         self.log.debug("Got rawhide suffix %r" % tag)
         return tag
