@@ -248,33 +248,70 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 self.bugzilla.follow_up(note, bz)
 
     def handle_buildsys_scratch(self, msg):
-        # Is this a scratch build that we triggered a couple minutes ago?
-        task_id = msg['msg']['info']['id']
-        if task_id not in self.triggered_task_ids:
-            self.log.debug("Koji task_id=%r is not ours.  Drop it." % task_id)
+        instance = msg['msg']['instance']
+
+        if instance != 'primary':
+            self.log.debug("Ignoring secondary arch task...")
             return
 
-        self.log.info("Handling koji scratch msg %r" % msg.get('msg_id', None))
+        method = msg['msg']['method']
+
+        if method != 'build':
+            self.log.debug("Ignoring non-build task...")
+            return
+
+        task_id = msg['msg']['info']['id']
+
+        self.log.info("Handling koji scratch msg %r" % msg.get('msg_id'))
 
         # see koji.TASK_STATES for all values
         done_states = {
-            'CLOSED': 'succeeded',
+            'CLOSED': 'completed',
             'FAILED': 'failed',
             'CANCELLED': 'canceled',
         }
         state = msg['msg']['new']
-        self.log.info("Heard word that our task %r is %r." % (task_id, state))
         if state not in done_states:
             return
 
-        bug = self.triggered_task_ids.pop(task_id)
-        url = self.buildsys.url_for(task_id)
+        bugs = []
 
-        text = "Scratch build %s %s" % (done_states.get(state, state), url)
 
-        self.bugzilla.follow_up(text, bug)
-        self.publish("update.bug.followup", msg=dict(
-            trigger=msg, bug=dict(bug_id=bug.bug_id)))
+        url = fedmsg.meta.msg2link(msg, **self.hub.config)
+        subtitle = fedmsg.meta.msg2subtitle(msg, **self.hub.config)
+        text1 = "Scratch build %s %s" % (done_states.get(state, state), url)
+        text2 = "%s %s" % (subtitle, url)
+
+        # Followup on bugs we filed
+        if task_id in self.triggered_task_ids:
+            bugs.append((self.triggered_task_ids.pop(task_id), text1))
+
+        # Also follow up on Package Review requests, but only if the package is
+        # not already in Fedora (it would be a waste of time to query bugzilla
+        # if the review is already approved and scm has been processed).
+        package_name = '-'.join(msg['msg']['srpm'].split('-')[:-2])
+        if not self.in_pkgdb(package_name):
+            for bug in self.bugzilla.review_request_bugs(package_name):
+                bugs.append((bug, text2))
+
+        if not bugs:
+            self.log.debug("No bugs to update for %r" % msg.get('msg_id'))
+            return
+
+        self.log.info("Following up on %i bugs." % len(bugs))
+        for bug, text in bugs:
+            # Don't followup on bugs that we have just recently followed up on.
+            # https://github.com/fedora-infra/the-new-hotness/issues/17
+            latest = bug.comments[-1]    # Check just the latest comment
+            target = 'completed http'    # Our comments have this in it
+            me = self.bugzilla.username  # Our comments are, obviously, by us.
+            if latest['creator'] == me and target in latest['text']:
+                self.log.info("%s has a recent comment from me." % bug.weburl)
+                continue
+
+            self.bugzilla.follow_up(text, bug)
+            self.publish("update.bug.followup", msg=dict(
+                trigger=msg, bug=dict(bug_id=bug.bug_id)))
 
     def handle_buildsys_real(self, msg):
         idx = msg['msg']['build_id']
@@ -515,6 +552,21 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         except:
             self.log.exception("Problem interacting with pkgdb.")
             return False
+
+    @hotness.cache.cache.cache_on_arguments()
+    def in_pkgdb(self, package):
+        """ Returns True if a package is in the Fedora pkgdb. """
+
+        url = '{0}/package/{1}'.format(self.pkgdb_url, package)
+        self.log.debug("Checking %r" % url)
+        r = requests.get(url)
+
+        if r.status_code == 404:
+            return False
+        if r.status_code != 200:
+            self.log.warning('URL %s returned code %s', r.url, r.status_code)
+            return False
+        return True
 
     @hotness.cache.cache.cache_on_arguments()
     def get_dist_tag(self):
