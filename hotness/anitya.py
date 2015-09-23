@@ -1,3 +1,4 @@
+import copy
 import logging
 import os
 import pickle
@@ -69,7 +70,7 @@ class AnityaAuthException(AnityaException, AuthError):
 
 
 def _parse_service_form(response):
-    parsed = bs4.BeautifulSoup(response.text)
+    parsed = bs4.BeautifulSoup(response.text, "lxml")
     inputs = {}
     for child in parsed.form.find_all(name='input'):
         if child.attrs['type'] == 'submit':
@@ -207,11 +208,52 @@ class Anitya(object):
 
         return output
 
-    def search(self, name, homepage):
+    def search_by_homepage(self, name, homepage):
         url = '{0}/api/projects/?homepage={1}'.format(self.url, homepage)
         log.info("Looking for %r via %r" % (name, url))
         response = self.__send_request(url, method='GET')
         return response.json()
+
+    def get_project_by_package(self, name):
+        url = '{0}/api/project/Fedora/{1}'.format(self.url, name)
+        log.info("Looking for %r via %r" % (name, url))
+        response = self.__send_request(url, method='GET')
+        if not response.status_code == 200:
+            log.warn('No existing anitya project found mapped to %r' % name)
+            return None
+        else:
+            return response.json()
+
+    def update_url(self, project, homepage):
+        if not self.is_logged_in:
+            raise AnityaException('Could not add anitya project.  '
+                                  'Not logged in.')
+        idx = project['id']
+        url = self.url + '/project/%i/edit' % idx
+        response = self.__send_request(url, method='GET')
+        if not response.status_code == 200:
+            code = response.status_code
+            raise AnityaException("Couldn't get form to get "
+                                  "csrf token %r" % code)
+        soup = bs4.BeautifulSoup(response.text, "lxml")
+
+        data = copy.copy(project)
+        data['homepage'] = homepage
+        data['csrf_token'] = soup.form.find(id='csrf_token').attrs['value']
+        response = self.__send_request(url, method='POST', data=data)
+
+        if not response.status_code == 200:
+            del data['csrf_token']
+            raise AnityaException('Bad status code from anitya when '
+                                  'updating project: %r.  Sent %r' % (
+                                      response.status_code, data))
+        elif 'Could not' in response.text:
+            soup = bs4.BeautifulSoup(response.text, "lxml")
+            tag = soup.find_all(attrs={'class': 'error'})[0]
+            err = ' '.join(tag.stripped_strings)
+            raise AnityaException(err)
+
+        log.info('Successfully updated anitya url for %r' % data['name'])
 
     def force_check(self, project):
         """ Force anitya to check for a new upstream release. """
@@ -239,7 +281,7 @@ class Anitya(object):
             raise AnityaException("Couldn't get form to get "
                                   "csrf token %r" % code)
 
-        soup = bs4.BeautifulSoup(response.text)
+        soup = bs4.BeautifulSoup(response.text, "lxml")
         data = dict(
             distro='Fedora',
             package_name=name,
@@ -254,8 +296,9 @@ class Anitya(object):
                                   'mapping package: %r.  Sent %r' % (
                                       response.status_code, data))
         elif 'Could not' in response.text:
-            soup = bs4.BeautifulSoup(response.text)
-            tag = soup.find_all(attrs={'class': 'error'})[0]
+            soup = bs4.BeautifulSoup(response.text, "lxml")
+            # This is the css class on the error flash messages from anitya
+            tag = soup.find_all(attrs={'class': 'list-group-item-danger'})[0]
             err = ' '.join(tag.stripped_strings)
             raise AnityaException(err)
 
@@ -306,11 +349,10 @@ class Anitya(object):
             raise AnityaException("Couldn't get form to get csrf "
                                   "token %r" % code)
 
-        soup = bs4.BeautifulSoup(response.text)
+        soup = bs4.BeautifulSoup(response.text, "lxml")
         data['csrf_token'] = soup.form.find(id='csrf_token').attrs['value']
 
         response = self.__send_request(url, method='POST', data=data)
-
 
         if not response.status_code == 200:
             # Hide this from stuff we republish to the bus
@@ -319,7 +361,7 @@ class Anitya(object):
                                   'adding project: %r.  Sent %r' % (
                                       response.status_code, data))
         elif 'Could not' in response.text:
-            soup = bs4.BeautifulSoup(response.text)
+            soup = bs4.BeautifulSoup(response.text, "lxml")
             tag = soup.find_all(attrs={'class': 'error'})[0]
             err = ' '.join(tag.stripped_strings)
             raise AnityaException(err)
