@@ -298,7 +298,6 @@ class Anitya(object):
             err = ' '.join(tag.stripped_strings)
             raise AnityaException(err)
 
-
         log.info('Successfully mapped %r in anitya' % name)
 
     def add_new_project(self, name, homepage):
