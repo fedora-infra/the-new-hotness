@@ -127,7 +127,7 @@ class Bugzilla(object):
                 is_patch=True)
         self.log.info("Attached patch to bug: %s" % bug.weburl)
 
-    def ftbfs_bug(self, name):
+    def ftbfs_bugs(self, name):
         """ Return all FTBFS bugs we find for a package """
         short_desc_pattern = '%s: FTBFS in rawhide' % name
         query = {
