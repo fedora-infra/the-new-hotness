@@ -1,4 +1,85 @@
 
+0.6.0
+-----
+
+Pull Requests
+
+- (@danc86)         #47, mark patches as such when attaching them in Bugzilla
+  https://github.com/fedora-infra/the-new-hotness/pull/47
+- (@puiterwijk)     #57, Use the root url to check for logged in state
+  https://github.com/fedora-infra/the-new-hotness/pull/57
+- (@ralphbean)      #61, Report successful rawhide builds (mostly) once.
+  https://github.com/fedora-infra/the-new-hotness/pull/61
+- (@ralphbean)      #62, Try twice to find the rawhide version of packages.
+  https://github.com/fedora-infra/the-new-hotness/pull/62
+- (@ralphbean)      #63, Fix fedpkg sources parsing.
+  https://github.com/fedora-infra/the-new-hotness/pull/63
+- (@ralphbean)      #64, Follow up on FTBFS bugs.
+  https://github.com/fedora-infra/the-new-hotness/pull/64
+- (@ralphbean)      #67, Match bugs also in the ASSIGNED state.
+  https://github.com/fedora-infra/the-new-hotness/pull/67
+- (@ralphbean)      #66, Handle pkgdb.package.update messages.
+  https://github.com/fedora-infra/the-new-hotness/pull/66
+- (@ralphbean)      #68, Be extra careful with anitya error panels.
+  https://github.com/fedora-infra/the-new-hotness/pull/68
+- (@ralphbean)      #69, Mention scratch build results in review request tickets.
+  https://github.com/fedora-infra/the-new-hotness/pull/69
+
+Commits
+
+- 3fef00949 Specbump.
+  https://github.com/fedora-infra/the-new-hotness/commit/3fef00949
+- e2a682eeb mark patches as such when attaching them in Bugzilla
+  https://github.com/fedora-infra/the-new-hotness/commit/e2a682eeb
+- 7cf5ebbe6 Use the root url to check for logged in state
+  https://github.com/fedora-infra/the-new-hotness/commit/7cf5ebbe6
+- 8ad4b1863 Report successful rawhide builds (mostly) once.
+  https://github.com/fedora-infra/the-new-hotness/commit/8ad4b1863
+- b24ada416 Save bz username so it can be referenced.
+  https://github.com/fedora-infra/the-new-hotness/commit/b24ada416
+- cc4b7f4f0 Try twice to find the rawhide version of packages.
+  https://github.com/fedora-infra/the-new-hotness/commit/cc4b7f4f0
+- 1e8fac332 Fix fedpkg sources parsing.
+  https://github.com/fedora-infra/the-new-hotness/commit/1e8fac332
+- 4db986c9e Add a method to query for FTBFS bugs.
+  https://github.com/fedora-infra/the-new-hotness/commit/4db986c9e
+- dc2aa7744 Follow up on FTBFS bugs.
+  https://github.com/fedora-infra/the-new-hotness/commit/dc2aa7744
+- d6589d7c3 If pkgdb hands us no upstream_url, then bail out.
+  https://github.com/fedora-infra/the-new-hotness/commit/d6589d7c3
+- 80f4042b2 Silence some BeautifulSoup warnings.
+  https://github.com/fedora-infra/the-new-hotness/commit/80f4042b2
+- a9c8ffd42 Handle pkgdb.package.update messages.
+  https://github.com/fedora-infra/the-new-hotness/commit/a9c8ffd42
+- 4648ed3ca Only return open FTBFS bugs.
+  https://github.com/fedora-infra/the-new-hotness/commit/4648ed3ca
+- a64d7d338 Operate on all open FTBFS bugs we find, not just the first one.
+  https://github.com/fedora-infra/the-new-hotness/commit/a64d7d338
+- 700925fa3 Match bugs also in the ASSIGNED state.
+  https://github.com/fedora-infra/the-new-hotness/commit/700925fa3
+- db929f815 pep8
+  https://github.com/fedora-infra/the-new-hotness/commit/db929f815
+- 493dba976 Update error text.
+  https://github.com/fedora-infra/the-new-hotness/commit/493dba976
+- 56ea7ae6a Use different anitya API endpoint to query for packages by project.
+  https://github.com/fedora-infra/the-new-hotness/commit/56ea7ae6a
+- 2249110d6 Add some tests.
+  https://github.com/fedora-infra/the-new-hotness/commit/2249110d6
+- 427f443d4 Be extra careful with anitya error panels.
+  https://github.com/fedora-infra/the-new-hotness/commit/427f443d4
+- 1510b7a10 Fix return statement.
+  https://github.com/fedora-infra/the-new-hotness/commit/1510b7a10
+- 24b51ae61 Merge branch 'develop' of github.com:fedora-infra/the-new-hotness into develop
+  https://github.com/fedora-infra/the-new-hotness/commit/24b51ae61
+- de2bd6c61 Make ftbfs_bugs plural to indicate that it returns a generator.
+  https://github.com/fedora-infra/the-new-hotness/commit/de2bd6c61
+- 51fe83dd6 Change the way we compare dist tags so we compare '.fc24' with '.fc24'.
+  https://github.com/fedora-infra/the-new-hotness/commit/51fe83dd6
+- 65ba74f4b Mention scratch build results in review request tickets.
+  https://github.com/fedora-infra/the-new-hotness/commit/65ba74f4b
+- 62d10b1b2 Remove changelog header.
+  https://github.com/fedora-infra/the-new-hotness/commit/62d10b1b2
+
 0.5.0
 -----
 
