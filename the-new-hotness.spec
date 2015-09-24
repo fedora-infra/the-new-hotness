@@ -9,7 +9,7 @@
 %global modname the-new-hotness
 
 Name:               the-new-hotness
-Version:            0.5.0
+Version:            0.6.0
 Release:            1%{?dist}
 Summary:            Consume anitya fedmsg messages to file bugzilla bugs
 
@@ -48,6 +48,9 @@ rm -rf %{modname}.egg-info
 %install
 %{__python2} setup.py install -O1 --skip-build --root=%{buildroot}
 
+# setuptools installs these, but we don't want them.
+rm -rf %{buildroot}%{python2_sitelib}/tests/
+
 %files
 %doc README.rst
 %license LICENSE
@@ -55,6 +58,9 @@ rm -rf %{modname}.egg-info
 %{python2_sitelib}/the_new_hotness-%{version}*
 
 %changelog
+* Thu Sep 24 2015 Ralph Bean <rbean@redhat.com> - 0.6.0-1
+- new version
+
 * Fri Jun 05 2015 Ralph Bean <rbean@redhat.com> - 0.5.0-1
 - new version
 
