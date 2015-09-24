@@ -290,7 +290,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # not already in Fedora (it would be a waste of time to query bugzilla
         # if the review is already approved and scm has been processed).
         package_name = '-'.join(msg['msg']['srpm'].split('-')[:-2])
-        if not self.in_pkgdb(package_name):
+        if package_name and not self.in_pkgdb(package_name):
             for bug in self.bugzilla.review_request_bugs(package_name):
                 bugs.append((bug, text2))
 
