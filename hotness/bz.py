@@ -147,6 +147,22 @@ class Bugzilla(object):
             if bug.short_desc.startswith(short_desc_pattern):
                 yield bug
 
+    def review_request_bugs(self, name):
+        """ Return the review request bugs for a package. """
+        short_desc_pattern = ' %s ' % name
+        query = {
+            'component': 'Package Review',
+            'bug_status': self.bug_status_open,
+            'short_desc': short_desc_pattern,
+            'short_desc_type': 'substring',
+            'product': self.config['product'],
+            'query_format': 'advanced',
+        }
+        bugs = self.bugzilla.query(query)
+        bugs = bugs or []
+        for bug in bugs:
+            yield bug
+
     def exact_bug(self, **package):
         """ Return a particular upstream release ticket for a package. """
         short_desc_pattern = '%(name)s-%(upstream)s ' % package
