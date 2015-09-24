@@ -490,7 +490,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             return
 
         anitya = hotness.anitya.Anitya(self.anitya_url)
-        results = anitya.search(name, homepage)
+        results = anitya.search_by_homepage(name, homepage)
         total = results['total']
 
         if total > 1:
