@@ -1,4 +1,23 @@
 
+0.6.1
+-----
+
+Just some bugfixes.
+
+Pull Requests
+
+- (@ralphbean)      #70, Rename this to match the function definition.
+  https://github.com/fedora-infra/the-new-hotness/pull/70
+
+Commits
+
+- dfc2923af Specbump.
+  https://github.com/fedora-infra/the-new-hotness/commit/dfc2923af
+- 606d666fb Ensure that we have a package name before chasing down review tickets.
+  https://github.com/fedora-infra/the-new-hotness/commit/606d666fb
+- a2ad60c86 Rename this to match the function definition.
+  https://github.com/fedora-infra/the-new-hotness/commit/a2ad60c86
+
 0.6.0
 -----
 
