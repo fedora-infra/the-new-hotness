@@ -204,7 +204,19 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         # Is it new to us?
         fname = self.yumconfig
-        version, release = hotness.repository.get_version(package, fname)
+        try:
+            version, release = hotness.repository.get_version(package, fname)
+        except KeyError:
+            # At this point, we have tried very hard to find the rawhide
+            # version of the package.  If we didn't find it, that means there
+            # likely hasn't yet been a rawhide build of it.. and there's
+            # nothing reasonable we can do.  Notify the world of our failure
+            # and go back to the event loop.
+            self.log.warn("No rawhide version found for %r" % package)
+            self.publish("update.drop", msg=dict(
+                trigger=msg, reason="rawhide"))
+            return
+
         self.log.info("Comparing upstream %s against repo %s-%s" % (
             upstream, version, release))
         diff = hotness.helpers.cmp_upstream_repo(upstream, (version, release))
