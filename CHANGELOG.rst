@@ -1,4 +1,23 @@
 
+0.6.2
+-----
+
+Some bugfixes.
+
+Pull Requests
+
+- (@ralphbean)      #71, Be a little more aggressive with real build comments.
+  https://github.com/fedora-infra/the-new-hotness/pull/71
+- (@ralphbean)      #75, Don't act on packages that are retired.
+  https://github.com/fedora-infra/the-new-hotness/pull/75
+
+Commits
+
+- 6c41c05cb Be a little more aggressive with real build comments.
+  https://github.com/fedora-infra/the-new-hotness/commit/6c41c05cb
+- 9468c8ee4 Don't act on packages that are retired.
+  https://github.com/fedora-infra/the-new-hotness/commit/9468c8ee4
+
 0.6.1
 -----
 
