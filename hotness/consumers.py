@@ -548,6 +548,13 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         try:
             data = r.json()
             package = data['packages'][0]
+
+            # Even if the package says it is monitored.. if it is retired, then
+            # let's not file any bugs or anything for it.
+            if package['package']['status'] == "Retired":
+                return False
+
+            # Otherwise, if it is not retired, then return the monitor flag.
             return package['package'].get('monitor', True)
         except:
             self.log.exception("Problem interacting with pkgdb.")
