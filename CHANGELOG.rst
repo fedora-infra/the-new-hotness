@@ -1,4 +1,19 @@
 
+0.6.3
+-----
+
+Pull Requests
+
+- (@ralphbean)      #76, Silence this error email.
+  https://github.com/fedora-infra/the-new-hotness/pull/76
+
+Commits
+
+- 8f408e041 Specbump.
+  https://github.com/fedora-infra/the-new-hotness/commit/8f408e041
+- ac2582180 Silence this error email.
+  https://github.com/fedora-infra/the-new-hotness/commit/ac2582180
+
 0.6.2
 -----
 
