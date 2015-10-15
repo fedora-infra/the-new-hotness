@@ -68,7 +68,7 @@ class Bugzilla(object):
         self.short_desc_template = self.config['short_desc_template']
         self.description_template = self.config['description_template']
 
-    def handle(self, package, upstream, version, release, url):
+    def handle(self, projectid, package, upstream, version, release, url):
         """ Main API entry point.  Push updates to bugzilla.
 
         We could be in one of three states:
@@ -79,6 +79,7 @@ class Bugzilla(object):
         """
         kwargs = copy.copy(self.config)
         kwargs.update(dict(
+            projectid=projectid,
             package=package,
             name=package,
             version=version,
