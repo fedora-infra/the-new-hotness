@@ -194,6 +194,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
     def _handle_anitya_update(self, upstream, package, msg):
         url = msg['msg']['project']['homepage']
+        projectid = msg['msg']['project']['id']
 
         # Is it something that we're being asked not to act on?
         is_monitored = self.is_monitored(package)
@@ -226,7 +227,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.log.info("OK, %s is newer than %s-%s" % (
                 upstream, version, release))
 
-            bz = self.bugzilla.handle(package, upstream, version, release, url)
+            bz = self.bugzilla.handle(
+                projectid, package, upstream, version, release, url)
             if not bz:
                 self.log.info("No RHBZ change detected (odd).  Aborting.")
                 self.publish("update.drop", msg=dict(

@@ -24,6 +24,8 @@ changes that need to be made. Specifically, please remember that it is your
 responsibility to review the new version to ensure that the licensing is still
 correct and that no non-free or legally problematic items have been added
 upstream.
+
+Based on the information from anitya: https://release-monitoring.org/project/%(projectid)s/
 """
 
 config = {
