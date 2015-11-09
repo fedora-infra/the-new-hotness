@@ -31,6 +31,7 @@ Requires:           python-bugzilla
 Requires:           python-dogpile-cache
 Requires:           fedmsg
 Requires:           python-fedmsg-meta-fedora-infrastructure
+Requires:           rebase-helper
 
 %description
 Fedmsg consumer that listens to release-monitoring.org and files bugzilla bugs

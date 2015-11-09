@@ -25,6 +25,7 @@ import traceback
 import fedmsg
 import fedmsg.consumers
 import requests
+import os
 
 import hotness.anitya
 import hotness.buildsys
@@ -154,6 +155,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # First, What is this thing called in our distro?
         # (we do this little inner.get(..) trick to handle legacy messages)
         inner = msg['msg'].get('message', msg['msg'])
+        self.log.info("Distro %s" % self.distro)
+        self.log.info("Distros %s" % [p['distro'] for p in inner['packages']])
         if not self.distro in [p['distro'] for p in inner['packages']]:
             self.log.info("No %r mapping for %r.  Dropping." % (
                 self.distro, msg['msg']['project']['name']))
@@ -226,6 +229,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.log.info("OK, %s is newer than %s-%s" % (
                 upstream, version, release))
 
+            # TODO Rebase-helper can be called here before BZ creation
+            # BZ can contain also texts in description and not as attachements
             bz = self.bugzilla.handle(package, upstream, version, release, url)
             if not bz:
                 self.log.info("No RHBZ change detected (odd).  Aborting.")
@@ -244,9 +249,28 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
             try:
                 # Kick off a scratch build..
-                task_id, patch_filename, description = self.buildsys.handle(
+                task_id, patch_filename, description, rh_stuff = self.buildsys.handle(
                     package, upstream, version, bz)
+                ret_val = rh_stuff['ret_val']
+                if int(ret_val) == 0:
+                    self.log.info('Rebase package %s to %s was SUCCESSFUL.' % (package, version))
+                else:
+                    ret_val = 1
+                    self.log.info('Rebase package %s to %s FAILED. See for details.' % (package, version))
 
+                self.log.info('Koji scratch build is available here: %s' % rh_stuff['build_log'][ret_val])
+                self.log.info('Information about patches:\n%s' % '\n'.join(rh_stuff['patches']))
+                self.log.info('Available logs gathered by rebase-helper:')
+                for rh_logs in rh_stuff['logs']:
+                    self.log.info(rh_logs)
+                    self.bugzilla.attach_patch(rh_logs, os.path.basename(rh_logs), bz)
+                for checker, log_file in rh_stuff['checkers']:
+                    self.log.info('%s is %s' %(checker, log_file))
+                    self.bugzilla.attach_patch(log_file,
+                                               'Compared packages by %s are here %s' % (checker, log_file),
+                                               bz)
+                # Add rebase-helper stuff to BZ
+                self.bugzilla.attach_patch(rh_stuff['build_log'], 'Koji scratch build', bz)
                 # Map that koji task_id to the bz ticket we want to pursue.
                 self.triggered_task_ids[task_id] = bz
 
