@@ -23,7 +23,7 @@ def force_cache_refresh(yumconfig):
     cache.invalidate(hard=True)
 
     # But also ask yum/dnf to kill its on-disk cache
-    cmdline = ["/usr/bin/yum",
+    cmdline = ["/usr/bin/dnf",
                "--config", yumconfig,
                "clean",
                "all"]
@@ -37,7 +37,8 @@ def force_cache_refresh(yumconfig):
 
 @cache.cache_on_arguments()
 def build_nvr_dict(yumconfig):
-    cmdline = ["/usr/bin/repoquery",
+    cmdline = ["/usr/bin/dnf",
+               "repoquery",
                "--config", yumconfig,
                "--quiet",
                #"--archlist=src",

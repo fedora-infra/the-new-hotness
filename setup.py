@@ -15,6 +15,7 @@ setup(
         "requests",
         "sh",
         "fedmsg_meta_fedora_infrastructure",
+        "rebase-helper"
     ],
     packages=find_packages(),
     entry_points="""

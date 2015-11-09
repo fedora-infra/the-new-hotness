@@ -12,6 +12,8 @@ import time
 import koji
 import sh
 
+from rebasehelper.upstream_monitoring import UpstreamMonitoring
+
 
 class Koji(object):
     def __init__(self, consumer, config):
@@ -86,10 +88,26 @@ class Koji(object):
         # Clone the package to a tempdir
         tmp = tempfile.mkdtemp(prefix='thn-', dir='/var/tmp')
         try:
+            rh_stuff = {}
             url = self.git_url.format(package=package)
             self.log.info("Cloning %r to %r" % (url, tmp))
             sh.git.clone(url, tmp)
+            self.log.info("RebaseHelper package %s" % package)
+            self.log.info("RebaseHelper upstream version %s" % upstream)
+            self.log.info("RebaseHelper old version %s" % version)
+            rh_upstream = UpstreamMonitoring()
+            rh_upstream.add_thn_info(tmp, package, version)
+            ret_code, rh_stuff = ret_val = rh_upstream.process_thn()
+            if int(ret_val) == 0:
+                self.log.info('Rebase package %s to %s was SUCCESSFUL.' % (package, version))
+            else:
+                self.log.info('Rebase package %s to %s FAILED. See for details.' % (package, version))
 
+            for rh_logs in rh_upstream.get_rh_logs():
+                self.log.info(rh_logs)
+            rh_stuff['ret_code'] = ret_code
+
+            # I think that as rebase-helper as old function can be used now.
             specfile = tmp + '/' + package + '.spec'
 
             comment = 'Update to %s (#%d)' % (upstream, rhbz.bug_id)
@@ -153,7 +171,7 @@ class Koji(object):
             destination = os.path.join('/var/tmp', filename)
             shutil.move(os.path.join(tmp, filename), destination)
 
-            return task_id, destination, '[patch] ' + comment
+            return task_id, destination, '[patch] ' + comment, rh_stuff
         finally:
             self.log.debug("Removing %r" % tmp)
             shutil.rmtree(tmp)
