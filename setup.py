@@ -14,6 +14,7 @@ setup(
         "dogpile.cache",
         "requests",
         "sh",
+        "python-six",
         "fedmsg_meta_fedora_infrastructure",
     ],
     packages=find_packages(),
