@@ -239,7 +239,8 @@ class Anitya(object):
 
         data = copy.copy(project)
         data['homepage'] = homepage
-        data['csrf_token'] = soup.form.find(id='csrf_token').attrs['value']
+        form = soup.find(action='/project/%i/edit' % idx)
+        data['csrf_token'] = form.find(id='csrf_token').attrs['value']
         response = self.__send_request(url, method='POST', data=data)
 
         if not response.status_code == 200:
@@ -285,10 +286,12 @@ class Anitya(object):
                                   "csrf token %r" % code)
 
         soup = bs4.BeautifulSoup(response.text, "lxml")
+        form = soup.find(action='/project/%i/map' % idx)
+        csrf_token = form.find(id='csrf_token').attrs['value']
         data = dict(
             distro='Fedora',
             package_name=name,
-            csrf_token=soup.form.find(id='csrf_token').attrs['value'],
+            csrf_token=csrf_token,
         )
         response = self.__send_request(url, method='POST', data=data)
 
@@ -355,7 +358,8 @@ class Anitya(object):
                                   "token %r" % code)
 
         soup = bs4.BeautifulSoup(response.text, "lxml")
-        data['csrf_token'] = soup.form.find(id='csrf_token').attrs['value']
+        form = soup.find(action='/project/new')  # There are two forms, get one
+        data['csrf_token'] = form.find(id='csrf_token').attrs['value']
 
         response = self.__send_request(url, method='POST', data=data)
 
