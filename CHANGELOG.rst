@@ -1,4 +1,25 @@
 
+0.6.4
+-----
+
+Pull Requests
+
+- (@pypingou)       #81, When sending a comment to bugzilla add a link to the project in anitya
+  https://github.com/fedora-infra/the-new-hotness/pull/81
+- (@ralphbean)      #86, Fix release-monitoring.org html scraping.
+  https://github.com/fedora-infra/the-new-hotness/pull/86
+
+Commits
+
+- d900b9de9 Specbump.
+  https://github.com/fedora-infra/the-new-hotness/commit/d900b9de9
+- a8903fa06 When sending a comment to bugzilla add a link to the project in anitya
+  https://github.com/fedora-infra/the-new-hotness/commit/a8903fa06
+- 47c5f9d55 Fix release-monitoring.org html scraping.
+  https://github.com/fedora-infra/the-new-hotness/commit/47c5f9d55
+- 54c132d60 Look just for the csrf_token field.
+  https://github.com/fedora-infra/the-new-hotness/commit/54c132d60
+
 0.6.3
 -----
 
