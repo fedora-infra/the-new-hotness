@@ -19,7 +19,7 @@ class ThnConfigParser(ConfigParser.ConfigParser):
             pass
         else:
             section = "[%s]\n" % thn_section
-            file = StringIO.StringIO(section + text)
+            file = StringIO(section + text)
             self.readfp(file, filename)
 
 
@@ -52,8 +52,7 @@ def force_cache_refresh(yumconfig):
     cache.invalidate(hard=True)
 
     # But also ask yum/dnf to kill its on-disk cache
-    pkg_manager = get_pkg_manager()
-    cmdline = [os.path.join("/usr/bin", pkg_manager),
+    cmdline = [os.path.join("/usr/bin", get_pkg_manager()),
                "--config", yumconfig,
                "clean",
                "all"]
@@ -70,16 +69,16 @@ def build_nvr_dict(yumconfig):
     pkg_manager = get_pkg_manager()
     cmdline = []
     if pkg_manager == 'yum':
-        cmdline.append("/usr/bin/repoquery")
+        cmdline = ["/usr/bin/repoquery"]
     else:
-        cmdline.append("/usr/bin/dnf",
-                       "repoquery")
-    cmdline.append("--config", yumconfig,
-                   "--quiet",
-                   #"--archlist=src",
-                   "--all",
-                   "--qf",
-                   "%{name}\t%{version}\t%{release}")
+        cmdline = [os.path.join("/usr/bin", pkg_manager),
+                   "repoquery"]
+    cmdline.extend(["--config", yumconfig,
+                    "--quiet",
+                    #"--archlist=src",
+                    "--all",
+                    "--qf",
+                    "%{name}\t%{version}\t%{release}"])
 
     log.info("Running %r" % ' '.join(cmdline))
     repoquery = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
