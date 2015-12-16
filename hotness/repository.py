@@ -67,18 +67,14 @@ def force_cache_refresh(yumconfig):
 @cache.cache_on_arguments()
 def build_nvr_dict(yumconfig):
     pkg_manager = get_pkg_manager()
-    cmdline = []
-    if pkg_manager == 'yum':
-        cmdline = ["/usr/bin/repoquery"]
-    else:
-        cmdline = [os.path.join("/usr/bin", pkg_manager),
-                   "repoquery"]
-    cmdline.extend(["--config", yumconfig,
-                    "--quiet",
-                    #"--archlist=src",
-                    "--all",
-                    "--qf",
-                    "%{name}\t%{version}\t%{release}"])
+    log.info(os.getcwd())
+    cmdline = [os.path.join("/usr/bin", pkg_manager),
+               "repoquery",
+               "--config", yumconfig,
+               "--quiet",
+               "--all",
+               "--qf",
+               "%{name}\t%{version}\t%{release}"]
 
     log.info("Running %r" % ' '.join(cmdline))
     repoquery = subprocess.Popen(cmdline, stdout=subprocess.PIPE)

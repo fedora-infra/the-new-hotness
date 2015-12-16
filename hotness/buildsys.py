@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import logging
 import os
 import random
@@ -8,9 +9,13 @@ import string
 import subprocess as sp
 import tempfile
 import time
+import six
 
 import koji
 import sh
+
+from rebasehelper.application import Application
+from rebasehelper.cli import CLI
 
 
 class Koji(object):
@@ -152,9 +157,40 @@ class Koji(object):
             # Copy the patch out of this doomed dir so bz can find it
             destination = os.path.join('/var/tmp', filename)
             shutil.move(os.path.join(tmp, filename), destination)
-
             return task_id, destination, '[patch] ' + comment
         finally:
             self.log.debug("Removing %r" % tmp)
             shutil.rmtree(tmp)
             pass
+
+    def rebase_helper(self, package, upstream, tmp, bz):
+        """
+        Rebase helper part which does a rebase a inform package
+        maintainer whether package was rebased properly.
+        Output information are in dictionary rh_stuff.
+
+        """
+        self.log.info("Rebase-helper is going to rebase package")
+        rh_stuff = {}
+        result_rh = -1
+        try:
+            url = self.git_url.format(package=package)
+            self.log.info("Cloning %r to %r" % (url, tmp))
+            sh.git.clone(url, tmp)
+            os.chdir(tmp)
+            self.log.info("Rebasehelper package %s %s" % (package, upstream))
+            argument = ['--non-interactive', '--buildtool', 'fedpkg', upstream]
+            cli = CLI(argument)
+            rh_app = Application(cli)
+            rh_app.set_upstream_monitoring()
+            result_rh = rh_app.run()
+            rh_stuff = rh_app.get_rebasehelper_data()
+            self.log.info("Rebasehelper finish properly")
+            self.log.info(rh_stuff)
+
+        except Exception as ex:
+            self.log.info('Rebase helper failed with unknown reason. %s' % ex)
+            return result_rh, rh_stuff
+
+        return result_rh, rh_stuff
+

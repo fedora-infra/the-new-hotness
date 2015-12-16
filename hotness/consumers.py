@@ -32,6 +32,13 @@ import hotness.bz
 import hotness.cache
 import hotness.helpers
 import hotness.repository
+import os
+import shutil
+import tempfile
+import time
+import six
+
+import koji
 
 
 class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
@@ -206,7 +213,9 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # Is it new to us?
         fname = self.yumconfig
         try:
-            version, release = hotness.repository.get_version(package, fname)
+            version, release = hotness.repository.get_version(package,
+                                                              fname,
+                                                              self.config['hotness.pkg_manager'])
         except KeyError:
             # At this point, we have tried very hard to find the rawhide
             # version of the package.  If we didn't find it, that means there
@@ -243,23 +252,68 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                               "Skipping scratch build.")
                 return
 
-            self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
+            cwd = os.getcwd()
+            result_rh = 0
+            rh_stuff = {}
             try:
-                # Kick off a scratch build..
-                task_id, patch_filename, description = self.buildsys.handle(
-                    package, upstream, version, bz)
+                tmp = tempfile.mkdtemp(prefix='thn-rh', dir='/var/tmp')
+                result_rh, rh_stuff = self.buildsys.rebase_helper(package, upstream, tmp, bz)
+                if int(result_rh) == 0:
+                    self.log.info('Rebase package %s to %s was SUCCESSFULL' % (package, version))
+                    for number, reference in six.iteritems(rh_stuff['build_logs'],):
+                        note = 'Scratch build completed %s' % reference
+                        self.bugzilla.follow_up(note, bz)
+                else:
+                    self.log.info('Rebase package %s to %s FAILED. See for details' % (package, version))
+                    self.bugzilla.follow_up('Rebase package %s to %s FAILED' % (package, version), bz)
+                    for number, reference in six.iteritems(rh_stuff['build_logs']):
+                        note = 'Scratch build failed %s' % reference
+                        self.bugzilla.follow_up(note, bz)
 
-                # Map that koji task_id to the bz ticket we want to pursue.
-                self.triggered_task_ids[task_id] = bz
+                for patch in rh_stuff['patches']:
+                    self.bugzilla.follow_up(patch, bz)
+                for check_name, log in six.iteritems(rh_stuff['checkers']):
+                    if log is None:
+                        continue
+                    rh_checkers = "Result from checker %s." % check_name
+                    self.bugzilla.attach_patch(log, rh_checkers, bz)
+                for log in rh_stuff['logs']:
+                    rh_logs = "Log %s provided by rebase-helper." % log
+                    self.bugzilla.attach_patch(log, rh_logs, bz)
+                shutil.rmtree(tmp)
+                os.chdir(cwd)
 
-                # Attach the patch to the ticket
-                self.bugzilla.attach_patch(patch_filename, description, bz)
-            except Exception as e:
-                heading = "Failed to kick off scratch build."
-                note = heading + "\n\n" + str(e)
-                self.log.warning(heading)
-                self.log.warning(traceback.format_exc())
-                self.bugzilla.follow_up(note, bz)
+            except Exception as ex:
+                self.log.info('Rebase helper failed with unknown reason. %s' % ex.message)
+                self.bugzilla.follow_up('Rebase helper failed. See logs and attachments in this bugzilla %s' % ex.message, bz)
+                for patch in rh_stuff['patches']:
+                    self.bugzilla.follow_up(patch, bz)
+                for check_name, log in six.iteritems(rh_stuff['checkers']):
+                    if log is None:
+                        continue
+                    rh_checkers = "Result from checker %s." % check_name
+                    self.bugzilla.attach_patch(log, rh_checkers, bz)
+                for log in rh_stuff['logs']:
+                    rh_logs = "Log %s provided by rebase-helper." % log
+                    self.bugzilla.attach_patch(log, rh_logs, bz)
+                shutil.rmtree(tmp)
+                os.chdir(cwd)
+                self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
+                try:
+                    # Kick off a scratch build..
+                    task_id, patch_filename, description = self.buildsys.handle(
+                        package, upstream, version, bz)
+
+                    # Map that koji task_id to the bz ticket we want to pursue.
+                    self.triggered_task_ids[task_id] = bz
+                    # Attach the patch to the ticket
+                    self.bugzilla.attach_patch(patch_filename, description, bz)
+                except Exception as e:
+                    heading = "Failed to kick off scratch build."
+                    note = heading + "\n\n" + str(e)
+                    self.log.warning(heading)
+                    self.log.warning(traceback.format_exc())
+                    self.bugzilla.follow_up(note, bz)
 
     def handle_buildsys_scratch(self, msg):
         instance = msg['msg']['instance']
@@ -297,8 +351,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         text2 = "%s %s" % (subtitle, url)
 
         # Followup on bugs we filed
-        if task_id in self.triggered_task_ids:
-            bugs.append((self.triggered_task_ids.pop(task_id), text1))
+        #if task_id in self.triggered_task_ids:
+        #    bugs.append((self.triggered_task_ids.pop(task_id), text1))
 
         # Also follow up on Package Review requests, but only if the package is
         # not already in Fedora (it would be a waste of time to query bugzilla
