@@ -1,6 +1,36 @@
 import os
 import socket
+import ConfigParser
+from six import StringIO
+
+
 hostname = socket.gethostname().split('.', 1)[0]
+
+
+thn_section = 'thn'
+
+
+class ThnConfigParser(ConfigParser.ConfigParser):
+    def read(self, filename):
+        try:
+            text = open(filename).read()
+        except IOError:
+            pass
+        else:
+            section = "[%s]\n" % thn_section
+            file = StringIO(section + text)
+            self.readfp(file, filename)
+
+
+def get_pkg_manager():
+    release_file = '/etc/os-release'
+    config = ThnConfigParser()
+    config.read(release_file)
+    name = config.get(thn_section, 'ID')
+    if name == 'fedora':
+        return ["/usr/bin/dnf", "repoquery"]
+    else:
+        return ["/usr/bin/repoquery"]
 
 description_template = """Latest upstream release: %(latest_upstream)s
 
@@ -32,8 +62,8 @@ config = {
     'hotness.bugzilla.enabled': True,
 
     'hotness.bugzilla': {
-        #'user': None,
-        #'password': None,
+        'user': "phracek@redhat.com",
+        'password': "%Oldfield;53",
         'url': 'https://partner-bugzilla.redhat.com',
         'product': 'Fedora',
         'version': 'rawhide',
@@ -80,6 +110,8 @@ config = {
             "filename": "/var/tmp/the-new-hotness-cache.dbm",
         },
     },
+
+    "hotness.pkg_manager": get_pkg_manager(),
 
     "endpoints": {
         # You need as many of these as you have worker threads.
