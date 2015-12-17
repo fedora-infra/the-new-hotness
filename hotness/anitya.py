@@ -23,6 +23,7 @@ backends = {
     'hackage.haskell.org': 'Hackage',
     'launchpad.net': 'launchpad',
     'npmjs.org': 'npmjs',
+    'npmjs.com': 'npmjs',
     'packagist.org': 'Packagist',
     'pear.php.net': 'PEAR',
     'pecl.php.net': 'PECL',
