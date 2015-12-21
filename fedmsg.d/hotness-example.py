@@ -62,8 +62,8 @@ config = {
     'hotness.bugzilla.enabled': True,
 
     'hotness.bugzilla': {
-        'user': "phracek@redhat.com",
-        'password': "%Oldfield;53",
+        #'user': None,
+        #'password': None,
         'url': 'https://partner-bugzilla.redhat.com',
         'product': 'Fedora',
         'version': 'rawhide',
