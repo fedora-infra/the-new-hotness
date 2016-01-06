@@ -1,14 +1,12 @@
 import copy
 import logging
-import os
-import pickle
 
 import bs4
-import requests
 
 ANITYA_URL = 'https://release-monitoring.org/'
 
 from fedora.client import AuthError
+from fedora.client import OpenIdBaseClient
 
 log = logging.getLogger('fedmsg')
 
@@ -80,145 +78,37 @@ def _parse_service_form(response):
     return (parsed.form.attrs['action'], inputs)
 
 
-class Anitya(object):
-
-    def __init__(self, url=ANITYA_URL, insecure=False, cookies=None,
-                 login_callback=None, login_attempts=3,
-                 sessionfile="~/.cache/anitya-session.pickle"):
-
-        self.url = url
-        self.session = requests.session()
-        self.insecure = insecure
-        self.username = None
-        self.password = None
-        self.login_callback = login_callback
-        self.login_attempts = login_attempts
-        self.sessionfile = os.path.expanduser(sessionfile)
-
-        try:
-            with open(self.sessionfile, "rb") as sessionfo:
-                self.session.cookies = pickle.load(sessionfo)["cookies"]
-        except (IOError, KeyError, TypeError):
-            pass
-
-    def __send_request(self, url, method, params=None, data=None):
-        log.debug(
-            'Calling: %s with arg: %s and data: %s', url, params, data)
-        req = self.session.request(
-            method=method,
-            url=url,
-            params=params,
-            data=data,
-            verify=not self.insecure,
+class Anitya(OpenIdBaseClient):
+    def __init__(self, url=ANITYA_URL, insecure=False):
+        super(Anitya, self).__init__(
+            base_url=url,
+            login_url=url + "/login/fedora",
+            useragent="The New Hotness",
+            debug=False,
+            insecure=insecure,
+            openid_insecure=insecure,
+            username=None,  # We supply this later
+            cache_session=True,
+            retries=7,
+            timeout=120,
+            retry_backoff_factor=0.3,
         )
-        self._save_cookies()
-        return req
-
-    def _save_cookies(self):
-        try:
-            with open(self.sessionfile, 'rb') as sessionfo:
-                data = pickle.load(sessionfo)
-        except:
-            data = {}
-        try:
-            with open(self.sessionfile, 'wb', 0600) as sessionfo:
-                sessionfo.seek(0)
-                data["cookies"] = self.session.cookies
-                pickle.dump(data, sessionfo)
-        except:
-            pass
 
     @property
     def is_logged_in(self):
-        response = self.session.get(self.url)
+        response = self._session.get(self.base_url)
         return "logout" in response.text
 
-    def login(self, username=None, password=None, openid_insecure=False,
-              response=None):
-
-        log.info("Attempting to login to anitya")
-
-        if not username:
-            username = self.username
-        if not password:
-            password = self.password
-        if self.login_callback and not password:
-            username, password = self.login_callback(username=username,
-                                                     bad_password=False)
-
-        if not username or not password:
-            raise AnityaAuthException('Username or password missing')
-
-        import re
-        from urlparse import urlparse, parse_qs
-
-        fedora_openid_api = r'https://id.fedoraproject.org/api/v1/'
-        fedora_openid = r'^http(s)?:\/\/id\.(|stg.|dev.)?fedoraproject'\
-            '\.org(/)?'
-        motif = re.compile(fedora_openid)
-
-        # Log into the service
-        if not response:
-            response = self.session.get(self.url + '/login/fedora')
-
-        openid_url = ''
-        if '<title>OpenID transaction in progress</title>' \
-                in response.text:
-            # requests.session should hold onto this for us....
-            openid_url, data = _parse_service_form(response)
-            if not motif.match(openid_url):
-                raise AnityaException(
-                    'Un-expected openid provider asked: %s' % openid_url)
-        elif 'logged in as' in response.text:
-            # User already logged in via its cookie file by default:
-            # ~/.cache/anitya-session.pickle
-            return
-        else:
-            data = {}
-            for resp in response.history:
-                if motif.match(resp.url):
-                    parsed = parse_qs(urlparse(resp.url).query)
-                    for key, value in parsed.items():
-                        data[key] = value[0]
-                    break
-            else:
-                log.info(response.text)
-                raise AnityaException(
-                    'Unable to determine openid parameters from login: %r' %
-                    openid_url)
-
-        # Contact openid provider
-        data['username'] = username
-        data['password'] = password
-        # Let's precise to FedOAuth that we want to authenticate with FAS
-        data['auth_module'] = 'fedoauth.auth.fas.Auth_FAS'
-
-        response = self.__send_request(
-            url=fedora_openid_api,
-            method='POST',
-            data=data)
-        output = response.json()
-
-        if not output['success']:
-            raise AnityaException(output['message'])
-
-        response = self.__send_request(
-            url=output['response']['openid.return_to'],
-            method='POST',
-            data=output['response'])
-
-        return output
-
     def search_by_homepage(self, name, homepage):
-        url = '{0}/api/projects/?homepage={1}'.format(self.url, homepage)
+        url = '{0}/api/projects/?homepage={1}'.format(self.base_url, homepage)
         log.info("Looking for %r via %r" % (name, url))
-        response = self.__send_request(url, method='GET')
+        response = self.send_request(url, verb='GET')
         return response.json()
 
     def get_project_by_package(self, name):
-        url = '{0}/api/project/Fedora/{1}'.format(self.url, name)
+        url = '{0}/api/project/Fedora/{1}'.format(self.base_url, name)
         log.info("Looking for %r via %r" % (name, url))
-        response = self.__send_request(url, method='GET')
+        response = self.send_request(url, verb='GET')
         if not response.status_code == 200:
             log.warn('No existing anitya project found mapped to %r' % name)
             return None
@@ -230,8 +120,8 @@ class Anitya(object):
             raise AnityaException('Could not add anitya project.  '
                                   'Not logged in.')
         idx = project['id']
-        url = self.url + '/project/%i/edit' % idx
-        response = self.__send_request(url, method='GET')
+        url = self.base_url + '/project/%i/edit' % idx
+        response = self.send_request(url, verb='GET')
         if not response.status_code == 200:
             code = response.status_code
             raise AnityaException("Couldn't get form to get "
@@ -241,7 +131,7 @@ class Anitya(object):
         data = copy.copy(project)
         data['homepage'] = homepage
         data['csrf_token'] = soup.find(id='csrf_token').attrs['value']
-        response = self.__send_request(url, method='POST', data=data)
+        response = self.send_request(url, verb='POST', data=data)
 
         if not response.status_code == 200:
             del data['csrf_token']
@@ -262,9 +152,8 @@ class Anitya(object):
     def force_check(self, project):
         """ Force anitya to check for a new upstream release. """
         idx = project['id']
-        url = '%s/api/version/get' % self.url
-        resp = self.session.post(url, data=dict(id=idx))
-        data = resp.json()
+        url = '%s/api/version/get' % self.base_url
+        data = self.send_request(url, verb='POST', data=dict(id=idx))
 
         if 'error' in data:
             log.warning('Anitya error: %r' % data['error'])
@@ -278,8 +167,8 @@ class Anitya(object):
                                   'Not logged in.')
 
         idx = project['id']
-        url = self.url + '/project/%i/map' % idx
-        response = self.__send_request(url, method='GET')
+        url = self.base_url + '/project/%i/map' % idx
+        response = self.send_request(url, verb='GET')
         if not response.status_code == 200:
             code = response.status_code
             raise AnityaException("Couldn't get form to get "
@@ -292,7 +181,7 @@ class Anitya(object):
             package_name=name,
             csrf_token=csrf_token,
         )
-        response = self.__send_request(url, method='POST', data=data)
+        response = self.send_request(url, verb='POST', data=data)
 
         if not response.status_code == 200:
             # Hide this from stuff we republish to the bus
@@ -348,8 +237,8 @@ class Anitya(object):
         if data['backend'] == 'github' and 'github.com' in data['homepage']:
             data['version_url'] = data['homepage']
 
-        url = self.url + '/project/new'
-        response = self.__send_request(url, method='GET')
+        url = self.base_url + '/project/new'
+        response = self.send_request(url, verb='GET')
 
         if not response.status_code == 200:
             code = response.status_code
@@ -359,7 +248,7 @@ class Anitya(object):
         soup = bs4.BeautifulSoup(response.text, "lxml")
         data['csrf_token'] = soup.find(id='csrf_token').attrs['value']
 
-        response = self.__send_request(url, method='POST', data=data)
+        response = self.send_request(url, verb='POST', data=data)
 
         if not response.status_code == 200:
             # Hide this from stuff we republish to the bus
