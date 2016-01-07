@@ -102,18 +102,17 @@ class Anitya(OpenIdBaseClient):
     def search_by_homepage(self, name, homepage):
         url = '{0}/api/projects/?homepage={1}'.format(self.base_url, homepage)
         log.info("Looking for %r via %r" % (name, url))
-        response = self.send_request(url, verb='GET')
-        return response.json()
+        return self.send_request(url, verb='GET')
 
     def get_project_by_package(self, name):
         url = '{0}/api/project/Fedora/{1}'.format(self.base_url, name)
         log.info("Looking for %r via %r" % (name, url))
-        response = self.send_request(url, verb='GET')
-        if not response.status_code == 200:
-            log.warn('No existing anitya project found mapped to %r' % name)
+        data = self.send_request(url, verb='GET')
+        if 'error' in data:
+            log.warn(data.error)
             return None
         else:
-            return response.json()
+            return data
 
     def update_url(self, project, homepage):
         if not self.is_logged_in:
@@ -121,7 +120,7 @@ class Anitya(OpenIdBaseClient):
                                   'Not logged in.')
         idx = project['id']
         url = self.base_url + '/project/%i/edit' % idx
-        response = self.send_request(url, verb='GET')
+        response = self._session.get(url)
         if not response.status_code == 200:
             code = response.status_code
             raise AnityaException("Couldn't get form to get "
@@ -131,7 +130,7 @@ class Anitya(OpenIdBaseClient):
         data = copy.copy(project)
         data['homepage'] = homepage
         data['csrf_token'] = soup.find(id='csrf_token').attrs['value']
-        response = self.send_request(url, verb='POST', data=data)
+        response = self._session.post(url, data=data)
 
         if not response.status_code == 200:
             del data['csrf_token']
@@ -168,7 +167,7 @@ class Anitya(OpenIdBaseClient):
 
         idx = project['id']
         url = self.base_url + '/project/%i/map' % idx
-        response = self.send_request(url, verb='GET')
+        response = self._session.get(url)
         if not response.status_code == 200:
             code = response.status_code
             raise AnityaException("Couldn't get form to get "
@@ -181,7 +180,7 @@ class Anitya(OpenIdBaseClient):
             package_name=name,
             csrf_token=csrf_token,
         )
-        response = self.send_request(url, verb='POST', data=data)
+        response = self._session.post(url, data=data)
 
         if not response.status_code == 200:
             # Hide this from stuff we republish to the bus
@@ -238,7 +237,7 @@ class Anitya(OpenIdBaseClient):
             data['version_url'] = data['homepage']
 
         url = self.base_url + '/project/new'
-        response = self.send_request(url, verb='GET')
+        response = self._sesion.get(urL)
 
         if not response.status_code == 200:
             code = response.status_code
@@ -248,7 +247,7 @@ class Anitya(OpenIdBaseClient):
         soup = bs4.BeautifulSoup(response.text, "lxml")
         data['csrf_token'] = soup.find(id='csrf_token').attrs['value']
 
-        response = self.send_request(url, verb='POST', data=data)
+        response = self._session.post(url, data=data)
 
         if not response.status_code == 200:
             # Hide this from stuff we republish to the bus
