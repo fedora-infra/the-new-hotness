@@ -433,6 +433,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 anitya.map_new_package(name, project)
             except hotness.anitya.AnityaException as e:
                 reason = str(e)
+                self.log.warn("Failed to map: %r" % reason)
 
             self.publish("project.map", msg=dict(
                 trigger=msg,
@@ -448,6 +449,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 anitya.add_new_project(name, homepage)
             except hotness.anitya.AnityaException as e:
                 reason = str(e)
+                self.log.warn("Failed to create: %r" % reason)
 
             self.publish("project.map", msg=dict(
                 trigger=msg,
@@ -523,6 +525,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 anitya.map_new_package(name, project)
             except hotness.anitya.AnityaException as e:
                 reason = str(e)
+                self.log.warn("Failed to map: %r" % reason)
 
             self.publish("project.map", msg=dict(
                 trigger=msg,
@@ -542,6 +545,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 anitya.add_new_project(name, homepage)
             except hotness.anitya.AnityaException as e:
                 reason = str(e)
+                self.log.warn("Failed to create: %r" % reason)
 
             self.publish("project.map", msg=dict(
                 trigger=msg,
