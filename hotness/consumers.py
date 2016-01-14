@@ -351,8 +351,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         text2 = "%s %s" % (subtitle, url)
 
         # Followup on bugs we filed
-        #if task_id in self.triggered_task_ids:
-        #    bugs.append((self.triggered_task_ids.pop(task_id), text1))
+        if task_id in self.triggered_task_ids:
+            bugs.append((self.triggered_task_ids.pop(task_id), text1))
 
         # Also follow up on Package Review requests, but only if the package is
         # not already in Fedora (it would be a waste of time to query bugzilla
