@@ -261,13 +261,13 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 if int(result_rh) == 0:
                     self.log.info('Rebase package %s to %s was SUCCESSFULL' % (package, version))
                     for number, reference in six.iteritems(rh_stuff['build_logs'],):
-                        note = 'Scratch build completed %s' % reference
+                        note = 'Scratch build completed. %s' % '\n'.join(reference)
                         self.bugzilla.follow_up(note, bz)
                 else:
                     self.log.info('Rebase package %s to %s FAILED. See for details' % (package, version))
                     self.bugzilla.follow_up('Rebase package %s to %s FAILED' % (package, version), bz)
                     for number, reference in six.iteritems(rh_stuff['build_logs']):
-                        note = 'Scratch build failed %s' % reference
+                        note = 'Scratch build failed. %s' % '\n'.join(reference)
                         self.bugzilla.follow_up(note, bz)
 
                 for patch in rh_stuff['patches']:
