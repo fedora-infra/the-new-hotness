@@ -260,15 +260,21 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 result_rh, rh_stuff = self.buildsys.rebase_helper(package, upstream, tmp, bz)
                 if int(result_rh) == 0:
                     self.log.info('Rebase package %s to %s was SUCCESSFULL' % (package, version))
-                    for number, reference in six.iteritems(rh_stuff['build_logs'],):
-                        note = 'Scratch build completed. %s' % '\n'.join(reference)
-                        self.bugzilla.follow_up(note, bz)
+                    if 'build_ref' in rh_stuff['build_logs']:
+                        for reference in six.iteritems(rh_stuff['build_logs']['build_ref']):
+                            note = 'Scratch build completed. %s' % '\n'.join(reference)
+                            self.bugzilla.follow_up(note, bz)
                 else:
                     self.log.info('Rebase package %s to %s FAILED. See for details' % (package, version))
                     self.bugzilla.follow_up('Rebase package %s to %s FAILED' % (package, version), bz)
-                    for number, reference in six.iteritems(rh_stuff['build_logs']):
-                        note = 'Scratch build failed. %s' % '\n'.join(reference)
-                        self.bugzilla.follow_up(note, bz)
+                    if 'build_ref' in rh_stuff['build_logs']:
+                        for reference in six.iteritems(rh_stuff['build_logs']['build_ref']):
+                            note = 'Scratch build failed. %s' % '\n'.join(reference)
+                            self.bugzilla.follow_up(note, bz)
+                    if 'logs' in rh_stuff['build_logs']:
+                        for log in six.iteritems(rh_stuff['build_logs']['logs']):
+                            note = 'Build log %s . %s' % os.path.basename(log)
+                            self.bugzilla.attach_patch(log, note, bz)
 
                 for patch in rh_stuff['patches']:
                     self.bugzilla.follow_up(patch, bz)
