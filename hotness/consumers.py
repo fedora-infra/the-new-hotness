@@ -72,6 +72,17 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
     config_key = 'hotness.bugzilla.enabled'
 
     def __init__(self, hub):
+
+        # If we're in development mode, rewrite some of our topics so that
+        # local playback with fedmsg-dg-replay works as expected.
+        if hub.config['environment'] == 'dev':
+            # Keep the original set, but append a duplicate set for local work
+            prefix, env = hub.config['topic_prefix'], hub.config['environment']
+            self.topic = self.topic + [
+                '.'.join([prefix, env] + topic.split('.')[3:])
+                for topic in self.topic
+            ]
+
         super(BugzillaTicketFiler, self).__init__(hub)
 
         if not self._initialized:
@@ -435,6 +446,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 anitya.map_new_package(name, project)
             except hotness.anitya.AnityaException as e:
                 reason = str(e)
+                self.log.warn("Failed to map: %r" % reason)
 
             self.publish("project.map", msg=dict(
                 trigger=msg,
@@ -450,6 +462,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 anitya.add_new_project(name, homepage)
             except hotness.anitya.AnityaException as e:
                 reason = str(e)
+                self.log.warn("Failed to create: %r" % reason)
 
             self.publish("project.map", msg=dict(
                 trigger=msg,
@@ -525,6 +538,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 anitya.map_new_package(name, project)
             except hotness.anitya.AnityaException as e:
                 reason = str(e)
+                self.log.warn("Failed to map: %r" % reason)
 
             self.publish("project.map", msg=dict(
                 trigger=msg,
@@ -544,6 +558,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 anitya.add_new_project(name, homepage)
             except hotness.anitya.AnityaException as e:
                 reason = str(e)
+                self.log.warn("Failed to create: %r" % reason)
 
             self.publish("project.map", msg=dict(
                 trigger=msg,
