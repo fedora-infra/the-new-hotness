@@ -173,6 +173,7 @@ class Koji(object):
         self.log.info("Rebase-helper is going to rebase package")
         rh_stuff = {}
         result_rh = -1
+        rh_app = None
         try:
             url = self.git_url.format(package=package)
             self.log.info("Cloning %r to %r" % (url, tmp))
@@ -186,11 +187,17 @@ class Koji(object):
             result_rh = rh_app.run()
             rh_stuff = rh_app.get_rebasehelper_data()
             self.log.info("Rebasehelper finish properly")
-            self.log.info(rh_stuff)
 
         except Exception as ex:
             self.log.info('Rebase helper failed with unknown reason. %s' % ex)
-            return result_rh, rh_stuff
+            rh_stuff = rh_app.get_rebasehelper_data()
 
         return result_rh, rh_stuff
 
+    def rebase_helper_checkers(self, task_ids, tmp_dir):
+        argument = ['--non-interactive']
+        cli = CLI(argument)
+        rh_app = Application(cli)
+        rh_stuff = rh_app.run_download_compare(task_ids, tmp_dir)
+
+        return rh_stuff

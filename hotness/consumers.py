@@ -122,7 +122,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # Build a little store where we'll keep track of what koji scratch
         # builds we have kicked off.  We'll look later for messages indicating
         # that they have completed.
-        self.triggered_task_ids = {}
+        self.old_triggered_task_ids = {}
+        self.new_triggered_task_ids = {}
 
         self.log.info("That new hotness ticket filer is all initialized")
 
@@ -255,53 +256,46 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             cwd = os.getcwd()
             result_rh = 0
             rh_stuff = {}
+            tmp = tempfile.mkdtemp(prefix='thn-rh', dir='/var/tmp')
             try:
-                tmp = tempfile.mkdtemp(prefix='thn-rh', dir='/var/tmp')
+                versions = ['old', 'new']
                 result_rh, rh_stuff = self.buildsys.rebase_helper(package, upstream, tmp, bz)
                 if int(result_rh) == 0:
-                    self.log.info('Rebase package %s to %s was SUCCESSFULL' % (package, version))
-                    if 'build_ref' in rh_stuff['build_logs']:
-                        for reference in six.iteritems(rh_stuff['build_logs']['build_ref']):
-                            note = 'Scratch build completed. %s' % '\n'.join(reference)
-                            self.bugzilla.follow_up(note, bz)
+                    if 'build_logs' in rh_stuff and 'build_ref' in rh_stuff['build_logs']:
+                        tasks = rh_stuff['build_logs']['build_ref']
+                        for version in versions:
+                            for task_id in tasks[version]:
+                                note = 'Scratch build for %s release started properly. %s' % (version,
+                                                                                              task_id)
+                                self.log.info(note)
+                                if 'old' == version:
+                                    self.old_triggered_task_ids[task_id] = [bz.bug_id, None, version, package]
+                                else:
+                                    self.new_triggered_task_ids[task_id] = [bz.bug_id, None, upstream, package]
                 else:
-                    self.log.info('Rebase package %s to %s FAILED. See for details' % (package, version))
-                    self.bugzilla.follow_up('Rebase package %s to %s FAILED' % (package, version), bz)
-                    if 'build_ref' in rh_stuff['build_logs']:
-                        for reference in six.iteritems(rh_stuff['build_logs']['build_ref']):
-                            note = 'Scratch build failed. %s' % '\n'.join(reference)
-                            self.bugzilla.follow_up(note, bz)
+                    note = 'Patching or scratch build for %s and version %s FAILED.\n' \
+                           'See for details' % (package, version)
+                    self.bugzilla.follow_up(note, bz)
                     if 'logs' in rh_stuff['build_logs']:
                         for log in six.iteritems(rh_stuff['build_logs']['logs']):
                             note = 'Build log %s . %s' % os.path.basename(log)
                             self.bugzilla.attach_patch(log, note, bz)
-
                 for patch in rh_stuff['patches']:
                     self.bugzilla.follow_up(patch, bz)
-                for check_name, log in six.iteritems(rh_stuff['checkers']):
-                    if log is None:
-                        continue
-                    rh_checkers = "Result from checker %s." % check_name
-                    self.bugzilla.attach_patch(log, rh_checkers, bz)
-                for log in rh_stuff['logs']:
-                    rh_logs = "Log %s provided by rebase-helper." % log
-                    self.bugzilla.attach_patch(log, rh_logs, bz)
                 shutil.rmtree(tmp)
                 os.chdir(cwd)
 
             except Exception as ex:
                 self.log.info('Rebase helper failed with unknown reason. %s' % ex.message)
-                self.bugzilla.follow_up('Rebase helper failed. See logs and attachments in this bugzilla %s' % ex.message, bz)
-                for patch in rh_stuff['patches']:
-                    self.bugzilla.follow_up(patch, bz)
-                for check_name, log in six.iteritems(rh_stuff['checkers']):
-                    if log is None:
-                        continue
-                    rh_checkers = "Result from checker %s." % check_name
-                    self.bugzilla.attach_patch(log, rh_checkers, bz)
-                for log in rh_stuff['logs']:
-                    rh_logs = "Log %s provided by rebase-helper." % log
-                    self.bugzilla.attach_patch(log, rh_logs, bz)
+                self.bugzilla.follow_up('Rebase helper failed.\n'
+                                        'See logs and attachments in this bugzilla %s' % ex.message, bz)
+                if 'patches' in rh_stuff:
+                    for patch in rh_stuff['patches']:
+                        self.bugzilla.follow_up(patch, bz)
+                if 'logs' in rh_stuff:
+                    for log in rh_stuff['logs']:
+                        rh_logs = "Log %s provided by rebase-helper." % log
+                        self.bugzilla.attach_patch(log, rh_logs, bz)
                 shutil.rmtree(tmp)
                 os.chdir(cwd)
                 self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
@@ -311,7 +305,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                         package, upstream, version, bz)
 
                     # Map that koji task_id to the bz ticket we want to pursue.
-                    self.triggered_task_ids[task_id] = bz
+                    self.new_triggered_task_ids[task_id] = [bz, None]
                     # Attach the patch to the ticket
                     self.bugzilla.attach_patch(patch_filename, description, bz)
                 except Exception as e:
@@ -350,16 +344,27 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         bugs = []
 
-
         url = fedmsg.meta.msg2link(msg, **self.hub.config)
         subtitle = fedmsg.meta.msg2subtitle(msg, **self.hub.config)
         text1 = "Scratch build %s %s" % (done_states.get(state, state), url)
         text2 = "%s %s" % (subtitle, url)
 
         # Followup on bugs we filed
-        if task_id in self.triggered_task_ids:
-            bugs.append((self.triggered_task_ids.pop(task_id), text1))
-
+        cwd = os.getcwd()
+        tmp = tempfile.mkdtemp(prefix='thn-rh', dir='/var/tmp')
+        bz, rh_stuff = self._update_tasks(task_id, state, text1, tmp)
+        if rh_stuff and 'checkers' in rh_stuff:
+            for check_name, log in six.iteritems(rh_stuff['checkers']):
+                if log is None:
+                    continue
+                rh_checkers = "Result from checker %s." % check_name
+                self.bugzilla.attach_patch(log, rh_checkers, bz)
+        if rh_stuff and 'logs' in rh_stuff:
+            for log in rh_stuff['logs']:
+                rh_logs = "Log %s provided by rebase-helper." % log
+                self.bugzilla.attach_patch(log, rh_logs, bz)
+        shutil.rmtree(tmp)
+        os.chdir(cwd)
         # Also follow up on Package Review requests, but only if the package is
         # not already in Fedora (it would be a waste of time to query bugzilla
         # if the review is already approved and scm has been processed).
@@ -367,6 +372,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         if package_name and not self.in_pkgdb(package_name):
             for bug in self.bugzilla.review_request_bugs(package_name):
                 bugs.append((bug, text2))
+
 
         if not bugs:
             self.log.debug("No bugs to update for %r" % msg.get('msg_id'))
@@ -663,3 +669,90 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         tag = collection['dist_tag'][1:]
         self.log.debug("Got rawhide suffix %r" % tag)
         return tag
+
+    def _update_tasks(self, task_id, state, text1, tmp):
+        task_ids = {}
+        bz = ""
+        bugs = []
+        rh_stuff = {}
+        # Remember BZ from old trigger which we are looking for.
+        try:
+            bz, state, package, version = self.old_triggered_task_ids[task_id]
+            # First of all we will check whether old task was finished
+            if task_id in self.old_triggered_task_ids:
+                task_ids['old'] = [str(task_id), version, package]
+                # if state is CLOSED, then build was finished properly
+                if state is 'CLOSED':
+                    self.old_triggered_task_ids[task_id][1] = state
+                    for new_task_id, (new_bz, state, new_version, new_package) in self.new_triggered_task_ids.iteritems():
+                        if new_bz == bz:
+                            # if koji build is finished
+                            if state is not None:
+                                # Koji build was done properly as for old as for new builds
+                                # rebase-helper is not called
+                                task_ids['new'] = [str(new_task_id), version, new_package]
+                                if state == 'CANCELED':
+                                    bugs = None
+                                else:
+                                    rh_stuff = self.buildsys.rebase_helper_checkers(task_ids, tmp)
+                                    bugs.append(bz, text1)
+                                # new build was cancelled. We do not have nothing to do.
+                                self.new_triggered_task_ids.pop(new_task_id)
+                                self.old_triggered_task_ids.pop(task_id)
+                                break
+                            # Koji task is not finished yet
+                            else:
+                                break
+                else:
+                    # if it was CANCELED or FAILED, then we do not care.
+                    # Old sources should be
+                    # We remove koji builds from both triggers
+                    self.old_triggered_task_ids.pop(task_id)
+                    for new_task_id, (new_bz, state) in self.new_triggered_task_ids.iteritems():
+                        # Check if we have proper BZ and then remove it.
+                        if new_bz == bz:
+                            self.new_triggered_task_ids.pop(new_task_id)
+                            break
+            # if task_id is in new trigger let's check
+            elif task_id in self.new_triggered_task_ids:
+                self.new_triggered_task_ids[task_id][1] = state
+                # Remember BZ from new trigger
+                bz, state, version, package = self.new_triggered_task_ids[task_id][0]
+                task_ids['new'] = [str(task_id), version, package]
+                # We do not have nothing to do if koji was canceled
+                # remove task_ids from old and new triggers
+                if state == 'CANCELED':
+                    self.new_triggered_task_ids.pop(task_id)
+                    for old_task_id, (old_bz, state) in self.old_triggered_task_ids.iteritems():
+                        if old_bz == bz:
+                            self.old_triggered_task_ids.pop(old_task_id)
+                            bugs = None
+                            break
+                # Koji build was successful and we can compare both packages
+                elif state == 'CLOSED':
+                    for old_task_id, (old_bz, state, old_version, old_package) in self.old_triggered_task_ids.iteritems():
+                        if old_bz == bz:
+                            if state is not None:
+                                # We do not want to call rebase-helper if old koji was cancelled
+                                # remove both task from triggers
+                                if state == 'CLOSED':
+                                    task_ids['old'] = [str(old_task_id), version, old_package]
+                                    rh_stuff = self.buildsys.rebase_helper_checkers(task_ids, tmp)
+                                    bugs.append(bz, text1)
+                                # Old sources failed or cancelled. We do not have nothing to do
+                                elif state == 'FAILED' or state == 'CANCELED':
+                                    bugs = None
+                                self.old_triggered_task_ids.pop(old_task_id)
+                                self.new_triggered_task_ids.pop(task_id)
+                                break
+                            # Old sources has not been finished yet
+                            else:
+                                bugs = None
+                                break
+                # Koji build failed and we have to attach build logs from rebase-helper
+                else:
+                    pass
+        except KeyError:
+            return None, None
+
+        return bugs, rh_stuff
