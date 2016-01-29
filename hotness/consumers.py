@@ -82,7 +82,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 '.'.join([prefix, env] + topic.split('.')[3:])
                 for topic in self.topic
             ]
-            import pprint; pprint.pprint(self.topic)
 
         super(BugzillaTicketFiler, self).__init__(hub)
 
