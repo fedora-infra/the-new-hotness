@@ -217,7 +217,9 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # Is it new to us?
         fname = self.yumconfig
         try:
-            version, release = hotness.repository.get_version(package, fname)
+            version, release = hotness.repository.get_version(package,
+                                                              fname,
+                                                              self.config['hotness.pkg_manager'])
         except KeyError:
             # At this point, we have tried very hard to find the rawhide
             # version of the package.  If we didn't find it, that means there
