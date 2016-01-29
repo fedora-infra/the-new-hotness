@@ -194,3 +194,10 @@ class Koji(object):
 
         return result_rh, rh_stuff
 
+    def rebase_helper_checkers(self, task_ids, tmp_dir):
+        argument = ['--non-interactive']
+        cli = CLI(argument)
+        rh_app = Application(cli)
+        rh_stuff = rh_app.run_download_compare(task_ids, tmp_dir)
+
+        return rh_stuff
