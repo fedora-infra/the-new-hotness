@@ -174,30 +174,34 @@ class Koji(object):
         rh_stuff = {}
         result_rh = -1
         rh_app = None
+        url = self.git_url.format(package=package)
+        self.log.info("Cloning %r to %r" % (url, tmp))
+        sh.git.clone(url, tmp)
+        os.chdir(tmp)
         try:
-            url = self.git_url.format(package=package)
-            self.log.info("Cloning %r to %r" % (url, tmp))
-            sh.git.clone(url, tmp)
-            os.chdir(tmp)
-            self.log.info("Rebasehelper package %s %s" % (package, upstream))
             argument = ['--non-interactive', '--buildtool', 'fedpkg', upstream]
             cli = CLI(argument)
             rh_app = Application(cli)
             rh_app.set_upstream_monitoring()
+            self.log.info("Rebasehelper package %s %s" % (package, upstream))
             result_rh = rh_app.run()
-            rh_stuff = rh_app.get_rebasehelper_data()
             self.log.info("Rebasehelper finish properly")
 
         except Exception as ex:
-            self.log.info('Rebase helper failed with unknown reason. %s' % ex)
-            rh_stuff = rh_app.get_rebasehelper_data()
-
+            self.log.info('builsys.py: Rebase helper failed with unknown reason. %s' % str(ex))
+        rh_stuff = rh_app.get_rebasehelper_data()
         return result_rh, rh_stuff
 
     def rebase_helper_checkers(self, task_ids, tmp_dir):
-        argument = ['--non-interactive']
-        cli = CLI(argument)
-        rh_app = Application(cli)
-        rh_stuff = rh_app.run_download_compare(task_ids, tmp_dir)
+        argument = ['--non-interactive', task_ids['new'][1]]
+        rh_app = None
+        rh_stuff = None
+        try:
+            cli = CLI(argument)
+            rh_app = Application(cli)
+            rh_stuff = rh_app.run_download_compare(task_ids, tmp_dir)
+        except Exception as ex:
+            self.log.info('Compare packages failed. Reason %s' % str(ex))
+        self.log.info(rh_stuff)
 
         return rh_stuff
