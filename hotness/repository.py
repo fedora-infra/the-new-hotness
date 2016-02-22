@@ -1,9 +1,38 @@
 import logging
 import subprocess
+import os
+import ConfigParser
+from six import StringIO
 
 from hotness.cache import cache
 
 log = logging.getLogger('fedmsg')
+
+thn_section = 'thn'
+
+
+class ThnConfigParser(ConfigParser.ConfigParser):
+    def read(self, filename):
+        try:
+            text = open(filename).read()
+        except IOError:
+            pass
+        else:
+            section = "[%s]\n" % thn_section
+            file = StringIO(section + text)
+            self.readfp(file, filename)
+
+
+def get_pkg_manager():
+    release_file = '/etc/os-release'
+    config = ThnConfigParser()
+    config.read(release_file)
+    name = config.get(thn_section, 'ID')
+    if name == 'fedora':
+        return 'dnf'
+    else:
+        return 'yum'
+
 
 def get_version(package_name, yumconfig):
     nvr_dict = build_nvr_dict(yumconfig)
@@ -23,7 +52,7 @@ def force_cache_refresh(yumconfig):
     cache.invalidate(hard=True)
 
     # But also ask yum/dnf to kill its on-disk cache
-    cmdline = ["/usr/bin/yum",
+    cmdline = [os.path.join("/usr/bin", get_pkg_manager()),
                "--config", yumconfig,
                "clean",
                "all"]
@@ -37,10 +66,12 @@ def force_cache_refresh(yumconfig):
 
 @cache.cache_on_arguments()
 def build_nvr_dict(yumconfig):
-    cmdline = ["/usr/bin/repoquery",
+    pkg_manager = get_pkg_manager()
+    log.info(os.getcwd())
+    cmdline = [os.path.join("/usr/bin", pkg_manager),
+               "repoquery",
                "--config", yumconfig,
                "--quiet",
-               #"--archlist=src",
                "--all",
                "--qf",
                "%{name}\t%{version}\t%{release}"]

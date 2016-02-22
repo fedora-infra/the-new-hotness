@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import logging
 import os
 import random
@@ -8,9 +9,13 @@ import string
 import subprocess as sp
 import tempfile
 import time
+import six
 
 import koji
 import sh
+
+from rebasehelper.application import Application
+from rebasehelper.cli import CLI
 
 
 class Koji(object):
@@ -152,9 +157,61 @@ class Koji(object):
             # Copy the patch out of this doomed dir so bz can find it
             destination = os.path.join('/var/tmp', filename)
             shutil.move(os.path.join(tmp, filename), destination)
-
             return task_id, destination, '[patch] ' + comment
         finally:
             self.log.debug("Removing %r" % tmp)
             shutil.rmtree(tmp)
             pass
+
+    def rebase_helper(self, package, upstream, tmp, bz):
+        """
+        Rebase helper part which does a rebase a inform package
+        maintainer whether package was rebased properly.
+        Output information are in dictionary rh_stuff.
+
+        """
+        self.log.info("Rebase-helper is going to rebase package")
+        rh_stuff = {}
+        result_rh = -1
+        rh_app = None
+        url = self.git_url.format(package=package)
+        self.log.info("Cloning %r to %r" % (url, tmp))
+        sh.git.clone(url, tmp)
+        os.chdir(tmp)
+        try:
+            argument = ['--non-interactive', '--builds-nowait', '--buildtool', 'fedpkg', upstream]
+            cli = CLI(argument)
+            rh_app = Application(cli)
+            rh_app.set_upstream_monitoring()
+            self.log.info("Rebasehelper package %s %s" % (package, upstream))
+            result_rh = rh_app.run()
+            self.log.info("Rebasehelper finish properly")
+
+        except Exception as ex:
+            self.log.info('builsys.py: Rebase helper failed with unknown reason. %s' % str(ex))
+        rh_stuff = rh_app.get_rebasehelper_data()
+        self.log.info(rh_stuff)
+        return result_rh, rh_stuff
+
+    def rebase_helper_checkers(self, new_version, old_task_id, new_task_id, tmp_dir):
+        argument = ['--non-interactive',
+                    '--builds-nowait',
+                    '--results-dir', tmp_dir,
+                    '--fedpkg-build-tasks',
+                    old_task_id + ',' + new_task_id,
+                    new_version,
+                    ]
+        rh_app = None
+        rh_stuff = None
+        try:
+            cli = CLI(argument)
+            rh_app = Application(cli)
+            ret_code = rh_app.run()
+            if int(ret_code) != 0:
+                self.log.error('Comparing package were not successful')
+            rh_stuff = rh_app.get_rebasehelper_data()
+        except Exception as ex:
+            self.log.info('Compare packages failed. Reason %s' % str(ex))
+        self.log.info(rh_stuff)
+
+        return rh_stuff
