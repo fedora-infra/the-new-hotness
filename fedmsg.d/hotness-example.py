@@ -49,7 +49,7 @@ config = {
         'weburl': 'http://koji.fedoraproject.org/koji',
         'cert': os.path.expanduser('~/.fedora.cert'),
         'ca_cert': os.path.expanduser('~/.fedora-server-ca.cert'),
-        'git_url': 'https://pkgs.fedoraproject.org/cgit/rpms/{package}.git',
+        'git_url': 'http://pkgs.fedoraproject.org/cgit/rpms/{package}.git',
         'userstring': ('Upstream Monitor',
                        '<upstream-release-monitoring@fedoraproject.org>'),
         'opts': {'scratch': True},
