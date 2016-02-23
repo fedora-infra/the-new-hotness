@@ -208,7 +208,7 @@ class Koji(object):
             rh_app = Application(cli)
             ret_code = rh_app.run()
             if int(ret_code) != 0:
-                self.log.error('Comparing package were not successful')
+                self.log.warn('Comparing package were not successful')
             rh_stuff = rh_app.get_rebasehelper_data()
         except Exception as ex:
             self.log.info('Compare packages failed. Reason %s' % str(ex))
