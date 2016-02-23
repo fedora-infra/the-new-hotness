@@ -49,7 +49,7 @@ config = {
         'weburl': 'http://koji.fedoraproject.org/koji',
         'cert': os.path.expanduser('~/.fedora.cert'),
         'ca_cert': os.path.expanduser('~/.fedora-server-ca.cert'),
-        'git_url': 'http://pkgs.fedoraproject.org/cgit/{package}.git',
+        'git_url': 'http://pkgs.fedoraproject.org/cgit/rpms/{package}.git',
         'userstring': ('Upstream Monitor',
                        '<upstream-release-monitoring@fedoraproject.org>'),
         'opts': {'scratch': True},
@@ -71,6 +71,7 @@ config = {
 
     'hotness.pkgdb_url': 'https://admin.fedoraproject.org/pkgdb/api',
 
+    'hotness.pkg_manager': 'dnf',
     'hotness.yumconfig': './yum-config',
 
     "hotness.cache": {

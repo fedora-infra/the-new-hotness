@@ -123,6 +123,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             if not hasattr(hotness.cache.cache, 'backend'):
                 hotness.cache.cache.configure(**self.config['hotness.cache'])
 
+        self.package_manager = self.config.get('hotness.pkg_manager', 'yum')
+        self.log.info("Using hotness.pkg_manager=%r" % self.package_manager)
         self.yumconfig = self.config.get('hotness.yumconfig')
         self.log.info("Using hotness.yumconfig=%r" % self.yumconfig)
         self.repoid = self.config.get('hotness.repoid', 'rawhide')
@@ -225,9 +227,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # Is it new to us?
         fname = self.yumconfig
         try:
-            version, release = hotness.repository.get_version(package,
-                                                              fname,
-                                                              self.config['hotness.pkg_manager'])
+            version, release = hotness.repository.get_version(
+                package, fname, self.package_manager)
         except KeyError:
             # At this point, we have tried very hard to find the rawhide
             # version of the package.  If we didn't find it, that means there
