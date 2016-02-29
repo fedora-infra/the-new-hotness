@@ -39,9 +39,16 @@ def force_cache_refresh(yumconfig, manager):
 
 @cache.cache_on_arguments()
 def build_nvr_dict(yumconfig, manager):
-    log.info(os.getcwd())
-    cmdline = [os.path.join("/usr/bin", manager),
-               "repoquery",
+    log.debug(os.getcwd())
+
+    # Use different entry points for yum and dnf
+    if manager == 'yum':
+        base_command = ['/usr/bin/repoquery']
+    else:
+        base_command = [os.path.join("/usr/bin", manager), "repoquery"]
+
+    # Construct the rest of our query command
+    cmdline = base_command + [
                "--config", yumconfig,
                "--quiet",
                "--all",
@@ -60,7 +67,11 @@ def build_nvr_dict(yumconfig, manager):
     for line in stdout.split("\n"):
         line = line.strip()
         if line:
-            name, version, release = line.split("\t")
+            try:
+                name, version, release = line.split("\t")
+            except ValueError:
+                log.warn("Failed to split %r" % line)
+                raise
             new_nvr_dict[name] = (version, release)
 
     log.info("Rebuilt nvr_dict with %r entries" % len(new_nvr_dict))
