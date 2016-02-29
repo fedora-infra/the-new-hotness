@@ -1,3 +1,80 @@
+This release swaps out usage of 'rpmdev-bumpspec' for the new 'rebase-helper'.
+Credit due to Petr Hracek.
+
+0.7.0
+-----
+
+Pull Requests
+
+- (@ralphbean)      #90, Allow mappings for npmjs.com as well as npmjs.org.
+  https://github.com/fedora-infra/the-new-hotness/pull/90
+- (@ralphbean)      #92, Remove bundled (and outdated) openid client code.
+  https://github.com/fedora-infra/the-new-hotness/pull/92
+- (@ralphbean)      #96, Rewrite topics to handle development mode.
+  https://github.com/fedora-infra/the-new-hotness/pull/96
+- (@phracek)        #94, Rebase helper integration.
+  https://github.com/fedora-infra/the-new-hotness/pull/94
+- (@ralphbean)      #101, Remove pkg_manager detection.
+  https://github.com/fedora-infra/the-new-hotness/pull/101
+- (@ralphbean)      #103, Make this log statement less verbose.
+  https://github.com/fedora-infra/the-new-hotness/pull/103
+
+Commits
+
+- f3b595f65 Support YUM and DNF
+  https://github.com/fedora-infra/the-new-hotness/commit/f3b595f65
+- b5dbf963c Specbump.
+  https://github.com/fedora-infra/the-new-hotness/commit/b5dbf963c
+- 6a582b6e2 Fix YUM and DNF usage.
+  https://github.com/fedora-infra/the-new-hotness/commit/6a582b6e2
+- 776c7e1e4 Merge remote-tracking branch 'upstream/develop' into develop
+  https://github.com/fedora-infra/the-new-hotness/commit/776c7e1e4
+- c075434e7 Allow mappings for npmjs.com as well as npmjs.org.
+  https://github.com/fedora-infra/the-new-hotness/commit/c075434e7
+- 2692cdaf0 Remove bundled (and outdated) openid client code.
+  https://github.com/fedora-infra/the-new-hotness/commit/2692cdaf0
+- e4133a36f Fix some usage of OpenIdBaseClient where we need more flexibility.
+  https://github.com/fedora-infra/the-new-hotness/commit/e4133a36f
+- 065a7bc46 Typofix.
+  https://github.com/fedora-infra/the-new-hotness/commit/065a7bc46
+- 4cfa9c93e Add some nice warnings for debugging.
+  https://github.com/fedora-infra/the-new-hotness/commit/4cfa9c93e
+- b89e56625 Rebase-helper integration
+  https://github.com/fedora-infra/the-new-hotness/commit/b89e56625
+- 763ee55c2 Iterate over build_logs
+  https://github.com/fedora-infra/the-new-hotness/commit/763ee55c2
+- 656b62373 Return back trigger.
+  https://github.com/fedora-infra/the-new-hotness/commit/656b62373
+- 326758e87 Return reference as not list. In case of failure return logs
+  https://github.com/fedora-infra/the-new-hotness/commit/326758e87
+- d3805d300 Rewrite topics to handle development mode.
+  https://github.com/fedora-infra/the-new-hotness/commit/d3805d300
+- 311eb4e96 (,,Ő ｘ Ő,,)
+  https://github.com/fedora-infra/the-new-hotness/commit/311eb4e96
+- b39f1b102 rebase-helper split
+  https://github.com/fedora-infra/the-new-hotness/commit/b39f1b102
+- 8f182e912 rebase-helper split
+  https://github.com/fedora-infra/the-new-hotness/commit/8f182e912
+- 71f41582e Merge branch 'rebase-helper' of github.com:phracek/the-new-hotness into rebase-helper
+  https://github.com/fedora-infra/the-new-hotness/commit/71f41582e
+- 8f374fc95 rebase-helper returns logs and packages after finishing scratch build.
+  https://github.com/fedora-infra/the-new-hotness/commit/8f374fc95
+- 64d34e815 Final commit with rebase-helper implementation
+  https://github.com/fedora-infra/the-new-hotness/commit/64d34e815
+- a48c0daf4 Move this outside the try/except block.
+  https://github.com/fedora-infra/the-new-hotness/commit/a48c0daf4
+- 4ce84bdfc Update config for namespaced pkgs.
+  https://github.com/fedora-infra/the-new-hotness/commit/4ce84bdfc
+- 77886e530 Remove pkg_manager detection.
+  https://github.com/fedora-infra/the-new-hotness/commit/77886e530
+- ee7f33504 Not https here.
+  https://github.com/fedora-infra/the-new-hotness/commit/ee7f33504
+- 75e90b743 Make this log statement less verbose.
+  https://github.com/fedora-infra/the-new-hotness/commit/75e90b743
+- dbe3d62e5 Promote this log statement to an exception.
+  https://github.com/fedora-infra/the-new-hotness/commit/dbe3d62e5
+- 218049a7f New version requires rebase-helper
+  https://github.com/fedora-infra/the-new-hotness/commit/218049a7f
 
 0.6.4
 -----
