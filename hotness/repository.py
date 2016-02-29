@@ -60,7 +60,11 @@ def build_nvr_dict(yumconfig, manager):
     for line in stdout.split("\n"):
         line = line.strip()
         if line:
-            name, version, release = line.split("\t")
+            try:
+                name, version, release = line.split("\t")
+            except ValueError:
+                log.warn("Failed to split %r" % line)
+                raise
             new_nvr_dict[name] = (version, release)
 
     log.info("Rebuilt nvr_dict with %r entries" % len(new_nvr_dict))
