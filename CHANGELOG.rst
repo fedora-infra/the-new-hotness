@@ -1,3 +1,18 @@
+
+0.7.1
+-----
+
+Pull Requests
+
+- (@ralphbean)      #104, Handle repoquery differently for yum and dnf.
+  https://github.com/fedora-infra/the-new-hotness/pull/104
+
+Commits
+
+- 20f9bd6bb When this fails, log more info.
+  https://github.com/fedora-infra/the-new-hotness/commit/20f9bd6bb
+- 0f3b72e62 Handle repoquery differently for yum and dnf.
+  https://github.com/fedora-infra/the-new-hotness/commit/0f3b72e62
 This release swaps out usage of 'rpmdev-bumpspec' for the new 'rebase-helper'.
 Credit due to Petr Hracek.
 
