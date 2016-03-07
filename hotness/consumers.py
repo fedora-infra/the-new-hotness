@@ -298,7 +298,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                             note_logs = 'Rebase-helper %s log file.\n' \
                                         ' See for details and report the eventual error to rebase-helper %s.' % \
                                         (os.path.basename(log), rebase_helper_url)
-                            self.bugzilla.attach_patch(log, note, bz)
+                            self.bugzilla.attach_patch(log, note_logs, bz)
 
                 if 'patches' in rh_stuff:
                     for patch in rh_stuff['patches']:
