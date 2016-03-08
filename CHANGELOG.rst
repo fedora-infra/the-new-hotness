@@ -1,3 +1,23 @@
+A bugfix to the last release which should attach more information to bugs when
+rebase-helper fails to bump things.
+
+
+0.7.2
+-----
+
+Pull Requests
+
+- (@phracek)        #106, Fixes #105: Rebase helper logs
+  https://github.com/fedora-infra/the-new-hotness/pull/106
+
+Commits
+
+- 4f145e9c1 Fixes #105 Add logs to bugzilla for another analysis.
+  https://github.com/fedora-infra/the-new-hotness/commit/4f145e9c1
+- 76f432f76 Typo in text which is mentioned in bugzilla
+  https://github.com/fedora-infra/the-new-hotness/commit/76f432f76
+- 80e174b46 Fix mistake with tuples. iteritems should not be used.
+  https://github.com/fedora-infra/the-new-hotness/commit/80e174b46
 
 0.7.1
 -----
