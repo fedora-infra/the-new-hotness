@@ -291,6 +291,15 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                         for log in six.iteritems(rh_stuff['build_logs']['logs']):
                             note = 'Build log %s.' % log
                             self.bugzilla.attach_patch(log, note, bz)
+                    # Attach rebase-helper logs for another analysis
+                    if 'logs' in rh_stuff:
+                        for log in rh_stuff['logs']:
+                            rebase_helper_url = 'https://github.com/phracek/rebase-helper/issues'
+                            note_logs = 'Rebase-helper %s log file.\n' \
+                                        ' See for details and report the eventual error to rebase-helper %s.' % \
+                                        (os.path.basename(log), rebase_helper_url)
+                            self.bugzilla.attach_patch(log, note_logs, bz)
+
                 if 'patches' in rh_stuff:
                     for patch in rh_stuff['patches']:
                         self.bugzilla.follow_up(patch, bz)
