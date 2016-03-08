@@ -9,7 +9,7 @@
 %global modname the-new-hotness
 
 Name:               the-new-hotness
-Version:            0.7.1
+Version:            0.7.2
 Release:            1%{?dist}
 Summary:            Consume anitya fedmsg messages to file bugzilla bugs
 
@@ -61,6 +61,9 @@ rm -rf %{buildroot}%{python2_sitelib}/tests/
 %{python2_sitelib}/the_new_hotness-%{version}*
 
 %changelog
+* Tue Mar 08 2016 Ralph Bean <rbean@redhat.com> - 0.7.2-1
+- new version
+
 * Tue Mar 01 2016 Ralph Bean <rbean@redhat.com> - 0.7.1-1
 - new version
 
