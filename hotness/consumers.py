@@ -288,7 +288,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                            'See for details' % (package, version)
                     self.bugzilla.follow_up(note, bz)
                     if 'logs' in rh_stuff['build_logs']:
-                        for log in six.iteritems(rh_stuff['build_logs']['logs']):
+                        for log in rh_stuff['build_logs']['logs']:
                             note = 'Build log %s.' % log
                             self.bugzilla.attach_patch(log, note, bz)
                     # Attach rebase-helper logs for another analysis
