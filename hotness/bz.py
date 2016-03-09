@@ -23,7 +23,7 @@ import copy
 import logging
 
 import bugzilla
-
+import os
 
 class Bugzilla(object):
     base_query = {
@@ -124,9 +124,10 @@ class Bugzilla(object):
 
     def attach_patch(self, filename, description, bug):
         self.log.debug("Attaching patch to bug %r" % bug.bug_id)
-        self.bugzilla.attachfile(bug.bug_id, filename, description,
+        if os.path.exists(filename) and os.path.getsize(filename) != 0:
+            self.bugzilla.attachfile(bug.bug_id, filename, description,
                 is_patch=True)
-        self.log.info("Attached patch to bug: %s" % bug.weburl)
+            self.log.info("Attached patch to bug: %s" % bug.weburl)
 
     def ftbfs_bugs(self, name):
         """ Return all FTBFS bugs we find for a package """
