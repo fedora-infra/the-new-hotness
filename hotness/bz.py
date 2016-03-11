@@ -123,10 +123,10 @@ class Bugzilla(object):
         self.log.info("Followed up on bug: %s" % bug.weburl)
 
     def attach_patch(self, filename, description, bug):
-        self.log.debug("Attaching patch to bug %r" % bug.bug_id)
         if os.path.exists(filename) and os.path.getsize(filename) != 0:
+            self.log.debug("Attaching patch to bug %r" % bug.bug_id)
             self.bugzilla.attachfile(bug.bug_id, filename, description,
-                is_patch=True)
+                    is_patch=True)
             self.log.info("Attached patch to bug: %s" % bug.weburl)
 
     def ftbfs_bugs(self, name):
