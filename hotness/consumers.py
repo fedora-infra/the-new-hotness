@@ -327,7 +327,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                         package, upstream, version, bz)
 
                     # Map that koji task_id to the bz ticket we want to pursue.
-                    self.new_triggered_task_ids[task_id] = [bz, None]
+                    self.new_triggered_task_ids[task_id] = [bz, None, str(upstream), str(package)]
                     # Attach the patch to the ticket
                     self.bugzilla.attach_patch(patch_filename, description, bz)
                 except Exception as e:
