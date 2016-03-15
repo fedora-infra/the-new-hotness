@@ -284,7 +284,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                                 else:
                                     self.new_triggered_task_ids[task_id] = [bz, None, str(upstream), str(package)]
                 else:
-                    note = 'Patching or scratch build for %s and version %s FAILED.\n' % (package, version)
+                    note = 'Patching or scratch build for %s-%s failed.\n' % (package, version)
                     self.bugzilla.follow_up(note, bz)
                     if 'logs' in rh_stuff['build_logs']:
                         for log in rh_stuff['build_logs']['logs']:
