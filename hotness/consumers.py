@@ -284,8 +284,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                                 else:
                                     self.new_triggered_task_ids[task_id] = [bz, None, str(upstream), str(package)]
                 else:
-                    note = 'Patching or scratch build for %s and version %s FAILED.\n' \
-                           'See for details' % (package, version)
+                    note = 'Patching or scratch build for %s and version %s FAILED.\n' % (package, version)
                     self.bugzilla.follow_up(note, bz)
                     if 'logs' in rh_stuff['build_logs']:
                         for log in rh_stuff['build_logs']['logs']:
@@ -296,7 +295,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                         for log in rh_stuff['logs']:
                             rebase_helper_url = 'https://github.com/phracek/rebase-helper/issues'
                             note_logs = 'Rebase-helper %s log file.\n' \
-                                        ' See for details and report the eventual error to rebase-helper %s.' % \
+                                        'See for details and report the eventual error to rebase-helper %s.' % \
                                         (os.path.basename(log), rebase_helper_url)
                             self.bugzilla.attach_patch(log, note_logs, bz)
 
