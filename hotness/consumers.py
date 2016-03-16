@@ -317,12 +317,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                     for log in rh_stuff['logs']:
                         rh_logs = "Log %s provided by rebase-helper." % log
                         self.bugzilla.attach_patch(log, rh_logs, bz)
+
                 os.chdir(cwd)
 
-                try:
+                if os.path.exists(tmp):
                     shutil.rmtree(tmp)
-                except OSError as e:
-                    log.warn("Failed to remove %r - %r" % (tmp, e))
 
                 self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
                 try:
