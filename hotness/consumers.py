@@ -317,8 +317,12 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                     for log in rh_stuff['logs']:
                         rh_logs = "Log %s provided by rebase-helper." % log
                         self.bugzilla.attach_patch(log, rh_logs, bz)
+
                 os.chdir(cwd)
-                shutil.rmtree(tmp)
+
+                if os.path.exists(tmp):
+                    shutil.rmtree(tmp)
+
                 self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
                 try:
                     # Kick off a scratch build..
