@@ -303,7 +303,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                     for patch in rh_stuff['patches']:
                         self.bugzilla.follow_up(patch, bz)
                 os.chdir(cwd)
-                shutil.rmtree(tmp)
+                if os.path.exists(tmp):
+                    shutil.rmtree(tmp)
 
             except Exception as ex:
                 self.log.info('Customer.py: Rebase helper failed with an unknown reason. %s' % str(ex))
