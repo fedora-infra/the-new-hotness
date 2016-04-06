@@ -1,3 +1,50 @@
+
+0.7.3
+-----
+
+Pull Requests
+
+- (@phracek)        #108, Fixes #107: Detect if file exists or is not empty
+  https://github.com/fedora-infra/the-new-hotness/pull/108
+- (@ralphbean)      #109, Correct another instance of mis-used six.iteritems().
+  https://github.com/fedora-infra/the-new-hotness/pull/109
+- (@phracek)        #111, Fixes #110: This does not really fix the problem. Log about attaching is
+  https://github.com/fedora-infra/the-new-hotness/pull/111
+- (@ralphbean)      #112, This dict expects a 4-tuple everywhere else in the code.
+  https://github.com/fedora-infra/the-new-hotness/pull/112
+- (@phracek)        #114, Fix #113 Text in bugzilla has to be clear.
+  https://github.com/fedora-infra/the-new-hotness/pull/114
+- (@ralphbean)      #115, Handle OSError from 'rm'.
+  https://github.com/fedora-infra/the-new-hotness/pull/115
+- (@phracek)        #118, Check if dir exists before deleting
+  https://github.com/fedora-infra/the-new-hotness/pull/118
+- (@ralphbean)      #120, Check if rawhide_version == upstream_version first.
+  https://github.com/fedora-infra/the-new-hotness/pull/120
+
+Commits
+
+- 71d7b2151 Fixes #107: Detect if file exists or is not empty
+  https://github.com/fedora-infra/the-new-hotness/commit/71d7b2151
+- 1a88414ea Correct another instance of mis-used six.iteritems().
+  https://github.com/fedora-infra/the-new-hotness/commit/1a88414ea
+- a99c1fbda Fixes #110: This does not really fix the problem. Log about attaching is valid only in case really attach.
+  https://github.com/fedora-infra/the-new-hotness/commit/a99c1fbda
+- c6459c2cc This dict expects a 4-tuple everywhere else in the code.
+  https://github.com/fedora-infra/the-new-hotness/commit/c6459c2cc
+- d7e91ba3f Fix #113 Text in bugzilla has to be clear.
+  https://github.com/fedora-infra/the-new-hotness/commit/d7e91ba3f
+- 38ee2caf6 Update text once again with feedback from @pnemade.
+  https://github.com/fedora-infra/the-new-hotness/commit/38ee2caf6
+- 83f524842 Handle OSError from 'rm'.
+  https://github.com/fedora-infra/the-new-hotness/commit/83f524842
+- 77e30b3a9 Check if dir exists instead.
+  https://github.com/fedora-infra/the-new-hotness/commit/77e30b3a9
+- 53cbda5df Check if dir exists before deleting
+  https://github.com/fedora-infra/the-new-hotness/commit/53cbda5df
+- 48bcd0048 Check if rawhide_version == upstream_version first.
+  https://github.com/fedora-infra/the-new-hotness/commit/48bcd0048
+- 3a2b1b834 .. but do also publish in this case.
+  https://github.com/fedora-infra/the-new-hotness/commit/3a2b1b834
 A bugfix to the last release which should attach more information to bugs when
 rebase-helper fails to bump things.
 
