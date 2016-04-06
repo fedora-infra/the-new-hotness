@@ -232,8 +232,9 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             # nothing reasonable we can do.  Notify the world of our failure
             # and go back to the event loop.
             self.log.warn("No rawhide version found for %r" % package)
-            self.publish("update.drop", msg=dict(
-                trigger=msg, reason="rawhide"))
+            if is_monitored:
+                self.publish("update.drop", msg=dict(
+                    trigger=msg, reason="rawhide"))
             return
 
         self.log.info("Comparing upstream %s against repo %s-%s" % (
