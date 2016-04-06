@@ -219,10 +219,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         # Is it something that we're being asked not to act on?
         is_monitored = self.is_monitored(package)
-        if not is_monitored:
-            self.log.info("Pkgdb says not to monitor %r.  Dropping." % package)
-            self.publish("update.drop", msg=dict(trigger=msg, reason="pkgdb"))
-            return
 
         # Is it new to us?
         fname = self.yumconfig
@@ -236,8 +232,9 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             # nothing reasonable we can do.  Notify the world of our failure
             # and go back to the event loop.
             self.log.warn("No rawhide version found for %r" % package)
-            self.publish("update.drop", msg=dict(
-                trigger=msg, reason="rawhide"))
+            if is_monitored:
+                self.publish("update.drop", msg=dict(
+                    trigger=msg, reason="rawhide"))
             return
 
         self.log.info("Comparing upstream %s against repo %s-%s" % (
@@ -248,6 +245,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         if diff == 1:
             self.log.info("OK, %s is newer than %s-%s" % (
                 upstream, version, release))
+
+            if not is_monitored:
+                self.log.info("Pkgdb says not to monitor %r.  Dropping." % package)
+                self.publish("update.drop", msg=dict(trigger=msg, reason="pkgdb"))
+                return
 
             bz = self.bugzilla.handle(
                 projectid, package, upstream, version, release, url)
