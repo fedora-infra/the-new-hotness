@@ -237,7 +237,7 @@ class Anitya(OpenIdBaseClient):
             data['version_url'] = data['homepage']
 
         url = self.base_url + '/project/new'
-        response = self._sesion.get(url)
+        response = self._session.get(url)
 
         if not response.status_code == 200:
             code = response.status_code
