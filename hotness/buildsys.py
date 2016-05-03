@@ -194,7 +194,8 @@ class Koji(object):
         return result_rh, rh_stuff
 
     def rebase_helper_checkers(self, new_version, old_task_id, new_task_id, tmp_dir):
-        argument = ['--non-interactive',
+        argument = ['--buildtool', 'fedpkg',
+                    '--non-interactive',
                     '--builds-nowait',
                     '--results-dir', tmp_dir,
                     '--fedpkg-build-tasks',
