@@ -122,12 +122,17 @@ class Bugzilla(object):
         self.bugzilla._proxy.Bug.update(update)
         self.log.info("Followed up on bug: %s" % bug.weburl)
 
-    def attach_patch(self, filename, description, bug):
+    def _attach_file(self, filename, description, bug, **kwargs):
         if os.path.exists(filename) and os.path.getsize(filename) != 0:
-            self.log.debug("Attaching patch to bug %r" % bug.bug_id)
-            self.bugzilla.attachfile(bug.bug_id, filename, description,
-                    is_patch=True)
-            self.log.info("Attached patch to bug: %s" % bug.weburl)
+            self.log.debug("Attaching file to bug %r" % bug.bug_id)
+            self.bugzilla.attachfile(bug.bug_id, filename, description, **kwargs)
+            self.log.info("Attached file to bug: %s" % bug.weburl)
+
+    def attach_log(self, filename, description, bug):
+        self._attach_file(filename, description, bug, content_type='text/plain')
+
+    def attach_patch(self, filename, description, bug):
+        self._attach_file(filename, description, bug, is_patch=True)
 
     def ftbfs_bugs(self, name):
         """ Return all FTBFS bugs we find for a package """
