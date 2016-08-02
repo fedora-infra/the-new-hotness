@@ -16,6 +16,7 @@ import sh
 
 from rebasehelper.application import Application
 from rebasehelper.cli import CLI
+from rebasehelper.logger import logger, LoggerHelper
 
 
 class Koji(object):
@@ -179,9 +180,11 @@ class Koji(object):
         sh.git.clone(url, tmp)
         os.chdir(tmp)
         try:
-            argument = ['--non-interactive', '--builds-nowait', '--buildtool', 'fedpkg', upstream]
+            argument = ['--non-interactive', '--builds-nowait', '--buildtool', 'koji', upstream]
+            LoggerHelper.add_stream_handler(logger, logging.INFO)
             cli = CLI(argument)
-            rh_app = Application(cli)
+            execution_dir, debug_log_file, report_log_file = Application.setup(cli)
+            rh_app = Application(cli, execution_dir, debug_log_file, report_log_file)
             rh_app.set_upstream_monitoring()
             self.log.info("Rebasehelper package %s %s" % (package, upstream))
             result_rh = rh_app.run()
@@ -194,19 +197,21 @@ class Koji(object):
         return result_rh, rh_stuff
 
     def rebase_helper_checkers(self, new_version, old_task_id, new_task_id, tmp_dir):
-        argument = ['--buildtool', 'fedpkg',
+        argument = ['--buildtool', 'koji',
                     '--non-interactive',
                     '--builds-nowait',
                     '--results-dir', tmp_dir,
-                    '--fedpkg-build-tasks',
+                    '--build-tasks',
                     old_task_id + ',' + new_task_id,
                     new_version,
                     ]
         rh_app = None
         rh_stuff = None
         try:
+            LoggerHelper.add_stream_handler(logger, logging.INFO)
             cli = CLI(argument)
-            rh_app = Application(cli)
+            execution_dir, debug_log_file, report_log_file = Application.setup(cli)
+            rh_app = Application(cli, execution_dir, debug_log_file, report_log_file)
             ret_code = rh_app.run()
             if int(ret_code) != 0:
                 self.log.warn('Comparing package were not successful')
