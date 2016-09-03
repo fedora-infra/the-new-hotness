@@ -71,8 +71,7 @@ config = {
 
     'hotness.pkgdb_url': 'https://admin.fedoraproject.org/pkgdb/api',
 
-    'hotness.pkg_manager': 'dnf',
-    'hotness.yumconfig': './yum-config',
+    "hotness.mdapi_url": "https://apps.fedoraproject.org/mdapi",
 
     "hotness.cache": {
         "backend": "dogpile.cache.dbm",
