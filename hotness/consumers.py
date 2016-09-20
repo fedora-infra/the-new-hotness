@@ -123,10 +123,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             if not hasattr(hotness.cache.cache, 'backend'):
                 hotness.cache.cache.configure(**self.config['hotness.cache'])
 
-        self.package_manager = self.config.get('hotness.pkg_manager', 'yum')
-        self.log.info("Using hotness.pkg_manager=%r" % self.package_manager)
-        self.yumconfig = self.config.get('hotness.yumconfig')
-        self.log.info("Using hotness.yumconfig=%r" % self.yumconfig)
+        self.mdapi_url = self.config.get("hotness.mdapi_url")
+        self.log.info("Using hotness.mdapi_url=%r" % self.mdapi_url)
         self.repoid = self.config.get('hotness.repoid', 'rawhide')
         self.log.info("Using hotness.repoid=%r" % self.repoid)
         self.distro = self.config.get('hotness.distro', 'Fedora')
@@ -221,21 +219,19 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         is_monitored = self.is_monitored(package)
 
         # Is it new to us?
-        fname = self.yumconfig
-        try:
-            version, release = hotness.repository.get_version(
-                package, fname, self.package_manager)
-        except KeyError:
-            # At this point, we have tried very hard to find the rawhide
-            # version of the package.  If we didn't find it, that means there
-            # likely hasn't yet been a rawhide build of it.. and there's
-            # nothing reasonable we can do.  Notify the world of our failure
-            # and go back to the event loop.
-            self.log.warn("No rawhide version found for %r" % package)
+        mdapi_url = '{0}/srcpkg/koji/{1}'.format(self.mdapi_url, package)
+        self.log.debug("Getting pkg info from %r" % mdapi_url)
+        r = requests.get(mdapi_url)
+        if r.status != 200:
+            # Unfortunately it's not in mdapi, we can't do much about it
+            self.log.warning("No koji version found for %r" % package)
             if is_monitored:
                 self.publish("update.drop", msg=dict(
                     trigger=msg, reason="rawhide"))
             return
+        js = r.json()
+        version = js["version"]
+        release = js["release"]
 
         self.log.info("Comparing upstream %s against repo %s-%s" % (
             upstream, version, release))
