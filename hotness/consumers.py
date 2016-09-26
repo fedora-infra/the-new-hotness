@@ -283,10 +283,13 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 else:
                     note = 'Patching or scratch build for %s-%s failed.\n' % (package, version)
                     self.bugzilla.follow_up(note, bz)
-                    if 'logs' in rh_stuff['build_logs']:
-                        for log in rh_stuff['build_logs']['logs']:
-                            note = 'Build log %s.' % log
-                            self.bugzilla.attach_log(log, note, bz)
+
+                    if 'build_ref' in rh_stuff.get('build_logs', {}):
+                        build_ref = rh_stuff['build_logs']['build_ref'] or {}
+                        for result in six.itervalues(build_ref):
+                            for log in result.get('logs', []):
+                                self.bugzilla.attach_log(log, 'Build log %s.' % log, bz)
+
                     # Attach rebase-helper logs for another analysis
                     if 'logs' in rh_stuff:
                         for log in rh_stuff['logs']:
