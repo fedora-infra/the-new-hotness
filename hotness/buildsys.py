@@ -188,6 +188,8 @@ class Koji(object):
             rh_app.set_upstream_monitoring()
             self.log.info("Rebasehelper package %s %s" % (package, upstream))
             result_rh = rh_app.run()
+            if result_rh is None:
+                result_rh = 0
             self.log.info("Rebasehelper finish properly")
 
         except Exception as ex:
