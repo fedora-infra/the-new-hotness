@@ -31,7 +31,6 @@ import hotness.buildsys
 import hotness.bz
 import hotness.cache
 import hotness.helpers
-import hotness.repository
 import os
 import shutil
 import tempfile
@@ -219,10 +218,10 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         is_monitored = self.is_monitored(package)
 
         # Is it new to us?
-        mdapi_url = '{0}/srcpkg/koji/{1}'.format(self.mdapi_url, package)
+        mdapi_url = '{0}/koji/srcpkg/{1}'.format(self.mdapi_url, package)
         self.log.debug("Getting pkg info from %r" % mdapi_url)
         r = requests.get(mdapi_url)
-        if r.status != 200:
+        if r.status_code != 200:
             # Unfortunately it's not in mdapi, we can't do much about it
             self.log.warning("No koji version found for %r" % package)
             if is_monitored:
