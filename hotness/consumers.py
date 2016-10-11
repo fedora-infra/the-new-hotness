@@ -749,7 +749,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                         rh_stuff = None
                     # Koji build was successful and we can compare both packages
                     elif new_state == 'CLOSED':
-                        self.bugzilla.follow_up(text, bug)
                         if old_state is not None:
                             # We do not want to call rebase-helper if old koji was cancelled
                             # remove both task from triggers
