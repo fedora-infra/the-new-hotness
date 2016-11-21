@@ -7,3 +7,6 @@ dist
 *.key
 *.gpg
 fedmsg.d/hotness.py
+
+# Docs
+*_build/
