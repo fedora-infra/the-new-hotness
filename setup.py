@@ -22,4 +22,5 @@ setup(
     [moksha.consumer]
     bug_filer = hotness.consumers:BugzillaTicketFiler
     """,
+    test_suite='tests',
 )

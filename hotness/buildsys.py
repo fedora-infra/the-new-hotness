@@ -9,7 +9,6 @@ import string
 import subprocess as sp
 import tempfile
 import time
-import six
 
 import koji
 import sh

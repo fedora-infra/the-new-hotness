@@ -16,15 +16,14 @@
     :contact: opensource@till.name
     :license: GPLv2+
 """
-__docformat__ = "restructuredtext"
-
-#from twisted.internet import reactor
 
 import fnmatch
 import re
 import pprint as pprint_module
 
 import rpm
+
+__docformat__ = "restructuredtext"
 
 pp = pprint_module.PrettyPrinter(indent=4)
 pprint = pp.pprint
@@ -120,12 +119,6 @@ def get_html(url, callback=None, errback=None):
 
             c.perform()
             c.close()
-
-            # this causes a hangug if reactor.run() was already called once
-            #df = getPage(url)
-            #df.addCallback(res.write)
-            #df.addCallback(lambda ignore: reactor.stop())
-            #reactor.run()
 
             data = res.getvalue()
             res.close()

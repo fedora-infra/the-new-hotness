@@ -34,14 +34,10 @@ import hotness.helpers
 import os
 import shutil
 import tempfile
-import time
 import six
-
-import koji
 
 
 class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
-
 
     # We can do multiple topics like this as of moksha.hub-1.4.4
     # https://github.com/mokshaproject/moksha/pull/25
@@ -172,7 +168,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # First, What is this thing called in our distro?
         # (we do this little inner.get(..) trick to handle legacy messages)
         inner = msg['msg'].get('message', msg['msg'])
-        if not self.distro in [p['distro'] for p in inner['packages']]:
+        if self.distro not in [p['distro'] for p in inner['packages']]:
             self.log.info("No %r mapping for %r.  Dropping." % (
                 self.distro, msg['msg']['project']['name']))
             self.publish("update.drop", msg=dict(trigger=msg, reason="anitya"))
@@ -277,9 +273,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                                 dict_version = build_ref[ver]
                                 task_id = dict_version['koji_task_id']
                                 if 'old' == ver:
-                                    self.old_triggered_task_ids[task_id] = [bz, None, str(version), str(package)]
+                                    self.old_triggered_task_ids[task_id] = [
+                                        bz, None, str(version), str(package)]
                                 else:
-                                    self.new_triggered_task_ids[task_id] = [bz, None, str(upstream), str(package)]
+                                    self.new_triggered_task_ids[task_id] = [
+                                        bz, None, str(upstream), str(package)]
                 else:
                     note = 'Patching or scratch build for %s-%s failed.\n' % (package, version)
                     self.bugzilla.follow_up(note, bz)
@@ -295,7 +293,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                         for log in rh_stuff['logs']:
                             rebase_helper_url = 'https://github.com/phracek/rebase-helper/issues'
                             note_logs = 'Rebase-helper %s log file.\n' \
-                                        'See for details and report the eventual error to rebase-helper %s.' % \
+                                        'See for details and report the eventual error to' \
+                                        'rebase-helper %s.' % \
                                         (os.path.basename(log), rebase_helper_url)
                             self.bugzilla.attach_log(log, note_logs, bz)
 
@@ -307,10 +306,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                     shutil.rmtree(tmp)
 
             except Exception as ex:
-                self.log.info('Customer.py: Rebase helper failed with an unknown reason. %s' % str(ex))
+                self.log.info('Customer.py: Rebase helper failed with an '
+                              'unknown reason: ' + str(ex))
                 self.log.info(rh_stuff)
-                self.bugzilla.follow_up('Rebase helper failed.\n'
-                                        'See logs and attachments in this bugzilla %s' % ex.message, bz)
+                self.bugzilla.follow_up('Rebase helper failed.\n See logs '
+                                        'and attachments in this bugzilla ' + str(ex), bz)
                 if 'patches' in rh_stuff:
                     for patch in rh_stuff['patches']:
                         self.bugzilla.follow_up(patch, bz)
@@ -372,7 +372,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         url = fedmsg.meta.msg2link(msg, **self.hub.config)
         subtitle = fedmsg.meta.msg2subtitle(msg, **self.hub.config)
-        text1 = "Scratch build %s %s" % (done_states.get(state, state), url)
         text2 = "%s %s" % (subtitle, url)
 
         # Followup on bugs we filed
@@ -388,20 +387,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         if not bugs:
             self.log.debug("No bugs to update for %r" % msg.get('msg_id'))
             return
-
-        #for bug in bugs:
-        #    # Don't followup on bugs that we have just recently followed up on.
-        #    # https://github.com/fedora-infra/the-new-hotness/issues/17
-        #    latest = bug.comments[-1]    # Check just the latest comment
-        #    target = 'completed http'    # Our comments have this in it
-        #    me = self.bugzilla.username  # Our comments are, obviously, by us.
-        #    if latest['creator'] == me and target in latest['text']:
-        #        self.log.info("%s has a recent comment from me." % bug.weburl)
-        #        continue
-        #
-        #    self.bugzilla.follow_up(text1, bug)
-        #    self.publish("update.bug.followup", msg=dict(
-        #        trigger=msg, bug=dict(bug_id=bug.bug_id)))
 
     def handle_buildsys_real(self, msg):
         idx = msg['msg']['build_id']
@@ -536,7 +521,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.log.info("Handling pkgdb update msg %r" % msg.get('msg_id'))
 
         fields = msg['msg']['fields']
-        if not 'upstream_url' in fields:
+        if 'upstream_url' not in fields:
             self.log.info("Ignoring package edit with no url change.")
             return
 
@@ -560,7 +545,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             anitya.login(self.anitya_username, self.anitya_password)
             if project['homepage'] == homepage:
                 self.log.info("No need to update anitya for %s.  Homepages"
-                                " are already in sync." % project['name'])
+                              " are already in sync." % project['name'])
                 return
 
             self.log.info("Updating anitya url on %s" % project['name'])
@@ -705,7 +690,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                     if old_state == 'CLOSED':
                         # if koji build is finished
                         if new_state is not None:
-                            # Koji build was done properly as for old as for new builds rebase-helper is not called
+                            # Koji build was done properly as for old as for new builds
+                            # rebase-helper is not called
                             if new_state == 'CANCELED':
                                 bug = None
                                 rh_stuff = None
@@ -740,7 +726,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             bz, new_state, new_version, package = self.new_triggered_task_ids[task_id]
             # We do not have nothing to do if koji was canceled
             # remove task_ids from old and new triggers
-            for old_task_id, (old_bz, old_state, old_version, old_package) in six.iteritems(self.old_triggered_task_ids):
+            for old_task_id, (old_bz, old_state, old_version, old_package) in \
+                    six.iteritems(self.old_triggered_task_ids):
                 if int(old_bz.bug_id) == int(bz.bug_id):
                     if new_state == 'CANCELED':
                         self.new_triggered_task_ids.pop(task_id)
