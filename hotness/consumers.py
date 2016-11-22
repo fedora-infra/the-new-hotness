@@ -382,7 +382,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         done_states = {
             'CLOSED': 'completed',
             'FAILED': 'failed',
-            'CANCELLED': 'canceled',
+            'CANCELED': 'canceled',
         }
         state = msg['msg']['new']
         if state not in done_states:
