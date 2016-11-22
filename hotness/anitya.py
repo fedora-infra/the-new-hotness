@@ -3,10 +3,11 @@ import logging
 
 import bs4
 
-ANITYA_URL = 'https://release-monitoring.org/'
-
 from fedora.client import AuthError
 from fedora.client import OpenIdBaseClient
+
+
+ANITYA_URL = 'https://release-monitoring.org/'
 
 log = logging.getLogger('fedmsg')
 

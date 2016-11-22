@@ -25,6 +25,7 @@ import logging
 import bugzilla
 import os
 
+
 class Bugzilla(object):
     base_query = {
         'query_format': 'advanced',

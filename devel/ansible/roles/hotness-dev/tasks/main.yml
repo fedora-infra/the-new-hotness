@@ -25,6 +25,7 @@
     # https://bugzilla.redhat.com/show_bug.cgi?id=1391461
     - python-copr
     - python-dogpile-cache
+    - python-flake8
     - python2-requests
     - python-sh
     - python-six

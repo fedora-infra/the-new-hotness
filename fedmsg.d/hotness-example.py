@@ -32,8 +32,8 @@ config = {
     'hotness.bugzilla.enabled': True,
 
     'hotness.bugzilla': {
-        #'user': None,
-        #'password': None,
+        # 'user': None,
+        # 'password': None,
         'url': 'https://partner-bugzilla.redhat.com',
         'product': 'Fedora',
         'version': 'rawhide',
@@ -65,8 +65,8 @@ config = {
 
     'hotness.anitya': {
         'url': 'https://release-monitoring.org',
-        #'username': '....',
-        #'password': '....',
+        # 'username': '....',
+        # 'password': '....',
     },
 
     'hotness.pkgdb_url': 'https://admin.fedoraproject.org/pkgdb/api',

@@ -26,7 +26,7 @@ config = dict(
     high_water_mark=0,
     io_threads=1,
 
-    ## For the fedmsg-hub and fedmsg-relay. ##
+    # For the fedmsg-hub and fedmsg-relay. #
 
     # We almost always want the fedmsg-hub to be sending messages with zmq as
     # opposed to amqp or stomp.

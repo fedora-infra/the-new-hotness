@@ -7,8 +7,9 @@ config = dict(
             ],
         },
 
-        # This is the input side of the relay to which 'fedmsg-logger' and 'fedmsg-dg-replay' will send messages.
-        # It will just repeat those messages out the 'relay_outbound' endpoint on your own box.
+        # This is the input side of the relay to which 'fedmsg-logger' and
+        # 'fedmsg-dg-replay' will send messages. It will just repeat those
+        # messages out the 'relay_outbound' endpoint on your own box.
         relay_inbound=[
             "tcp://127.0.0.1:2003",
         ],
