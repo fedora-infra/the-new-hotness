@@ -81,6 +81,16 @@ config = {
         },
     },
 
+    # The time in seconds the-new-hotness should wait for a socket to connect
+    # before giving up.
+    'hotness.connect_timeout': 15,
+    # The time in seconds the-new-hotness should wait for a read from a socket
+    # before giving up.
+    'hotness.read_timeout': 15,
+    # The number of times the-new-hotness should retry a network request that
+    # that failed for any reason (e.g. read timeout, DNS error, etc)
+    'hotness.requests_retries': 3,
+
     "endpoints": {
         # You need as many of these as you have worker threads.
         'hotness.%s' % hostname: [
