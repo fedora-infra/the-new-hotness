@@ -22,6 +22,7 @@ Authors:    Ralph Bean <rbean@redhat.com>
 import socket
 import traceback
 
+from requests.packages.urllib3.util import retry
 import fedmsg
 import fedmsg.consumers
 import requests
@@ -125,6 +126,23 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.distro = self.config.get('hotness.distro', 'Fedora')
         self.log.info("Using hotness.distro=%r" % self.distro)
 
+        # Retrieve the requests configuration; by default requests time out
+        # after 15 seconds and are retried up to 3 times.
+        self.requests_session = requests.Session()
+        self.timeout = (
+            self.config.get('hotness.connect_timeout', 15),
+            self.config.get('hotness.read_timeout', 15),
+        )
+        retries = self.config.get('hotness.requests_retries', 3)
+        retry_conf = retry.Retry(total=retries, connect=retries, read=retries, backoff_factor=1)
+        retry_conf.BACKOFF_MAX = 5
+        self.requests_session.mount(
+            'http://', requests.adapters.HTTPAdapter(max_retries=retry_conf))
+        self.requests_session.mount(
+            'https://', requests.adapters.HTTPAdapter(max_retries=retry_conf))
+        self.log.info('Requests timeouts are {}s (connect) and {}s (read)'
+                      ' with {} retries'.format(self.timeout[0], self.timeout[1], retries))
+
         # Build a little store where we'll keep track of what koji scratch
         # builds we have kicked off.  We'll look later for messages indicating
         # that they have completed.
@@ -216,7 +234,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # Is it new to us?
         mdapi_url = '{0}/koji/srcpkg/{1}'.format(self.mdapi_url, package)
         self.log.debug("Getting pkg info from %r" % mdapi_url)
-        r = requests.get(mdapi_url)
+        r = self.requests_session.get(mdapi_url, timeout=self.timeout)
         if r.status_code != 200:
             # Unfortunately it's not in mdapi, we can't do much about it
             self.log.warning("No koji version found for %r" % package)
@@ -618,7 +636,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         url = '{0}/package/{1}'.format(self.pkgdb_url, package)
         self.log.debug("Checking %r" % url)
-        r = requests.get(url)
+        r = self.requests_session.get(url, timeout=self.timeout)
 
         if not r.status_code == 200:
             self.log.warning('URL %s returned code %s', r.url, r.status_code)
@@ -645,7 +663,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         url = '{0}/package/{1}'.format(self.pkgdb_url, package)
         self.log.debug("Checking %r" % url)
-        r = requests.get(url)
+        r = self.requests_session.get(url, timeout=self.timeout)
 
         if r.status_code == 404:
             return False
@@ -658,7 +676,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
     def get_dist_tag(self):
         url = '{0}/collections/master/'.format(self.pkgdb_url)
         self.log.debug("Getting dist tag from %r" % url)
-        r = requests.get(url)
+        r = self.requests_session.get(url, timeout=self.timeout)
 
         if not r.status_code == 200:
             raise IOError('URL %s returned code %s', r.url, r.status_code)
