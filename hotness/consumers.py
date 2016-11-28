@@ -283,10 +283,13 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 else:
                     note = 'Patching or scratch build for %s-%s failed.\n' % (package, version)
                     self.bugzilla.follow_up(note, bz)
-                    if 'logs' in rh_stuff['build_logs']:
-                        for log in rh_stuff['build_logs']['logs']:
-                            note = 'Build log %s.' % log
-                            self.bugzilla.attach_patch(log, note, bz)
+
+                    if 'build_ref' in rh_stuff.get('build_logs', {}):
+                        build_ref = rh_stuff['build_logs']['build_ref'] or {}
+                        for result in six.itervalues(build_ref):
+                            for log in result.get('logs', []):
+                                self.bugzilla.attach_log(log, 'Build log %s.' % log, bz)
+
                     # Attach rebase-helper logs for another analysis
                     if 'logs' in rh_stuff:
                         for log in rh_stuff['logs']:
@@ -294,7 +297,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                             note_logs = 'Rebase-helper %s log file.\n' \
                                         'See for details and report the eventual error to rebase-helper %s.' % \
                                         (os.path.basename(log), rebase_helper_url)
-                            self.bugzilla.attach_patch(log, note_logs, bz)
+                            self.bugzilla.attach_log(log, note_logs, bz)
 
                 if 'patches' in rh_stuff:
                     for patch in rh_stuff['patches']:
@@ -314,7 +317,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 if 'logs' in rh_stuff:
                     for log in rh_stuff['logs']:
                         rh_logs = "Log %s provided by rebase-helper." % log
-                        self.bugzilla.attach_patch(log, rh_logs, bz)
+                        self.bugzilla.attach_log(log, rh_logs, bz)
 
                 os.chdir(cwd)
 
@@ -746,7 +749,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                         rh_stuff = None
                     # Koji build was successful and we can compare both packages
                     elif new_state == 'CLOSED':
-                        self.bugzilla.follow_up(text, bug)
                         if old_state is not None:
                             # We do not want to call rebase-helper if old koji was cancelled
                             # remove both task from triggers
@@ -799,7 +801,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                             continue
                         if log.endswith('root.log') or log.endswith('build.log'):
                             rh_log = 'Build log from new sources %s.' % (os.path.basename(log))
-                            self.bugzilla.attach_patch(log, rh_log, bugs)
+                            self.bugzilla.attach_log(log, rh_log, bugs)
             # if check logs are available attach them
             if 'checkers' in rh_stuff:
                 if rh_stuff['checkers']:
@@ -810,11 +812,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                         if os.path.getsize(log) == 0:
                             continue
                         rh_checkers = "Result from checker %s." % check_name
-                        self.bugzilla.attach_patch(log, rh_checkers, bugs)
+                        self.bugzilla.attach_log(log, rh_checkers, bugs)
             # if logs are available from rebase-helper attach them
             if 'logs' in rh_stuff:
                 for log in rh_stuff['logs']:
                     if os.path.getsize(log) == 0:
                         continue
                     rh_logs = "Log %s provided by rebase-helper." % (os.path.basename(log))
-                    self.bugzilla.attach_patch(log, rh_logs, bugs)
+                    self.bugzilla.attach_log(log, rh_logs, bugs)
