@@ -1,0 +1,67 @@
+---
+
+- name: Install helpful development packages
+  dnf: name={{ item }} state=present
+  with_items:
+    - git
+    - ngrep
+    - nmap-ncat
+    - python-rpdb
+    - tmux
+    - tree
+    - vim-enhanced
+
+- name: Install the-new-hotness development packages
+  dnf: name={{ item }} state=present
+  with_items:
+    - fedmsg
+    - fedmsg-hub
+    - fedmsg-relay
+    - koji
+    - rebase-helper
+    - rpm-python
+    - python-bugzilla
+    # we have to explicitly require copr for rebase-helper
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1391461
+    - python-copr
+    - python-dogpile-cache
+    - python2-requests
+    - python-sh
+    - python-six
+    - python2-fedmsg-meta-fedora-infrastructure
+    - python2-fedmsg-commands
+    - rpmdevtools
+
+# Add various helpful configuration files
+- name: Install a custom bashrc
+  become_user: "{{ ansible_env.SUDO_USER }}"
+  copy: src=bashrc dest=/home/{{ ansible_env.SUDO_USER }}/.bashrc
+
+- name: Install the message of the day
+  copy: src=motd dest=/etc/motd
+
+- name: Install the-new-hotness package into /usr/lib
+  pip:
+    name: /home/{{ ansible_env.SUDO_USER }}/devel/
+    extra_args: '-e'
+
+- name: Install fedmsg config to ~/.fedmsg.d
+  become_user: "{{ ansible_env.SUDO_USER }}"
+  copy:
+    src: fedmsg.d/
+    dest: /home/{{ ansible_env.SUDO_USER }}/.fedmsg.d
+
+- name: Create systemd user unit directory
+  become_user: "{{ ansible_env.SUDO_USER }}"
+  file:
+    path: /home/{{ ansible_env.SUDO_USER }}/.config/systemd/user/
+    state: directory
+
+- name: Install the hub service files for systemd
+  become_user: "{{ ansible_env.SUDO_USER }}"
+  copy:
+    src: "{{ item }}"
+    dest: /home/{{ ansible_env.SUDO_USER }}/.config/systemd/user/{{ item }}
+  with_items:
+    - hub.service
+    - relay.service

@@ -10,3 +10,7 @@ fedmsg.d/hotness.py
 
 # Docs
 *_build/
+
+# Vagrant-related files
+Vagrantfile
+*.retry

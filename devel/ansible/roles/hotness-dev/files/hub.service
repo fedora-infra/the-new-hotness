@@ -1,0 +1,10 @@
+[Unit]
+Description=The fedmsg hub service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/fedmsg-hub
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

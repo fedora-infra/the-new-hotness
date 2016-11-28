@@ -1,0 +1,14 @@
+
+Welcome to The New Hotness development environment!
+
+Here are some tips:
+
+* The code for the-new-hotness is located at ~/devel/
+
+* Run `hotstart` to start the development services and `hotstop` to stop it.
+
+* Logs for the server are available with `journalctl`; the services are run
+  as systemd user units in ~/.config/systemd/user/
+
+Happy hacking!
+
