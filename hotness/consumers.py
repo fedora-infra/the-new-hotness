@@ -331,72 +331,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                               "Skipping scratch build.")
                 return
 
-            cwd = os.getcwd()
-            result_rh = 0
-            rh_stuff = {}
-            tmp = tempfile.mkdtemp(prefix='thn-rh', dir='/var/tmp')
-            try:
-                result_rh, rh_stuff = self.buildsys.rebase_helper(package, upstream, tmp, bz)
-                self.log.info(rh_stuff)
-                if int(result_rh) == 0:
-                    if 'build_logs' in rh_stuff and 'build_ref' in rh_stuff.get('build_logs'):
-                        build_ref = rh_stuff['build_logs']['build_ref']
-                        if build_ref:
-                            for ver in ['old', 'new']:
-                                dict_version = build_ref[ver]
-                                task_id = dict_version['koji_task_id']
-                                if 'old' == ver:
-                                    self.old_triggered_task_ids[task_id] = [
-                                        bz, None, str(version), str(package)]
-                                else:
-                                    self.new_triggered_task_ids[task_id] = [
-                                        bz, None, str(upstream), str(package)]
-                else:
-                    note = 'Patching or scratch build for %s-%s failed.\n' % (package, version)
-                    self.bugzilla.follow_up(note, bz)
-
-                    if 'build_ref' in rh_stuff.get('build_logs', {}):
-                        build_ref = rh_stuff['build_logs']['build_ref'] or {}
-                        for result in six.itervalues(build_ref):
-                            for log in result.get('logs', []):
-                                self.bugzilla.attach_log(log, 'Build log %s.' % log, bz)
-
-                    # Attach rebase-helper logs for another analysis
-                    if 'logs' in rh_stuff:
-                        for log in rh_stuff['logs']:
-                            rebase_helper_url = 'https://github.com/phracek/rebase-helper/issues'
-                            note_logs = 'Rebase-helper %s log file.\n' \
-                                        'See for details and report the eventual error to' \
-                                        'rebase-helper %s.' % \
-                                        (os.path.basename(log), rebase_helper_url)
-                            self.bugzilla.attach_log(log, note_logs, bz)
-
-                if 'patches' in rh_stuff:
-                    for patch in rh_stuff['patches']:
-                        self.bugzilla.follow_up(patch, bz)
-                os.chdir(cwd)
-                if os.path.exists(tmp):
-                    shutil.rmtree(tmp)
-
-            except Exception as ex:
-                self.log.info('Customer.py: Rebase helper failed with an '
-                              'unknown reason: ' + str(ex))
-                self.log.info(rh_stuff)
-                self.bugzilla.follow_up('Rebase helper failed.\n See logs '
-                                        'and attachments in this bugzilla ' + str(ex), bz)
-                if 'patches' in rh_stuff:
-                    for patch in rh_stuff['patches']:
-                        self.bugzilla.follow_up(patch, bz)
-                if 'logs' in rh_stuff:
-                    for log in rh_stuff['logs']:
-                        rh_logs = "Log %s provided by rebase-helper." % log
-                        self.bugzilla.attach_log(log, rh_logs, bz)
-
-                os.chdir(cwd)
-
-                if os.path.exists(tmp):
-                    shutil.rmtree(tmp)
-
+            if not self._rebase(package, version, upstream, bz):
+                # Fall back to the original process
                 self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
                 try:
                     # Kick off a scratch build..
@@ -404,7 +340,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                         package, upstream, version, bz)
 
                     # Map that koji task_id to the bz ticket we want to pursue.
-                    self.new_triggered_task_ids[task_id] = [bz, None, str(upstream), str(package)]
+                    self.new_triggered_task_ids[task_id] = [
+                        bz, None, str(upstream), str(package)]
                     # Attach the patch to the ticket
                     self.bugzilla.attach_patch(patch_filename, description, bz)
                 except Exception as e:
@@ -901,6 +838,82 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self._update_bz_rh(bug, rh_stuff)
         shutil.rmtree(tmp)
         os.chdir(cwd)
+
+    def _rebase(self, package, version, upstream, bz):
+        """
+        Try to rebase the package with rebase-helper.
+
+        Runs rebase-helper and follows up on the bugzilla accordingly.
+
+        Returns True unless exception is raised during rebase.
+        """
+        rh_stuff = None
+        tmp = tempfile.mkdtemp(prefix='thn-rh-', dir='/var/tmp')
+        try:
+            result_rh, rh_stuff = self.buildsys.rebase(package, upstream, tmp)
+            notes = []
+
+            if result_rh == 0:
+                notes.append("Package rebased successfully.")
+                notes.append("")
+                notes.extend(rh_stuff.get('patches', []))
+
+                task_ids = self._register_tasks(package, version, upstream, bz, rh_stuff)
+
+                for ver, task_id in zip(['rawhide', 'rebased'], task_ids):
+                    notes.append("")
+                    notes.append("Triggered scratch build of %s version:" % ver)
+                    koji_url = "https://koji.fedoraproject.org/koji/taskinfo?taskID=%s"
+                    notes.append(koji_url % task_id)
+            else:
+                notes.append("SRPM rebuild or patching failed.")
+                notes.append("")
+                notes.extend(rh_stuff.get('patches', []))
+
+            self.bugzilla.follow_up("\n".join(notes), bz)
+
+            if result_rh != 0:
+                self._rh_attach_logs(bz, rh_stuff)
+
+        except Exception as e:
+            self.log.warning("rebase-helper failed with: %s" % str(e))
+            self.log.warning(traceback.format_exc())
+            self._rh_fail(e, bz, rh_stuff)
+            return False
+        else:
+            return True
+
+        finally:
+            self.log.debug("Removing %r" % tmp)
+            shutil.rmtree(tmp)
+
+    def _register_tasks(self, package, version, upstream, bz, rh_stuff):
+        """
+        Add tasks initiated by rebase-helper to tracking dicts.
+
+        Task ids are retrieved from rh_stuff dictionary containing data
+        from rebase-helper.
+
+        Returns ids of both tasks.
+        """
+        old_task_id = None
+        new_task_id = None
+
+        for ver in ['old', 'new']:
+            try:
+                task_id = rh_stuff['build_logs']['build_ref'][ver]['koji_task_id']
+                if ver == 'old':
+                    self.old_triggered_task_ids[task_id] = [
+                        bz, None, str(version), str(package)]
+                    old_task_id = task_id
+                else:
+                    self.new_triggered_task_ids[task_id] = [
+                        bz, None, str(upstream), str(package)]
+                    new_task_id = task_id
+            except KeyError:
+                pass
+
+        return old_task_id, new_task_id
 
     def _rh_attach_logs(self, bz, rh_stuff, debug=False):
         """
