@@ -182,8 +182,7 @@ class Koji(object):
             argument = ['--non-interactive', '--builds-nowait', '--buildtool', 'koji', upstream]
             LoggerHelper.add_stream_handler(logger, logging.INFO)
             cli = CLI(argument)
-            execution_dir, debug_log_file, report_log_file = Application.setup(cli)
-            rh_app = Application(cli, execution_dir, debug_log_file, report_log_file)
+            rh_app = Application(cli, *Application.setup(cli))
             rh_app.set_upstream_monitoring()
             self.log.info("Rebasehelper package %s %s" % (package, upstream))
             result_rh = rh_app.run()
@@ -211,8 +210,7 @@ class Koji(object):
         try:
             LoggerHelper.add_stream_handler(logger, logging.INFO)
             cli = CLI(argument)
-            execution_dir, debug_log_file, report_log_file = Application.setup(cli)
-            rh_app = Application(cli, execution_dir, debug_log_file, report_log_file)
+            rh_app = Application(cli, *Application.setup(cli))
             ret_code = rh_app.run()
             if int(ret_code) != 0:
                 self.log.warn('Comparing package were not successful')
