@@ -39,6 +39,32 @@ import six
 
 
 class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
+    """
+    A fedmsg consumer that is the heart of the-new-hotness.
+
+    This consumer subscribes to the following topics:
+
+    * 'org.fedoraproject.prod.buildsys.task.state.change'
+      handled by :method:`BugzillaTicketFiler.handle_buildsys_scratch`
+
+    * 'org.fedoraproject.prod.buildsys.build.state.change'
+      handled by :method:`BugzillaTicketFiler.handle_buildsys_real`
+
+    * 'org.fedoraproject.prod.pkgdb.package.new'
+      handled by :method:`BugzillaTicketFiler.handle_new_package`
+
+    * 'org.fedoraproject.prod.pkgdb.package.update'
+      handled by :method:`BugzillaTicketFiler.handle_updated_package`
+
+    * 'org.fedoraproject.prod.pkgdb.package.monitor.update'
+      handled by :method:`BugzillaTicketFiler.handle_monitor_toggle`
+
+    * 'org.release-monitoring.prod.anitya.project.version.update'
+      handled by :method:`BugzillaTicketFiler.handle_anitya_version_update`
+
+    * 'org.release-monitoring.prod.anitya.project.map.new'
+      handled by :method:`BugzillaTicketFiler.handle_anitya_map_new`
+    """
 
     # We can do multiple topics like this as of moksha.hub-1.4.4
     # https://github.com/mokshaproject/moksha/pull/25
@@ -152,10 +178,16 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.log.info("That new hotness ticket filer is all initialized")
 
     def publish(self, topic, msg):
+        """
+        Publish a fedmsg message to the specified topic.
+        """
         self.log.info("publishing topic %r" % topic)
         fedmsg.publish(modname='hotness', topic=topic, msg=msg)
 
     def consume(self, msg):
+        """
+        Called when a message arrives on the fedmsg bus.
+        """
         topic, msg = msg['topic'], msg['body']
         self.log.debug("Received %r" % msg.get('msg_id', None))
 
@@ -182,6 +214,19 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             pass
 
     def handle_anitya_version_update(self, msg):
+        """
+        Message handler for new versions found by Anitya.
+
+        This handler deals with new versions found by Anitya. A new upstream
+        release can map to several downstream packages, so each package in
+        Rawhide (if any) are checked against the newly released version. If
+        they are older than the new version, a bug is filed.
+
+        Topic: ``org.release-monitoring.prod.anitya.project.version.update``
+
+        Publishes to ``update.drop`` if there is no mapping to a package in
+        Fedora.
+        """
         self.log.info("Handling anitya msg %r" % msg.get('msg_id', None))
         # First, What is this thing called in our distro?
         # (we do this little inner.get(..) trick to handle legacy messages)
@@ -204,6 +249,16 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 self._handle_anitya_update(upstream, pname, msg)
 
     def handle_anitya_map_new(self, msg):
+        """
+        Message handler for projects newly mapped to Fedora in Anitya.
+
+        This handler is used when a project is mapped to a Fedora package in
+        Anitya. It triggers Anitya to perform a check for the latest upstream
+        version, then compares that to the version in Rawhide. If Rawhide does
+        not have the latest version, a bug is filed.
+
+        Topic: 'org.release-monitoring.prod.anitya.project.map.new'
+        """
         message = msg['msg']['message']
         if message['distro'] != self.distro:
             self.log.info("New mapping on %s, not for %s.  Dropping." % (
@@ -360,6 +415,16 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                     self.bugzilla.follow_up(note, bz)
 
     def handle_buildsys_scratch(self, msg):
+        """
+        Message handler for scratch builds in the build system.
+
+        This handler is used to check up on scratch builds this consumer
+        dispatched. When a message arrives it is checked to see if it is
+        in a completed state and if it belongs to this consumer. A follow-up
+        comment is left on bugs filed when builds are completed.
+
+        Topic: 'org.fedoraproject.prod.buildsys.task.state.change'
+        """
         instance = msg['msg']['instance']
 
         if instance != 'primary':
@@ -407,6 +472,14 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             return
 
     def handle_buildsys_real(self, msg):
+        """
+        Message handlers for real builds (not scratch) in the build system.
+
+        This handles messages for the real builds. It only examines builds
+        for Rawhide. It comments on bugs filed by this consumer previously.
+
+        Topic: 'org.fedoraproject.prod.buildsys.build.state.change'
+        """
         idx = msg['msg']['build_id']
         state = msg['msg']['new']
         release = msg['msg']['release'].split('.')[-1]
@@ -479,6 +552,18 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 trigger=msg, bug=dict(bug_id=bug.bug_id)))
 
     def handle_new_package(self, msg, package):
+        """
+        Message handler for newly added packages in pkgdb.
+
+        When a new package is added to pkgdb, this ensures that there is a
+        mapping in release-monitoring.org for that package. If it is not
+        present, this adds it, if possible.
+
+        Topic: 'org.fedoraproject.prod.pkgdb.package.new',
+
+        Publish a message to ``project.map`` with the results of the attempt
+        map the package to a project.
+        """
         name = package['name']
         homepage = package['upstream_url']
 
@@ -536,6 +621,20 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 reason=reason))
 
     def handle_updated_package(self, msg):
+        """
+        Message handler for updates to packages in pkgdb.
+
+        When a package is updated in pkgdb, this ensures that if the
+        upstream_url changes in pkgdb, the changes are pushed to Anitya.
+        This can result in either an update to the Anitya project entry,
+        or an entirely new entry if the package did not previously exist
+        in Anitya.
+
+        Topic: 'org.fedoraproject.prod.pkgdb.package.update',
+
+        Publish a message to ``project.map`` with the results of the attempt
+        map the package to a project if the project is not already on Anitya.
+        """
         self.log.info("Handling pkgdb update msg %r" % msg.get('msg_id'))
 
         fields = msg['msg']['fields']
@@ -574,6 +673,15 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.handle_new_package(msg, package)
 
     def handle_monitor_toggle(self, msg):
+        """
+        Message handler for packages whose monitoring is adjusted in pkgdb.
+
+        If a package has its monitoring turned off, this does nothing. If it is
+        turned on, this ensures the package exists in Anitya and forces Anitya
+        to check for the latest version.
+
+        Topic: 'org.fedoraproject.prod.pkgdb.package.monitor.update'
+        """
         status = msg['msg']['status']
         name = msg['msg']['package']['name']
         homepage = msg['msg']['package']['upstream_url']
