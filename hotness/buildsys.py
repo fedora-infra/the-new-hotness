@@ -33,6 +33,9 @@ class Koji(object):
         self.priority = config['priority']
         self.target_tag = config['target_tag']
 
+        # enable console logging from rebase-helper
+        LoggerHelper.add_stream_handler(logger, self.log.level)
+
     def session_maker(self):
         koji_session = koji.ClientSession(self.server, {'timeout': 3600})
         koji_session.ssl_login(self.cert, self.ca_cert, self.ca_cert)
@@ -163,60 +166,60 @@ class Koji(object):
             shutil.rmtree(tmp)
             pass
 
-    def rebase_helper(self, package, upstream, tmp, bz):
+    def _run_rh(self, package, args, tmp_dir):
         """
-        Rebase helper part which does a rebase a inform package
-        maintainer whether package was rebased properly.
-        Output information are in dictionary rh_stuff.
+        Execute rebase-helper with given arguments.
 
+        Returns exit code and data from rebase-helper.
         """
-        self.log.info("Rebase-helper is going to rebase package")
-        rh_stuff = {}
-        result_rh = -1
-        rh_app = None
-        url = self.git_url.format(package=package)
-        self.log.info("Cloning %r to %r" % (url, tmp))
-        sh.git.clone(url, tmp)
-        os.chdir(tmp)
+        if package:
+            url = self.git_url.format(package=package)
+            self.log.info("Cloning %r to %r" % (url, tmp_dir))
+            sh.git.clone(url, tmp_dir)
+
+        cwd = os.getcwd()
+        os.chdir(tmp_dir)
         try:
-            argument = ['--non-interactive', '--builds-nowait', '--buildtool', 'koji', upstream]
-            LoggerHelper.add_stream_handler(logger, logging.INFO)
-            cli = CLI(argument)
+            cli = CLI(args)
             rh_app = Application(cli, *Application.setup(cli))
             rh_app.set_upstream_monitoring()
-            self.log.info("Rebasehelper package %s %s" % (package, upstream))
+            self.log.info("Running rebase-helper with arguments '%s'" % ' '.join(args))
             result_rh = rh_app.run()
-            if result_rh is None:
-                result_rh = 0
-            self.log.info("Rebasehelper finish properly")
+            rh_stuff = rh_app.get_rebasehelper_data()
+        finally:
+            os.chdir(cwd)
 
-        except Exception as ex:
-            self.log.info('builsys.py: Rebase helper failed with unknown reason. %s' % str(ex))
-        rh_stuff = rh_app.get_rebasehelper_data()
-        self.log.info(rh_stuff)
+        result_rh = int(result_rh) if result_rh else 0
+        self.log.info("rebase-helper finished with exit code %d" % result_rh)
+        self.log.debug(rh_stuff)
         return result_rh, rh_stuff
 
-    def rebase_helper_checkers(self, new_version, old_task_id, new_task_id, tmp_dir):
-        argument = ['--buildtool', 'koji',
-                    '--non-interactive',
-                    '--builds-nowait',
-                    '--results-dir', tmp_dir,
-                    '--build-tasks',
-                    old_task_id + ',' + new_task_id,
-                    new_version,
-                    ]
-        rh_app = None
-        rh_stuff = None
-        try:
-            LoggerHelper.add_stream_handler(logger, logging.INFO)
-            cli = CLI(argument)
-            rh_app = Application(cli, *Application.setup(cli))
-            ret_code = rh_app.run()
-            if int(ret_code) != 0:
-                self.log.warn('Comparing package were not successful')
-            rh_stuff = rh_app.get_rebasehelper_data()
-        except Exception:
-            self.log.exception('Compare packages failed.')
-        self.log.info(rh_stuff)
+    def rebase(self, package, upstream, tmp_dir):
+        """
+        Rebase the package using rebase-helper.
 
-        return rh_stuff
+        Returns exit code and data from rebase-helper.
+        """
+        args = [
+            '--non-interactive',
+            '--builds-nowait',
+            '--buildtool', 'koji',
+            upstream
+        ]
+        return self._run_rh(package, args, tmp_dir)
+
+    def check_rebase(self, upstream, old_task_id, new_task_id, tmp_dir):
+        """
+        Check and compare rawhide and rebased version builds
+        using rebase-helper.
+
+        Returns exit code and data from rebase-helper.
+        """
+        args = [
+            '--non-interactive',
+            '--builds-nowait',
+            '--buildtool', 'koji',
+            '--build-tasks', '%s,%s' % (old_task_id, new_task_id),
+            upstream
+        ]
+        return self._run_rh(None, args, tmp_dir)
