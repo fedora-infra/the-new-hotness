@@ -340,8 +340,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                         package, upstream, version, bz)
 
                     # Map that koji task_id to the bz ticket we want to pursue.
-                    self.new_triggered_task_ids[task_id] = [
-                        bz, None, str(upstream), str(package)]
+                    self.new_triggered_task_ids[task_id] = dict(
+                        bz=bz, state=None, version=str(upstream))
                     # Attach the patch to the ticket
                     self.bugzilla.attach_patch(patch_filename, description, bz)
                 except Exception as e:
@@ -741,9 +741,9 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         """
         # Update task state
         if task_id in self.old_triggered_task_ids:
-            self.old_triggered_task_ids[task_id][1] = state
+            self.old_triggered_task_ids[task_id]['state'] = state
         elif task_id in self.new_triggered_task_ids:
-            self.new_triggered_task_ids[task_id][1] = state
+            self.new_triggered_task_ids[task_id]['state'] = state
 
         old_task_id, new_task_id = self._find_tasks(task_id)
 
@@ -754,7 +754,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         old_task = self.old_triggered_task_ids[old_task_id]
         new_task = self.new_triggered_task_ids[new_task_id]
 
-        if None in (old_task[1], new_task[1]):
+        if None in (old_task['state'], new_task['state']):
             # At least one task is still open
             return
 
@@ -820,21 +820,21 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         old_task = self.old_triggered_task_ids[old_task_id]
         new_task = self.new_triggered_task_ids[new_task_id]
 
-        bz = old_task[0]
-        upstream = new_task[2]
+        bz = old_task['bz']
+        upstream = new_task['version']
 
-        if old_task[1] == 'CLOSED':
+        if old_task['state'] == 'CLOSED':
             rh_stuff = None
             tmp = tempfile.mkdtemp(prefix='thn-rh-', dir='/var/tmp')
             try:
                 result_rh, rh_stuff = self.buildsys.check_rebase(
                     upstream, old_task_id, new_task_id, tmp)
 
-                if new_task[1] == 'CLOSED':
+                if new_task['state'] == 'CLOSED':
                     self.bugzilla.follow_up("Scratch builds compared successfully.", bz)
-                elif new_task[1] == 'FAILED':
+                elif new_task['state'] == 'FAILED':
                     self.bugzilla.follow_up("Scratch build of rebased version failed.", bz)
-                elif new_task[1] == 'CANCELED':
+                elif new_task['state'] == 'CANCELED':
                     self.bugzilla.follow_up("Scratch build of rebased version "
                                             "has been canceled.", bz)
                 self._rh_attach_logs(bz, rh_stuff)
@@ -848,9 +848,9 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 self.log.debug("Removing %r" % tmp)
                 shutil.rmtree(tmp)
 
-        elif old_task[1] == 'FAILED':
+        elif old_task['state'] == 'FAILED':
             self.bugzilla.follow_up("Scratch build of rawhide version failed.", bz)
-        elif old_task[1] == 'CANCELED':
+        elif old_task['state'] == 'CANCELED':
             self.bugzilla.follow_up("Scratch build of rawhide version has been canceled.", bz)
 
     def _register_tasks(self, package, version, upstream, bz, rh_stuff):
@@ -869,12 +869,12 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             try:
                 task_id = rh_stuff['build_logs']['build_ref'][ver]['koji_task_id']
                 if ver == 'old':
-                    self.old_triggered_task_ids[task_id] = [
-                        bz, None, str(version), str(package)]
+                    self.old_triggered_task_ids[task_id] = dict(
+                        bz=bz, state=None, version=str(version))
                     old_task_id = task_id
                 else:
-                    self.new_triggered_task_ids[task_id] = [
-                        bz, None, str(upstream), str(package)]
+                    self.new_triggered_task_ids[task_id] = dict(
+                        bz=bz, state=None, version=str(upstream))
                     new_task_id = task_id
             except KeyError:
                 pass
@@ -888,16 +888,16 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         Returns pair of task ids.
         """
         def find_matching_task(bug_id, store):
-            l = [k for k, v in six.iteritems(store) if v[0].bug_id == bug_id]
+            l = [k for k, v in six.iteritems(store) if v['bz'].bug_id == bug_id]
             return l[0] if l else None
 
         if task_id in self.old_triggered_task_ids:
             new_task_id = find_matching_task(
-                self.old_triggered_task_ids[task_id][0].bug_id, self.new_triggered_task_ids)
+                self.old_triggered_task_ids[task_id]['bz'].bug_id, self.new_triggered_task_ids)
             return task_id, new_task_id
         elif task_id in self.new_triggered_task_ids:
             old_task_id = find_matching_task(
-                self.new_triggered_task_ids[task_id][0].bug_id, self.old_triggered_task_ids)
+                self.new_triggered_task_ids[task_id]['bz'].bug_id, self.old_triggered_task_ids)
             return old_task_id, task_id
 
         return None, None
