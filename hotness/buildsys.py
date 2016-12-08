@@ -15,14 +15,15 @@ import sh
 
 from rebasehelper.application import Application
 from rebasehelper.cli import CLI
-from rebasehelper.logger import logger, LoggerHelper
+
+
+_log = logging.getLogger(__name__)
 
 
 class Koji(object):
     def __init__(self, consumer, config):
         self.consumer = consumer
         self.config = config
-        self.log = logging.getLogger('fedmsg')
         self.server = config['server']
         self.weburl = config['weburl']
         self.cert = config['cert']
@@ -32,9 +33,6 @@ class Koji(object):
         self.opts = config['opts']
         self.priority = config['priority']
         self.target_tag = config['target_tag']
-
-        # enable console logging from rebase-helper
-        LoggerHelper.add_stream_handler(logger, self.log.level)
 
     def session_maker(self):
         koji_session = koji.ClientSession(self.server, {'timeout': 3600})
@@ -56,28 +54,28 @@ class Koji(object):
         return '%s/%r.%s' % (prefix, time.time(), suffix)
 
     def upload_srpm(self, session, source):
-        self.log.info('Uploading {source} to koji'.format(source=source))
+        _log.info('Uploading {source} to koji'.format(source=source))
         serverdir = self._unique_path('cli-build')
         session.uploadWrapper(source, serverdir)
         return "%s/%s" % (serverdir, os.path.basename(source))
 
     def scratch_build(self, session, name, source):
         remote = self.upload_srpm(session, source)
-        self.log.info('Intiating koji build for %r' % dict(
+        _log.info('Intiating koji build for %r' % dict(
             name=name, target=self.target_tag, source=remote, opts=self.opts))
         task_id = session.build(
             remote, self.target_tag, self.opts, priority=self.priority)
-        self.log.info('Done: task_id={task_id}'.format(task_id=task_id))
+        _log.info('Done: task_id={task_id}'.format(task_id=task_id))
         return task_id
 
     def run(self, cmd, cwd=None):
-        self.log.info("Running %r in %r", cmd, cwd)
+        _log.info("Running %r in %r", cmd, cwd)
         p = sp.Popen(cmd, cwd=cwd, stdout=sp.PIPE, stderr=sp.PIPE)
         out, err = p.communicate()
         if out:
-            self.log.debug(out)
+            _log.debug(out)
         if err:
-            self.log.warning(err)
+            _log.warning(err)
         if p.returncode != 0:
             message = 'cmd:  %s\nreturn code:  %r\nstdout:\n%s\nstderr:\n%s'
             raise Exception(message % (' '.join(cmd), p.returncode, out, err))
@@ -95,7 +93,7 @@ class Koji(object):
         tmp = tempfile.mkdtemp(prefix='thn-', dir='/var/tmp')
         try:
             url = self.git_url.format(package=package)
-            self.log.info("Cloning %r to %r" % (url, tmp))
+            _log.info("Cloning %r to %r" % (url, tmp))
             sh.git.clone(url, tmp)
 
             specfile = tmp + '/' + package + '.spec'
@@ -116,14 +114,14 @@ class Koji(object):
             output = self.run(['fedpkg', 'sources'], cwd=tmp)
             # fedpkg sources output looks like "Downloading SOURCE\n#######"
             oldfile = output.strip().split()[1]
-            self.log.debug("fedpkg grabbed %r", oldfile)
+            _log.debug("fedpkg grabbed %r", oldfile)
 
             # Then go and get the *new* tarball from upstream.
             # For these to work, it requires that rpmmacros be redefined to
             # find source files in the tmp directory.  See:  http://da.gd/1MWt
             output = self.run(['spectool', '-g', specfile], cwd=tmp)
             newfile = output.strip().split()[-1]
-            self.log.debug("spectool grabbed %r", oldfile)
+            _log.debug("spectool grabbed %r", oldfile)
 
             # Now, handle an edge case before we proceed with building.
             # Sometimes, the specfiles have versions hardcoded in them such
@@ -145,7 +143,7 @@ class Koji(object):
             output = self.run(['rpmbuild', '-bs', specfile], cwd=tmp)
 
             srpm = os.path.join(tmp, output.strip().split()[-1])
-            self.log.debug("Got srpm %r" % srpm)
+            _log.debug("Got srpm %r" % srpm)
 
             session = self.session_maker()
             task_id = self.scratch_build(session, package, srpm)
@@ -162,7 +160,7 @@ class Koji(object):
             shutil.move(os.path.join(tmp, filename), destination)
             return task_id, destination, '[patch] ' + comment
         finally:
-            self.log.debug("Removing %r" % tmp)
+            _log.debug("Removing %r" % tmp)
             shutil.rmtree(tmp)
             pass
 
@@ -174,7 +172,7 @@ class Koji(object):
         """
         if package:
             url = self.git_url.format(package=package)
-            self.log.info("Cloning %r to %r" % (url, tmp_dir))
+            _log.info("Cloning %r to %r" % (url, tmp_dir))
             sh.git.clone(url, tmp_dir)
 
         cwd = os.getcwd()
@@ -183,15 +181,15 @@ class Koji(object):
             cli = CLI(args)
             rh_app = Application(cli, *Application.setup(cli))
             rh_app.set_upstream_monitoring()
-            self.log.info("Running rebase-helper with arguments '%s'" % ' '.join(args))
+            _log.info("Running rebase-helper with arguments '%s'" % ' '.join(args))
             result_rh = rh_app.run()
             rh_stuff = rh_app.get_rebasehelper_data()
         finally:
             os.chdir(cwd)
 
         result_rh = int(result_rh) if result_rh else 0
-        self.log.info("rebase-helper finished with exit code %d" % result_rh)
-        self.log.debug(rh_stuff)
+        _log.info("rebase-helper finished with exit code %d" % result_rh)
+        _log.debug(rh_stuff)
         return result_rh, rh_stuff
 
     def rebase(self, package, upstream, tmp_dir):

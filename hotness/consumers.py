@@ -19,23 +19,27 @@ Authors:    Ralph Bean <rbean@redhat.com>
 
 """
 
+import logging
+import os
+import shutil
 import socket
+import tempfile
 import traceback
 
 from requests.packages.urllib3.util import retry
 import fedmsg
 import fedmsg.consumers
 import requests
+import six
 
 import hotness.anitya
 import hotness.buildsys
 import hotness.bz
 import hotness.cache
 import hotness.helpers
-import os
-import shutil
-import tempfile
-import six
+
+
+_log = logging.getLogger(__name__)
 
 
 class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
@@ -140,17 +144,17 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.anitya_password = anitya_config.get('password', default)
 
         # Also, set up our global cache object.
-        self.log.info("Configuring cache.")
+        _log.info("Configuring cache.")
         with hotness.cache.cache_lock:
             if not hasattr(hotness.cache.cache, 'backend'):
                 hotness.cache.cache.configure(**self.config['hotness.cache'])
 
         self.mdapi_url = self.config.get("hotness.mdapi_url")
-        self.log.info("Using hotness.mdapi_url=%r" % self.mdapi_url)
+        _log.info("Using hotness.mdapi_url=%r" % self.mdapi_url)
         self.repoid = self.config.get('hotness.repoid', 'rawhide')
-        self.log.info("Using hotness.repoid=%r" % self.repoid)
+        _log.info("Using hotness.repoid=%r" % self.repoid)
         self.distro = self.config.get('hotness.distro', 'Fedora')
-        self.log.info("Using hotness.distro=%r" % self.distro)
+        _log.info("Using hotness.distro=%r" % self.distro)
 
         # Retrieve the requests configuration; by default requests time out
         # after 15 seconds and are retried up to 3 times.
@@ -166,8 +170,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             'http://', requests.adapters.HTTPAdapter(max_retries=retry_conf))
         self.requests_session.mount(
             'https://', requests.adapters.HTTPAdapter(max_retries=retry_conf))
-        self.log.info('Requests timeouts are {}s (connect) and {}s (read)'
-                      ' with {} retries'.format(self.timeout[0], self.timeout[1], retries))
+        _log.info('Requests timeouts are {}s (connect) and {}s (read)'
+                  ' with {} retries'.format(self.timeout[0], self.timeout[1], retries))
 
         # Build a little store where we'll keep track of what koji scratch
         # builds we have kicked off.  We'll look later for messages indicating
@@ -175,13 +179,13 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.old_triggered_task_ids = {}
         self.new_triggered_task_ids = {}
 
-        self.log.info("That new hotness ticket filer is all initialized")
+        _log.info("That new hotness ticket filer is all initialized")
 
     def publish(self, topic, msg):
         """
         Publish a fedmsg message to the specified topic.
         """
-        self.log.info("publishing topic %r" % topic)
+        _log.info("publishing topic %r" % topic)
         fedmsg.publish(modname='hotness', topic=topic, msg=msg)
 
     def consume(self, msg):
@@ -189,7 +193,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         Called when a message arrives on the fedmsg bus.
         """
         topic, msg = msg['topic'], msg['body']
-        self.log.debug("Received %r" % msg.get('msg_id', None))
+        _log.debug("Received %r" % msg.get('msg_id', None))
 
         if topic.endswith('anitya.project.version.update'):
             self.handle_anitya_version_update(msg)
@@ -202,7 +206,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         elif topic.endswith('pkgdb.package.new'):
             listing = msg['msg']['package_listing']
             if listing['collection']['branchname'] != 'master':
-                self.log.debug("Ignoring non-rawhide new package...")
+                _log.debug("Ignoring non-rawhide new package...")
                 return
             self.handle_new_package(msg, listing['package'])
         elif topic.endswith('pkgdb.package.update'):
@@ -210,7 +214,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         elif topic.endswith('pkgdb.package.monitor.update'):
             self.handle_monitor_toggle(msg)
         else:
-            self.log.debug("Dropping %r %r" % (topic, msg['msg_id']))
+            _log.debug("Dropping %r %r" % (topic, msg['msg_id']))
             pass
 
     def handle_anitya_version_update(self, msg):
@@ -227,12 +231,12 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         Publishes to ``update.drop`` if there is no mapping to a package in
         Fedora.
         """
-        self.log.info("Handling anitya msg %r" % msg.get('msg_id', None))
+        _log.info("Handling anitya msg %r" % msg.get('msg_id', None))
         # First, What is this thing called in our distro?
         # (we do this little inner.get(..) trick to handle legacy messages)
         inner = msg['msg'].get('message', msg['msg'])
         if self.distro not in [p['distro'] for p in inner['packages']]:
-            self.log.info("No %r mapping for %r.  Dropping." % (
+            _log.info("No %r mapping for %r.  Dropping." % (
                 self.distro, msg['msg']['project']['name']))
             self.publish("update.drop", msg=dict(trigger=msg, reason="anitya"))
             return
@@ -261,7 +265,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         """
         message = msg['msg']['message']
         if message['distro'] != self.distro:
-            self.log.info("New mapping on %s, not for %s.  Dropping." % (
+            _log.info("New mapping on %s, not for %s.  Dropping." % (
                 message['distro'], self.distro))
             return
 
@@ -269,13 +273,13 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         package = message['new']
         upstream = msg['msg']['project']['version']
 
-        self.log.info("Newly mapped %r to %r bears version %r" % (
+        _log.info("Newly mapped %r to %r bears version %r" % (
             project, package, upstream))
 
         if upstream:
             self._handle_anitya_update(upstream, package, msg)
         else:
-            self.log.info("Forcing an anitya upstream check.")
+            _log.info("Forcing an anitya upstream check.")
             anitya = hotness.anitya.Anitya(self.anitya_url)
             anitya.force_check(msg['msg']['project'])
 
@@ -288,11 +292,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         # Is it new to us?
         mdapi_url = '{0}/koji/srcpkg/{1}'.format(self.mdapi_url, package)
-        self.log.debug("Getting pkg info from %r" % mdapi_url)
+        _log.debug("Getting pkg info from %r" % mdapi_url)
         r = self.requests_session.get(mdapi_url, timeout=self.timeout)
         if r.status_code != 200:
             # Unfortunately it's not in mdapi, we can't do much about it
-            self.log.warning("No koji version found for %r" % package)
+            _log.warning("No koji version found for %r" % package)
             if is_monitored:
                 self.publish("update.drop", msg=dict(
                     trigger=msg, reason="rawhide"))
@@ -301,24 +305,24 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         version = js["version"]
         release = js["release"]
 
-        self.log.info("Comparing upstream %s against repo %s-%s" % (
+        _log.info("Comparing upstream %s against repo %s-%s" % (
             upstream, version, release))
         diff = hotness.helpers.cmp_upstream_repo(upstream, (version, release))
 
         # If so, then poke bugzilla and start a scratch build
         if diff == 1:
-            self.log.info("OK, %s is newer than %s-%s" % (
+            _log.info("OK, %s is newer than %s-%s" % (
                 upstream, version, release))
 
             if not is_monitored:
-                self.log.info("Pkgdb says not to monitor %r.  Dropping." % package)
+                _log.info("Pkgdb says not to monitor %r.  Dropping." % package)
                 self.publish("update.drop", msg=dict(trigger=msg, reason="pkgdb"))
                 return
 
             bz = self.bugzilla.handle(
                 projectid, package, upstream, version, release, url)
             if not bz:
-                self.log.info("No RHBZ change detected (odd).  Aborting.")
+                _log.info("No RHBZ change detected (odd).  Aborting.")
                 self.publish("update.drop", msg=dict(
                     trigger=msg, reason="bugzilla"))
                 return
@@ -327,13 +331,13 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 trigger=msg, bug=dict(bug_id=bz.bug_id)))
 
             if is_monitored == 'nobuild':
-                self.log.info("Monitor flag set to 'nobuild'.  "
-                              "Skipping scratch build.")
+                _log.info("Monitor flag set to 'nobuild'.  "
+                          "Skipping scratch build.")
                 return
 
             if not self._rebase(package, version, upstream, bz):
                 # Fall back to the original process
-                self.log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
+                _log.info("Now with #%i, time to do koji stuff" % bz.bug_id)
                 try:
                     # Kick off a scratch build..
                     task_id, patch_filename, description = self.buildsys.handle(
@@ -347,8 +351,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 except Exception as e:
                     heading = "Failed to kick off scratch build."
                     note = heading + "\n\n" + str(e)
-                    self.log.warning(heading)
-                    self.log.warning(traceback.format_exc())
+                    _log.warning(heading)
+                    _log.warning(traceback.format_exc())
                     self.bugzilla.follow_up(note, bz)
 
     def handle_buildsys_scratch(self, msg):
@@ -365,18 +369,18 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         instance = msg['msg']['instance']
 
         if instance != 'primary':
-            self.log.debug("Ignoring secondary arch task...")
+            _log.debug("Ignoring secondary arch task...")
             return
 
         method = msg['msg']['method']
 
         if method != 'build':
-            self.log.debug("Ignoring non-build task...")
+            _log.debug("Ignoring non-build task...")
             return
 
         task_id = msg['msg']['info']['id']
 
-        self.log.info("Handling koji scratch msg %r" % msg.get('msg_id'))
+        _log.info("Handling koji scratch msg %r" % msg.get('msg_id'))
 
         # see koji.TASK_STATES for all values
         done_states = {
@@ -405,7 +409,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 bugs.append((bug, text2))
 
         if not bugs:
-            self.log.debug("No bugs to update for %r" % msg.get('msg_id'))
+            _log.debug("No bugs to update for %r" % msg.get('msg_id'))
             return
 
     def handle_buildsys_real(self, msg):
@@ -423,17 +427,17 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         instance = msg['msg']['instance']
 
         if instance != 'primary':
-            self.log.debug("Ignoring secondary arch build...")
+            _log.debug("Ignoring secondary arch build...")
             return
 
         rawhide = self.get_dist_tag()
         if not release.endswith(rawhide):
-            self.log.debug("Koji build=%r, %r is not rawhide(%r). Drop it." % (
+            _log.debug("Koji build=%r, %r is not rawhide(%r). Drop it." % (
                 idx, release, rawhide))
             return
 
         if state != 1:
-            self.log.debug("Koji build_id=%r is not complete.  Drop it." % idx)
+            _log.debug("Koji build_id=%r is not complete.  Drop it." % idx)
             return
 
         package = msg['msg']['name']
@@ -442,14 +446,14 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         is_monitored = self.is_monitored(package)
         if not is_monitored:
-            self.log.debug('%r not monitored, dropping koji build' % package)
+            _log.debug('%r not monitored, dropping koji build' % package)
             return
 
         if is_monitored == 'nobuild':
-            self.log.debug('%r set to "nobuild", dropping build' % package)
+            _log.debug('%r set to "nobuild", dropping build' % package)
             return
 
-        self.log.info("Handling koji build msg %r" % msg.get('msg_id', None))
+        _log.info("Handling koji build msg %r" % msg.get('msg_id', None))
 
         # Search for all FTBFS bugs and any upstream bugs we filed earlier.
         bugs = list(self.bugzilla.ftbfs_bugs(name=package)) + [
@@ -459,7 +463,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         bugs = [bug for bug in bugs if bug]
 
         if not bugs:
-            self.log.info("No bugs found for %s-%s.%s." % (
+            _log.info("No bugs found for %s-%s.%s." % (
                 package, version, release))
             return
 
@@ -474,13 +478,13 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             target = subtitle            # Our comments have this in it
             me = self.bugzilla.username  # Our comments are, obviously, by us.
             if latest['creator'] == me and target in latest['text']:
-                self.log.info("%s has a recent comment from me." % bug.weburl)
+                _log.info("%s has a recent comment from me." % bug.weburl)
                 continue
 
             # Don't followup on bugs that are already closed... otherwise we
             # would followup for ALL ETERNITY.
             if bug.status in self.bugzilla.bug_status_closed:
-                self.log.info("Bug %s is %s.  Dropping." % (
+                _log.info("Bug %s is %s.  Dropping." % (
                     bug.weburl, bug.status))
                 continue
 
@@ -510,10 +514,10 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             # pkgdb has a cron script that runs weekly that updates the
             # upstream url there, so when that happens, we'll be triggered
             # and can try again.
-            self.log.warn("New package %r has no homepage.  Dropping." % name)
+            _log.warn("New package %r has no homepage.  Dropping." % name)
             return
 
-        self.log.info("Considering new package %r with %r" % (name, homepage))
+        _log.info("Considering new package %r with %r" % (name, homepage))
 
         anitya = hotness.anitya.Anitya(self.anitya_url)
         results = anitya.search_by_homepage(name, homepage)
@@ -521,11 +525,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         projects = results['projects']
         total = results['total']
         if total > 1:
-            self.log.warning("Fail. %i matching projects on anitya." % total)
+            _log.warning("Fail. %i matching projects on anitya." % total)
             self.publish("project.map", msg=dict(
                 trigger=msg, total=total, success=False))
         elif total == 1:
-            self.log.info("Found one match on Anitya.")
+            _log.info("Found one match on Anitya.")
             project = projects[0]
             anitya.login(self.anitya_username, self.anitya_password)
 
@@ -534,7 +538,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 anitya.map_new_package(name, project)
             except hotness.anitya.AnityaException as e:
                 reason = str(e)
-                self.log.warn("Failed to map: %r" % reason)
+                _log.warn("Failed to map: %r" % reason)
 
             self.publish("project.map", msg=dict(
                 trigger=msg,
@@ -542,7 +546,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 success=not bool(reason),
                 reason=reason))
         else:
-            self.log.info("Saw 0 matching projects on anitya.  Adding.")
+            _log.info("Saw 0 matching projects on anitya.  Adding.")
             anitya.login(self.anitya_username, self.anitya_password)
 
             reason = None
@@ -550,7 +554,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 anitya.add_new_project(name, homepage)
             except hotness.anitya.AnityaException as e:
                 reason = str(e)
-                self.log.warn("Failed to create: %r" % reason)
+                _log.warn("Failed to create: %r" % reason)
 
             self.publish("project.map", msg=dict(
                 trigger=msg,
@@ -572,18 +576,18 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         Publish a message to ``project.map`` with the results of the attempt
         map the package to a project if the project is not already on Anitya.
         """
-        self.log.info("Handling pkgdb update msg %r" % msg.get('msg_id'))
+        _log.info("Handling pkgdb update msg %r" % msg.get('msg_id'))
 
         fields = msg['msg']['fields']
         if 'upstream_url' not in fields:
-            self.log.info("Ignoring package edit with no url change.")
+            _log.info("Ignoring package edit with no url change.")
             return
 
         package = msg['msg']['package']
         name = package['name']
         homepage = package['upstream_url']
 
-        self.log.info("Trying url change on %s: %s" % (name, homepage))
+        _log.info("Trying url change on %s: %s" % (name, homepage))
 
         # There are two possible scenarios here.
         # 1) the package already *is mapped* in anitya, in which case we can
@@ -595,14 +599,14 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         project = anitya.get_project_by_package(name)
 
         if project:
-            self.log.info("Found project with name %s" % project['name'])
+            _log.info("Found project with name %s" % project['name'])
             anitya.login(self.anitya_username, self.anitya_password)
             if project['homepage'] == homepage:
-                self.log.info("No need to update anitya for %s.  Homepages"
-                              " are already in sync." % project['name'])
+                _log.info("No need to update anitya for %s.  Homepages"
+                          " are already in sync." % project['name'])
                 return
 
-            self.log.info("Updating anitya url on %s" % project['name'])
+            _log.info("Updating anitya url on %s" % project['name'])
             anitya.update_url(project, homepage)
             anitya.force_check(project)
         else:
@@ -623,10 +627,10 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         name = msg['msg']['package']['name']
         homepage = msg['msg']['package']['upstream_url']
 
-        self.log.info("Considering monitored %r with %r" % (name, homepage))
+        _log.info("Considering monitored %r with %r" % (name, homepage))
 
         if not status:
-            self.log.info(".. but it was turned off.  Dropping.")
+            _log.info(".. but it was turned off.  Dropping.")
             return
 
         anitya = hotness.anitya.Anitya(self.anitya_url)
@@ -634,7 +638,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         total = results['total']
 
         if total > 1:
-            self.log.info("%i projects with %r %r already exist in anitya." % (
+            _log.info("%i projects with %r %r already exist in anitya." % (
                 total, name, homepage))
             return
         elif total == 1:
@@ -649,7 +653,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 anitya.map_new_package(name, project)
             except hotness.anitya.AnityaException as e:
                 reason = str(e)
-                self.log.warn("Failed to map: %r" % reason)
+                _log.warn("Failed to map: %r" % reason)
 
             self.publish("project.map", msg=dict(
                 trigger=msg,
@@ -661,7 +665,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             anitya.force_check(project)
         else:
             # OTHERWISE, there is *nothing* on anitya about it, so add one.
-            self.log.info("Saw 0 matching projects on anitya.  Adding.")
+            _log.info("Saw 0 matching projects on anitya.  Adding.")
             anitya.login(self.anitya_username, self.anitya_password)
 
             reason = None
@@ -669,7 +673,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 anitya.add_new_project(name, homepage)
             except hotness.anitya.AnityaException as e:
                 reason = str(e)
-                self.log.warn("Failed to create: %r" % reason)
+                _log.warn("Failed to create: %r" % reason)
 
             self.publish("project.map", msg=dict(
                 trigger=msg,
@@ -680,11 +684,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         """ Returns True if a package is marked as 'monitored' in pkgdb2. """
 
         url = '{0}/package/{1}'.format(self.pkgdb_url, package)
-        self.log.debug("Checking %r" % url)
+        _log.debug("Checking %r" % url)
         r = self.requests_session.get(url, timeout=self.timeout)
 
         if not r.status_code == 200:
-            self.log.warning('URL %s returned code %s', r.url, r.status_code)
+            _log.warning('URL %s returned code %s', r.url, r.status_code)
             return False
 
         try:
@@ -699,7 +703,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             # Otherwise, if it is not retired, then return the monitor flag.
             return package['package'].get('monitor', True)
         except:
-            self.log.exception("Problem interacting with pkgdb.")
+            _log.exception("Problem interacting with pkgdb.")
             return False
 
     @hotness.cache.cache.cache_on_arguments()
@@ -707,20 +711,20 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         """ Returns True if a package is in the Fedora pkgdb. """
 
         url = '{0}/package/{1}'.format(self.pkgdb_url, package)
-        self.log.debug("Checking %r" % url)
+        _log.debug("Checking %r" % url)
         r = self.requests_session.get(url, timeout=self.timeout)
 
         if r.status_code == 404:
             return False
         if r.status_code != 200:
-            self.log.warning('URL %s returned code %s', r.url, r.status_code)
+            _log.warning('URL %s returned code %s', r.url, r.status_code)
             return False
         return True
 
     @hotness.cache.cache.cache_on_arguments()
     def get_dist_tag(self):
         url = '{0}/collections/master/'.format(self.pkgdb_url)
-        self.log.debug("Getting dist tag from %r" % url)
+        _log.debug("Getting dist tag from %r" % url)
         r = self.requests_session.get(url, timeout=self.timeout)
 
         if not r.status_code == 200:
@@ -729,7 +733,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         data = r.json()
         collection = data['collections'][0]
         tag = collection['dist_tag'][1:]
-        self.log.debug("Got rawhide suffix %r" % tag)
+        _log.debug("Got rawhide suffix %r" % tag)
         return tag
 
     def _update_tasks(self, task_id, state):
@@ -800,15 +804,15 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 self._rh_attach_logs(bz, rh_stuff)
 
         except Exception as e:
-            self.log.warning("rebase-helper failed with: %s" % str(e))
-            self.log.warning(traceback.format_exc())
+            _log.warning("rebase-helper failed with: %s" % str(e))
+            _log.warning(traceback.format_exc())
             self._rh_fail(e, bz, rh_stuff)
             return False
         else:
             return True
 
         finally:
-            self.log.debug("Removing %r" % tmp)
+            _log.debug("Removing %r" % tmp)
             shutil.rmtree(tmp)
 
     def _check_rebase(self, old_task_id, new_task_id):
@@ -840,12 +844,12 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 self._rh_attach_logs(bz, rh_stuff)
 
             except Exception as e:
-                self.log.warning("rebase-helper failed with: %s" % str(e))
-                self.log.warning(traceback.format_exc())
+                _log.warning("rebase-helper failed with: %s" % str(e))
+                _log.warning(traceback.format_exc())
                 self._rh_fail(e, bz, rh_stuff)
 
             finally:
-                self.log.debug("Removing %r" % tmp)
+                _log.debug("Removing %r" % tmp)
                 shutil.rmtree(tmp)
 
         elif old_task['state'] == 'FAILED':
@@ -954,5 +958,5 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.bugzilla.follow_up("\n".join(notes), bz)
 
         if rh_stuff:
-            self.log.debug(rh_stuff)
+            _log.debug(rh_stuff)
             self._rh_attach_logs(bz, rh_stuff, debug=True)

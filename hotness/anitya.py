@@ -9,7 +9,9 @@ from fedora.client import OpenIdBaseClient
 
 ANITYA_URL = 'https://release-monitoring.org/'
 
-log = logging.getLogger('fedmsg')
+
+_log = logging.getLogger(__name__)
+
 
 backends = {
     'ftp.debian.org': 'Debian project',
@@ -102,15 +104,15 @@ class Anitya(OpenIdBaseClient):
 
     def search_by_homepage(self, name, homepage):
         url = '{0}/api/projects/?homepage={1}'.format(self.base_url, homepage)
-        log.info("Looking for %r via %r" % (name, url))
+        _log.info("Looking for %r via %r" % (name, url))
         return self.send_request(url, verb='GET')
 
     def get_project_by_package(self, name):
         url = '{0}/api/project/Fedora/{1}'.format(self.base_url, name)
-        log.info("Looking for %r via %r" % (name, url))
+        _log.info("Looking for %r via %r" % (name, url))
         data = self.send_request(url, verb='GET')
         if 'error' in data:
-            log.warn(data.error)
+            _log.warn(data.error)
             return None
         else:
             return data
@@ -147,7 +149,7 @@ class Anitya(OpenIdBaseClient):
                 err = ' '.join(tags[0].stripped_strings)
             raise AnityaException(err)
 
-        log.info('Successfully updated anitya url for %r' % data['name'])
+        _log.info('Successfully updated anitya url for %r' % data['name'])
 
     def force_check(self, project):
         """ Force anitya to check for a new upstream release. """
@@ -156,9 +158,9 @@ class Anitya(OpenIdBaseClient):
         data = self.send_request(url, verb='POST', data=dict(id=idx))
 
         if 'error' in data:
-            log.warning('Anitya error: %r' % data['error'])
+            _log.warning('Anitya error: %r' % data['error'])
         else:
-            log.info("Check yielded upstream version %s for %s" % (
+            _log.info("Check yielded upstream version %s for %s" % (
                 data['version'], data['name']))
 
     def map_new_package(self, name, project):
@@ -198,7 +200,7 @@ class Anitya(OpenIdBaseClient):
                 err = ' '.join(tags[0].stripped_strings)
             raise AnityaException(err)
 
-        log.info('Successfully mapped %r in anitya' % name)
+        _log.info('Successfully mapped %r in anitya' % name)
 
     def add_new_project(self, name, homepage):
         if not self.is_logged_in:
@@ -265,4 +267,4 @@ class Anitya(OpenIdBaseClient):
                 err = ' '.join(tags[0].stripped_strings)
             raise AnityaException(err)
 
-        log.info('Successfully added %r to anitya' % data['name'])
+        _log.info('Successfully added %r to anitya' % data['name'])
