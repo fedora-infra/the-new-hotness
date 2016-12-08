@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
+import re
+
+
+def get_version():
+    """Get the current version of the hotness package"""
+    with open('hotness/__init__.py', 'r') as fd:
+        regex = r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]'
+        version = re.search(regex, fd.read(), re.MULTILINE).group(1)
+    if not version:
+        raise RuntimeError('No version set in hotness/__init__.py')
+    return version
+
 
 
 def get_requirements(requirements_file='requirements.txt'):
@@ -22,7 +34,7 @@ def get_requirements(requirements_file='requirements.txt'):
 
 setup(
     name='the-new-hotness',
-    version='0.7.3',
+    version=get_version(),
     description='Consume anitya fedmsg messages to file bugzilla bugs',
     license='LGPLv2+',
     author='Ralph Bean',
