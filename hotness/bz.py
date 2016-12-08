@@ -26,6 +26,9 @@ import bugzilla
 import os
 
 
+_log = logging.getLogger(__name__)
+
+
 class Bugzilla(object):
     base_query = {
         'query_format': 'advanced',
@@ -47,14 +50,13 @@ class Bugzilla(object):
     def __init__(self, consumer, config):
         self.consumer = consumer
         self.config = config
-        self.log = logging.getLogger('fedmsg')
         default = 'https://partner-bugzilla.redhat.com'
         url = self.config.get('url', default)
         self.username = self.config['user']
         password = self.config['password']
         self.bugzilla = bugzilla.Bugzilla(
             url=url, cookiefile=None, tokenfile=None)
-        self.log.info("Logging in to %s" % url)
+        _log.info("Logging in to %s" % url)
         self.bugzilla.login(self.username, password)
 
         self.base_query['product'] = self.config['product']
@@ -98,17 +100,17 @@ class Bugzilla(object):
 
         bug = self.exact_bug(**kwargs)
         if bug:
-            self.log.info("Found exact bug %r" % bug.weburl)
+            _log.info("Found exact bug %r" % bug.weburl)
             return False
 
         bug = self.inexact_bug(**kwargs)
         if bug:
-            self.log.info("Found and updating bug %r" % bug.weburl)
+            _log.info("Found and updating bug %r" % bug.weburl)
             self.update_bug(bug, **kwargs)
             return bug
 
         bug = self.create_bug(**kwargs)
-        self.log.info("Filed new bug %r" % bug.weburl)
+        _log.info("Filed new bug %r" % bug.weburl)
         return bug
 
     def follow_up(self, text, bug):
@@ -119,15 +121,15 @@ class Bugzilla(object):
             },
             'ids': [bug.bug_id],
         }
-        self.log.debug("Following up on bug %r with %r" % (bug.bug_id, update))
+        _log.debug("Following up on bug %r with %r" % (bug.bug_id, update))
         self.bugzilla._proxy.Bug.update(update)
-        self.log.info("Followed up on bug: %s" % bug.weburl)
+        _log.info("Followed up on bug: %s" % bug.weburl)
 
     def _attach_file(self, filename, description, bug, **kwargs):
         if os.path.exists(filename) and os.path.getsize(filename) != 0:
-            self.log.debug("Attaching file to bug %r" % bug.bug_id)
+            _log.debug("Attaching file to bug %r" % bug.bug_id)
             self.bugzilla.attachfile(bug.bug_id, filename, description, **kwargs)
-            self.log.info("Attached file to bug: %s" % bug.weburl)
+            _log.info("Attached file to bug: %s" % bug.weburl)
 
     def attach_log(self, filename, description, bug):
         self._attach_file(filename, description, bug, content_type='text/plain')
@@ -217,7 +219,7 @@ class Bugzilla(object):
         # with split and then remove the name and '-' via slicing
         bug_version = short_desc.split(" ")[0][len(package['name']) + 1:]
 
-        self.log.info("Comparing %r, %r" % (bug_version, package['upstream']))
+        _log.info("Comparing %r, %r" % (bug_version, package['upstream']))
         if bug_version != package['upstream']:
             update = {
                 'summary': self.short_desc_template % package,
@@ -227,13 +229,13 @@ class Bugzilla(object):
                 },
                 'ids': [bug.bug_id],
             }
-            self.log.debug("Updating bug %r with %r" % (bug.bug_id, update))
+            _log.debug("Updating bug %r with %r" % (bug.bug_id, update))
             res = self.bugzilla._proxy.Bug.update(update)
-            self.log.debug("Result from bug update: %r" % res)
-            self.log.info("Updated bug: %s" % bug.weburl)
+            _log.debug("Result from bug update: %r" % res)
+            _log.info("Updated bug: %s" % bug.weburl)
             return True
         else:
-            self.log.warn("They are the same, which is odd. %r == %r" % (
+            _log.warn("They are the same, which is odd. %r == %r" % (
                 bug_version, package['upstream']))
             return False
 
@@ -246,7 +248,7 @@ class Bugzilla(object):
         bug_dict.update(self.new_bug)
         new_bug = self.bugzilla.createbug(**bug_dict)
         change_status = None
-        self.log.info("Created bug: %s" % new_bug)
+        _log.info("Created bug: %s" % new_bug)
 
         if new_bug.bug_status != self.config['bug_status']:
             change_status = self.bugzilla._proxy.bugzilla.changeStatus(
@@ -259,5 +261,5 @@ class Bugzilla(object):
                 False,
                 1,
             )
-            self.log.info("Changed bug status %r" % change_status)
+            _log.info("Changed bug status %r" % change_status)
         return new_bug
