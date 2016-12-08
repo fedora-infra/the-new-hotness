@@ -50,8 +50,8 @@ config = {
         'cert': os.path.expanduser('~/.fedora.cert'),
         'ca_cert': os.path.expanduser('~/.fedora-server-ca.cert'),
         'git_url': 'http://pkgs.fedoraproject.org/cgit/rpms/{package}.git',
-        'userstring': ('Upstream Monitor',
-                       '<upstream-release-monitoring@fedoraproject.org>'),
+        # Previously a tuple was accepted for 'userstring' which is deprecated
+        'userstring': 'Upstream Monitor <upstream-release-monitoring@fedoraproject.org>',
         'opts': {'scratch': True},
         'priority': 30,
         'target_tag': 'rawhide',
