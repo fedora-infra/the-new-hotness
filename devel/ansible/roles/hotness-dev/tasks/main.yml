@@ -26,6 +26,7 @@
     - python-copr
     - python-dogpile-cache
     - python-flake8
+    - python-mock
     - python2-requests
     - python-sh
     - python-six

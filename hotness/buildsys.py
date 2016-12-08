@@ -1,6 +1,22 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-from __future__ import print_function
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
+# USA.
+"""This provides classes and functions to work with the Fedora build system"""
+from __future__ import absolute_import, print_function
+
 import logging
 import os
 import random
@@ -9,9 +25,11 @@ import string
 import subprocess as sp
 import tempfile
 import time
+import warnings
 
 import koji
 import sh
+import six
 
 from rebasehelper.application import Application
 from rebasehelper.cli import CLI
@@ -29,6 +47,12 @@ class Koji(object):
         self.ca_cert = config['ca_cert']
         self.git_url = config['git_url']
         self.userstring = config['userstring']
+        if not isinstance(self.userstring, six.string_types):
+            msg = ('Using a tuple for "userstring" in "hotness.koji"'
+                   ' is deprecated, please use a string in the format'
+                   ' "Your Name <address@example.com>"')
+            warnings.warn(msg, DeprecationWarning)
+            self.userstring = ' '.join(self.userstring)
         self.opts = config['opts']
         self.priority = config['priority']
         self.target_tag = config['target_tag']
