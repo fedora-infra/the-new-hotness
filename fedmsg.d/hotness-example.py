@@ -1,4 +1,3 @@
-import os
 import socket
 hostname = socket.gethostname().split('.', 1)[0]
 
@@ -47,8 +46,14 @@ config = {
     'hotness.koji': {
         'server': 'https://koji.fedoraproject.org/kojihub',
         'weburl': 'http://koji.fedoraproject.org/koji',
-        'cert': os.path.expanduser('~/.fedora.cert'),
-        'ca_cert': os.path.expanduser('~/.fedora-server-ca.cert'),
+        # Kerberos configuration to authenticate with Koji. In development
+        # environments, use `kinit <fas-name>@FEDORAPROJECT.ORG` to get a
+        # Kerberos ticket and use the default settings below.
+        'krb_principal': None,
+        'krb_keytab': None,
+        'krb_ccache': None,
+        'krb_proxyuser': None,
+        'krb_sessionopts': {'timeout': 3600, 'krb_rdns': False},
         'git_url': 'http://pkgs.fedoraproject.org/cgit/rpms/{package}.git',
         # Previously a tuple was accepted for 'userstring' which is deprecated
         'userstring': 'Upstream Monitor <upstream-release-monitoring@fedoraproject.org>',
