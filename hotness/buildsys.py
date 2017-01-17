@@ -89,7 +89,8 @@ class Koji(object):
             name=name, target=self.target_tag, source=remote, opts=self.opts))
         task_id = session.build(
             remote, self.target_tag, self.opts, priority=self.priority)
-        _log.info('Done: task_id={task_id}'.format(task_id=task_id))
+        _log.info('Scratch build created for {name}: {url}'.format(
+            name=name, url=self.url_for(task_id)))
         return task_id
 
     def run(self, cmd, cwd=None):
@@ -186,62 +187,3 @@ class Koji(object):
         finally:
             _log.debug("Removing %r" % tmp)
             shutil.rmtree(tmp)
-            pass
-
-    def _run_rh(self, package, args, tmp_dir):
-        """
-        Execute rebase-helper with given arguments.
-
-        Returns exit code and data from rebase-helper.
-        """
-        if package:
-            url = self.git_url.format(package=package)
-            _log.info("Cloning %r to %r" % (url, tmp_dir))
-            sh.git.clone(url, tmp_dir)
-
-        cwd = os.getcwd()
-        os.chdir(tmp_dir)
-        try:
-            cli = CLI(args)
-            rh_app = Application(cli, *Application.setup(cli))
-            rh_app.set_upstream_monitoring()
-            _log.info("Running rebase-helper with arguments '%s'" % ' '.join(args))
-            result_rh = rh_app.run()
-            rh_stuff = rh_app.get_rebasehelper_data()
-        finally:
-            os.chdir(cwd)
-
-        result_rh = int(result_rh) if result_rh else 0
-        _log.info("rebase-helper finished with exit code %d" % result_rh)
-        _log.debug(rh_stuff)
-        return result_rh, rh_stuff
-
-    def rebase(self, package, upstream, tmp_dir):
-        """
-        Rebase the package using rebase-helper.
-
-        Returns exit code and data from rebase-helper.
-        """
-        args = [
-            '--non-interactive',
-            '--builds-nowait',
-            '--buildtool', 'koji',
-            upstream
-        ]
-        return self._run_rh(package, args, tmp_dir)
-
-    def check_rebase(self, upstream, old_task_id, new_task_id, tmp_dir):
-        """
-        Check and compare rawhide and rebased version builds
-        using rebase-helper.
-
-        Returns exit code and data from rebase-helper.
-        """
-        args = [
-            '--non-interactive',
-            '--builds-nowait',
-            '--buildtool', 'koji',
-            '--build-tasks', '%s,%s' % (old_task_id, new_task_id),
-            upstream
-        ]
-        return self._run_rh(None, args, tmp_dir)

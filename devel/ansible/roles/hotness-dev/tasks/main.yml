@@ -17,13 +17,10 @@
     - fedmsg
     - fedmsg-hub
     - fedmsg-relay
+    - fedpkg
     - koji
-    - rebase-helper
     - rpm-python
     - python-bugzilla
-    # we have to explicitly require copr for rebase-helper
-    # https://bugzilla.redhat.com/show_bug.cgi?id=1391461
-    - python-copr
     - python-dogpile-cache
     - python-flake8
     - python-mock
