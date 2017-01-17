@@ -17,6 +17,7 @@
 """This provides classes and functions to work with the Fedora build system"""
 from __future__ import absolute_import, print_function
 
+from warnings import warn
 import logging
 import os
 import random
@@ -25,11 +26,8 @@ import string
 import subprocess as sp
 import tempfile
 import time
-import warnings
 
 import koji
-import sh
-import six
 
 from rebasehelper.application import Application
 from rebasehelper.cli import CLI
@@ -47,13 +45,13 @@ class Koji(object):
         self.cert = config['cert']
         self.ca_cert = config['ca_cert']
         self.git_url = config['git_url']
-        self.userstring = config['userstring']
-        if not isinstance(self.userstring, six.string_types):
-            msg = ('Using a tuple for "userstring" in "hotness.koji"'
-                   ' is deprecated, please use a string in the format'
-                   ' "Your Name <address@example.com>"')
-            warnings.warn(msg, DeprecationWarning)
-            self.userstring = ' '.join(self.userstring)
+        try:
+            self.email_user = config['user_email']
+        except KeyError:
+            msg = 'userstring is deprecated, please use the "email_user" tuple'
+            warn(msg, DeprecationWarning)
+            self.email_user = config['userstring'].rsplit('<', 1)
+            self.email_user[1] = '<' + self.email_user[1]
         self.opts = config['opts']
         self.priority = config['priority']
         self.target_tag = config['target_tag']
@@ -118,7 +116,7 @@ class Koji(object):
         try:
             url = self.git_url.format(package=package)
             _log.info("Cloning %r to %r" % (url, tmp))
-            sh.git.clone(url, tmp)
+            self.run(['git', 'clone', url, tmp])
 
             specfile = tmp + '/' + package + '.spec'
 
@@ -129,7 +127,7 @@ class Koji(object):
                 '/usr/bin/rpmdev-bumpspec',
                 '--new', upstream,
                 '-c', comment,
-                '-u', self.userstring,
+                '-u', ' '.join(self.email_user),
                 specfile,
             ]
             output = self.run(cmd)
@@ -164,7 +162,8 @@ class Koji(object):
                         oldfile=oldfile, oldsum=oldsum,
                         newfile=newfile, newsum=newsum))
 
-            output = self.run(['rpmbuild', '-bs', specfile], cwd=tmp)
+            output = self.run(
+                ['rpmbuild', '-D', '_sourcedir .', '-D', '_topdir .', '-bs', specfile], cwd=tmp)
 
             srpm = os.path.join(tmp, output.strip().split()[-1])
             _log.debug("Got srpm %r" % srpm)
@@ -173,9 +172,9 @@ class Koji(object):
             task_id = self.scratch_build(session, package, srpm)
 
             # Now, craft a patch to attach to the ticket
-            output = self.run(['git', 'commit', '-a',
-                               '-m', comment,
-                               '--author', self.userstring], cwd=tmp)
+            self.run(['git', 'config', 'user.name', self.email_user[0]], cwd=tmp)
+            self.run(['git', 'config', 'user.email', self.email_user[1]], cwd=tmp)
+            self.run(['git', 'commit', '-a', '-m', comment], cwd=tmp)
             filename = self.run(['git', 'format-patch', 'HEAD^'], cwd=tmp)
             filename = filename.strip()
 

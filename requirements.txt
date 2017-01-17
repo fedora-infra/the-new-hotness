@@ -2,6 +2,5 @@ fedmsg
 python-bugzilla
 dogpile.cache
 requests
-sh
 six
 fedmsg_meta_fedora_infrastructure
