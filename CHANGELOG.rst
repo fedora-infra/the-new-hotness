@@ -1,3 +1,24 @@
+0.8.0
+-----
+
+- rebase-helper has been removed from the-new-hotness. For a detailed
+  discussion that lead to this decision, see issue #145.
+
+- the-new-hotness now integrates with mdapi to determine the latest available
+  versions of packages rather than repoquery. This fixes a bug where
+  the-new-hotness would report that the latest rawhide build was the build in
+  EPEL 7 (Issue #98)
+
+- The ``userstring`` setting has been replaced by a ``user_email`` setting.
+  This setting is tuple in the form ('User Name', '<email address>').
+
+- Several configuration URLs have been updated to use HTTPS
+
+- Log entries are now emitted with their full Python path included so debugging
+  is easier.
+
+- the-new-hotness now authenticates with Koji using Kerberos
+
 
 0.7.3
 -----
