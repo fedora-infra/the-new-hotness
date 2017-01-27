@@ -46,7 +46,7 @@ config = {
 
     'hotness.koji': {
         'server': 'https://koji.fedoraproject.org/kojihub',
-        'weburl': 'http://koji.fedoraproject.org/koji',
+        'weburl': 'https://koji.fedoraproject.org/koji',
         # Kerberos configuration to authenticate with Koji. In development
         # environments, use `kinit <fas-name>@FEDORAPROJECT.ORG` to get a
         # Kerberos ticket and set all krb_* settings to `None`.
@@ -55,7 +55,7 @@ config = {
         'krb_ccache': None,
         'krb_proxyuser': None,
         'krb_sessionopts': {'timeout': 3600, 'krb_rdns': False},
-        'git_url': 'http://pkgs.fedoraproject.org/cgit/rpms/{package}.git',
+        'git_url': 'https://src.fedoraproject.org/cgit/rpms/{package}.git',
         'user_email': ('Upstream Monitor', '<upstream-release-monitoring@fedoraproject.org>'),
         'opts': {'scratch': True},
         'priority': 30,
