@@ -25,6 +25,7 @@ import shutil
 import string
 import subprocess as sp
 import tempfile
+import threading
 import time
 
 import koji
@@ -35,6 +36,8 @@ from rebasehelper.cli import CLI
 
 _log = logging.getLogger(__name__)
 
+_koji_session_lock = threading.RLock()
+
 
 class Koji(object):
     def __init__(self, consumer, config):
@@ -42,8 +45,13 @@ class Koji(object):
         self.config = config
         self.server = config['server']
         self.weburl = config['weburl']
-        self.cert = config['cert']
-        self.ca_cert = config['ca_cert']
+
+        self.krb_principal = config['krb_principal']
+        self.krb_keytab = config['krb_keytab']
+        self.krb_ccache = config['krb_ccache']
+        self.krb_sessionopts = config['krb_sessionopts']
+        self.krb_proxyuser = config['krb_proxyuser']
+
         self.git_url = config['git_url']
         try:
             self.email_user = config['user_email']
@@ -57,9 +65,18 @@ class Koji(object):
         self.target_tag = config['target_tag']
 
     def session_maker(self):
-        koji_session = koji.ClientSession(self.server, {'timeout': 3600})
-        koji_session.ssl_login(self.cert, self.ca_cert, self.ca_cert)
-        return koji_session
+        _log.info('Creating a new Koji session to %s', self.server)
+        with _koji_session_lock:
+            koji_session = koji.ClientSession(self.server, self.krb_sessionopts)
+            result = koji_session.krb_login(
+                principal=self.krb_principal,
+                keytab=self.krb_keytab,
+                ccache=self.krb_ccache,
+                proxyuser=self.krb_proxyuser
+            )
+            if not result:
+                _log.error('Koji kerberos authentication failed')
+            return koji_session
 
     def url_for(self, task_id):
         return self.weburl + '/taskinfo?taskID=%i' % task_id

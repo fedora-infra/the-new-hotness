@@ -47,6 +47,12 @@ Before you can run ``the-new-hotness``, you need to add your bugzilla credential
 to the configuration. You can set these credentials in ``~/.fedmsg.d/hotness.py``
 in the virtual machine.
 
+You also need to acquire a valid Kerberos ticket to perform Koji scratch builds.
+You can get this by performing ``kinit <fas-username>@FEDORAPROJECT.ORG``.
+
+.. warning::
+    Services will fail to start if you do not provide valid credentials.
+
 You now have a functional development environment. The message of the day for the virtual machine
 has some helpful tips, but the basic services can be started in the virtual machine with::
 
