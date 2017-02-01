@@ -13,7 +13,6 @@ def get_version():
     return version
 
 
-
 def get_requirements(requirements_file='requirements.txt'):
     """Get the contents of a file listing the requirements.
 
