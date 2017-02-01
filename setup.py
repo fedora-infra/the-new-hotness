@@ -41,10 +41,10 @@ setup(
     url='https://github.com/fedora-infra/the-new-hotness',
     install_requires=get_requirements(),
     tests_require=get_requirements('dev-requirements.txt'),
-    packages=find_packages(),
+    packages=find_packages(exclude=('hotness.tests', 'hotness.tests.*')),
+    test_suite='hotness.tests',
     entry_points="""
     [moksha.consumer]
     bug_filer = hotness.consumers:BugzillaTicketFiler
     """,
-    test_suite='tests',
 )
