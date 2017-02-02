@@ -30,9 +30,6 @@ import time
 
 import koji
 
-from rebasehelper.application import Application
-from rebasehelper.cli import CLI
-
 
 _log = logging.getLogger(__name__)
 
@@ -58,7 +55,7 @@ class Koji(object):
         except KeyError:
             msg = 'userstring is deprecated, please use the "email_user" tuple'
             warn(msg, DeprecationWarning)
-            self.email_user = config['userstring'].rsplit('<', 1)
+            self.email_user = [p.strip() for p in config['userstring'].rsplit('<', 1)]
             self.email_user[1] = '<' + self.email_user[1]
         self.opts = config['opts']
         self.priority = config['priority']

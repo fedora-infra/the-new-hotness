@@ -19,28 +19,38 @@ from __future__ import absolute_import, unicode_literals
 
 import unittest
 
-import mock
-
 from hotness import buildsys
 
 
 class KojiTests(unittest.TestCase):
 
-    def test_initialization_userstring_str(self):
-        """Assert that a string for the 'userstring' config option works"""
-        userstring = 'Jeremy <jeremy@example.com>'
-        mock_config = mock.MagicMock()
-        mock_config.__getitem__.return_value = userstring
-        koji = buildsys.Koji(None, mock_config)
-        self.assertEqual(userstring, koji.userstring)
+    def setUp(self):
+        self.config = {
+            'server': None,
+            'weburl': None,
+            'krb_principal': None,
+            'krb_keytab': None,
+            'krb_ccache': None,
+            'krb_sessionopts': None,
+            'krb_proxyuser': None,
+            'git_url': None,
+            'user_email': ['Jeremy', '<jeremy@example.com>'],
+            'opts': None,
+            'priority': None,
+            'target_tag': None,
+        }
 
-    def test_initialization_userstring_tuple(self):
-        """Assert that a tuple for the 'userstring' config option works"""
-        userstring = ('Jeremy',  '<jeremy@example.com>')
-        mock_config = mock.MagicMock()
-        mock_config.__getitem__.return_value = userstring
-        koji = buildsys.Koji(None, mock_config)
-        self.assertEqual('Jeremy <jeremy@example.com>', koji.userstring)
+    def test_initialization_userstring_str(self):
+        """Assert that a string for the 'userstring' config is parsed to user_email"""
+        self.config['userstring'] = 'Jeremy <jeremy@example.com>'
+        del self.config['user_email']
+        koji = buildsys.Koji(None, self.config)
+        self.assertEqual(['Jeremy', '<jeremy@example.com>'], koji.email_user)
+
+    def test_initialization_user_email_tuple(self):
+        """Assert that a tuple for the 'user_email' config option works"""
+        koji = buildsys.Koji(None, self.config)
+        self.assertEqual(['Jeremy', '<jeremy@example.com>'], koji.email_user)
 
 
 if __name__ == '__main__':

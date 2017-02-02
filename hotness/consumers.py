@@ -21,7 +21,6 @@ Authors:    Ralph Bean <rbean@redhat.com>
 
 import logging
 import socket
-import traceback
 
 from requests.packages.urllib3.util import retry
 import fedmsg
