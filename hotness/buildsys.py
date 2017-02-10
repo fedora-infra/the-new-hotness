@@ -199,4 +199,4 @@ class Koji(object):
             return task_id, destination, '[patch] ' + comment
         finally:
             _log.debug("Removing %r" % tmp)
-            shutil.rmtree(tmp)
+            shutil.rmtree(tmp, ignore_errors=True)
