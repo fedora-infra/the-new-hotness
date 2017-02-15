@@ -27,6 +27,7 @@ import fedmsg
 import fedmsg.consumers
 import requests
 
+from hotness import exceptions
 import hotness.anitya
 import hotness.buildsys
 import hotness.bz
@@ -341,6 +342,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                     bz=bz, state=None, version=str(upstream))
                 # Attach the patch to the ticket
                 self.bugzilla.attach_patch(patch_filename, description, bz)
+            except exceptions.HotnessException as e:
+                self.bugzilla.follow_up(str(e), bz)
             except Exception as e:
                 _log.exception(e)
                 note = ("An unexpected error occured creating the scratch build: "
