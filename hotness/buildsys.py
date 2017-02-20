@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-
+#
+# This file is part of the-new-hotness project.
+# Copyright (C) 2017  Red Hat, Inc.
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -18,6 +21,7 @@
 from __future__ import absolute_import, print_function
 
 from warnings import warn
+import hashlib
 import logging
 import os
 import random
@@ -28,7 +32,10 @@ import tempfile
 import threading
 import time
 
+from six.moves.urllib.parse import urlparse
 import koji
+
+from hotness import exceptions
 
 
 _log = logging.getLogger(__name__)
@@ -147,35 +154,14 @@ class Koji(object):
             ]
             output = self.run(cmd)
 
-            # First, get all patches and other sources from dist-git
-            output = self.run(['fedpkg', 'sources'], cwd=tmp)
-            # fedpkg sources output looks like "Downloading SOURCE\n#######"
-            oldfile = output.strip().split()[1]
-            _log.debug("fedpkg grabbed %r", oldfile)
-
-            # Then go and get the *new* tarball from upstream.
-            # For these to work, it requires that rpmmacros be redefined to
-            # find source files in the tmp directory.  See:  http://da.gd/1MWt
-            output = self.run(['spectool', '-g', specfile], cwd=tmp)
-            newfile = output.strip().split()[-1]
-            _log.debug("spectool grabbed %r", oldfile)
-
-            # Now, handle an edge case before we proceed with building.
-            # Sometimes, the specfiles have versions hardcoded in them such
-            # that bumping the Version field and running spectool actually
-            # pulls down another copy of the old tarball, not the new one.
-            # https://github.com/fedora-infra/the-new-hotness/issues/29
-            # So, check that the sha sums of the tarballs are different.
-            oldsum = self.run(['sha256sum', os.path.join(tmp, oldfile)])
-            newsum = self.run(['sha256sum', os.path.join(tmp, newfile)])
-            oldsum, newsum = oldsum.split()[0], newsum.split()[0]
-            if oldsum == newsum:
-                raise ValueError(
-                    "spectool was unable to grab new sources\n\n"
-                    "old source: {oldfile}\nold sha256: {oldsum}\n\n"
-                    "new source: {newfile}\nnew sha256: {newsum}\n".format(
-                        oldfile=oldfile, oldsum=oldsum,
-                        newfile=newfile, newsum=newsum))
+            # We compare the old sources to the new ones to make sure we download
+            # new sources from bumping the specfile version. Some packages don't
+            # use macros in the source URL(s) or even worse, don't set the source
+            # to a URL. We want to detect these and notify the packager on the bug
+            # we filed about the new version.
+            old_sources = dist_git_sources(tmp)
+            new_sources = spec_sources(specfile, tmp)
+            compare_sources(old_sources, new_sources)
 
             output = self.run(
                 ['rpmbuild', '-D', '_sourcedir .', '-D', '_topdir .', '-bs', specfile], cwd=tmp)
@@ -200,3 +186,155 @@ class Koji(object):
         finally:
             _log.debug("Removing %r" % tmp)
             shutil.rmtree(tmp, ignore_errors=True)
+
+
+def compare_sources(old_sources, new_sources):
+    """
+    Compare two sets of files via checksum and raise an exception if both sets
+    contain the same file.
+
+    Args:
+        old_sources (list): A list of filesystem paths to source tarballs.
+        new_sources (list): A list of filesystem paths to source tarballs.
+
+    Raises:
+        exceptions.SpecUrlException: If the old and new sources share a file
+    """
+    old_checksums = set()
+    new_checksums = set()
+    for sources, checksums in ((old_sources, old_checksums), (new_sources, new_checksums)):
+        for file_path in sources:
+            with open(file_path, 'rb') as fd:
+                h = hashlib.sha256()
+                h.update(fd.read())
+                checksums.add(h.hexdigest())
+
+    if old_checksums.intersection(new_checksums):
+        msg = ("One or more of the new sources for this package are identical to "
+               "the old sources. It's likely this package does not use the version "
+               "macro in its Source URLs. If possible, please update the specfile "
+               "to include the version macro in the Source URLs")
+        raise exceptions.SpecUrlException(msg)
+
+    return old_checksums, new_checksums
+
+
+def dist_git_sources(dist_git_path):
+    """
+    Retrieve sources from dist-git.
+
+    Example:
+        >>> dist_git_sources('/path/to/repo')
+        ['/path/to/repo/source0.tar.gz', '/path/to/repo/source1.tar.gz']
+
+    Args:
+        dist_git_path (str): The filesystem path to the dist-git repository
+
+    Returns:
+        list: A list of absolute paths to source files downloaded
+    """
+    files = []
+    try:
+        # The output format is:
+        # Downloading requests-2.12.4.tar.gz
+        # ####################################################################### 100.0%
+        # Downloading requests-2.12.4-tests.tar.gz
+        # ####################################################################### 100.0%
+        output = sp.check_output(['fedpkg', 'sources'], cwd=dist_git_path)
+        for line in output.splitlines():
+            if line.startswith('Downloading'):
+                files.append(os.path.join(dist_git_path, line.split()[-1]))
+    except sp.CalledProcessError as e:
+        _log.error('{cmd} failed (exit {code}): {msg}'.format(
+            cmd=e.cmd, code=e.returncode, msg=e.output))
+        raise exceptions.DownloadException(e.output)
+
+    return files
+
+
+def _validate_spec_urls(specfile_path):
+    """
+    Validate a specfile's Source URLs.
+
+    Args:
+        specfile_path (str): The path to the specfile to parse and validate.
+
+    Raises:
+        exceptions.SpecUrlException: If the specfile contains Source URLs that
+            are invalid.
+    """
+    # The output of spectool -l <spec> is in the format:
+    # Source0: some-string-we-want-to-be-a-url.tar.gz
+    # Source1: some-string-we-want-to-be-a-url.tar.gz
+    # ...
+    # Patch0: patch-we-expect-to-be-in-dist-git.patch
+    # ...
+    output = sp.check_output(['spectool', '-l', specfile_path])
+    for line in output.splitlines():
+        if line.startswith('Source'):
+            # Parse to make sure it's a url
+            url = line.split(':', 1)[1].strip()
+            parsed_url = urlparse(url)
+            if not parsed_url.scheme or not parsed_url.netloc:
+                msg = ("One or more of the specfile's Sources is not a valid URL "
+                       "so we cannot automatically build the new version for you."
+                       "Please use a URL in your Source declarations if possible.")
+                raise exceptions.SpecUrlException(msg)
+
+
+def spec_sources(specfile_path, target_dir):
+    """
+    Retrieve a specfile's sources and store them in the given target directory.
+
+    Example:
+        >>> spec_sources('/path/to/specfile', '/tmp/dir')
+        ['/tmp/dir/source0.tar.gz', '/tmp/dir/source1.tar.gz']
+
+    Args:
+        specfile_path (str): The filesystem path to the specfile
+        target_dir (str): The directory is where the file(s) will be saved.
+
+    Returns:
+        list: A list of absolute paths to source files downloaded
+
+    Raises:
+        exceptions.SpecUrlException: If the specfile contains Source URLs that
+            are invalid.
+        exceptions.DownloadException: If a networking-related error occurs while
+            downloading the specfile sources. This includes hostname resolution,
+            non-200 HTTP status codes, SSL errors, etc.
+    """
+    _validate_spec_urls(specfile_path)
+    files = []
+    try:
+        output = sp.check_output(['spectool', '-g', specfile_path], cwd=target_dir)
+        for line in output.splitlines():
+            if line.startswith('Getting'):
+                files.append(os.path.realpath(os.path.join(target_dir, line.split()[-1])))
+    except sp.CalledProcessError as e:
+        # spectool passes the cURL exit codes back so see its manpage for the full list
+        if e.returncode == 1:
+            # Unknown protocol (e.g. not ftp, http, or https)
+            msg = ('The specfile contains a Source URL with an unknown protocol; it should'
+                   'be "https", "http", or "ftp".')
+            raise exceptions.SpecUrlException(msg)
+        elif e.returncode in (5, 6):
+            msg = "Unable to resolve the hostname for one of the package's Source URLs"
+        elif e.returncode == 7:
+            # Failed to connect to the host
+            msg = "Unable to connect to the host for one of the package's Source URLs"
+        elif e.returncode == 22:
+            # cURL uses 22 for 400+ HTTP errors; the final line contains the specific code
+            msg = ("An HTTP error occurred downloading the package's new Source URLs: " +
+                   e.output.splitlines()[-1])
+        elif e.returncode == 60:
+            msg = ("Unable to validate the TLS certificate for one of the package's"
+                   "Source URLs")
+        else:
+            msg = (u'An unexpected error occurred while downloading the new package sources; '
+                   u'please report this as a bug on the-new-hotness issue tracker.')
+            _log.error('{cmd} failed (exit {code}): {msg}'.format(
+                cmd=e.cmd, code=e.returncode, msg=e.output))
+        raise exceptions.DownloadException(msg)
+
+    return files
