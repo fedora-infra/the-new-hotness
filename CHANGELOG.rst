@@ -1,3 +1,22 @@
+0.8.1
+-----
+
+0.8.1 is a bugfix release intended to improve the reliability of
+the-new-hotness, particularly the code responsible for creating Koji scratch
+builds for new updates.
+
+Bugfixes
+^^^^^^^^
+
+ - Attempting to remove a working directory that's already gone no longer
+   results in a traceback (#154)
+
+ - Fetching package sources now has greatly improved error reporting (#161)
+
+ - Packages with multiple source tarballs are now correctly handled.
+   Previously, only the first source URL was used (#161)
+
+
 0.8.0
 -----
 
