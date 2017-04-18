@@ -33,17 +33,17 @@ backends = {
     'sourceforge.net': 'Sourceforge',
 }
 
-prefixes = [
-    'drupal7-',
-    'drupal6-',
-    'ghc-',
-    'nodejs-',
-    'php-pear-',
-    'php-pecl-',
-    'php-',
-    'python-',
-    'rubygem-',
-]
+prefixes = {
+    'drupal7-': None,
+    'drupal6-': None,
+    'ghc-': None,
+    'nodejs-': None,
+    'php-pear-': None,
+    'php-pecl-': None,
+    'php-': None,
+    'python-': None,
+    'rubygem-': 'Rubygems',
+}
 
 easy_guesses = [
     'Debian project',
@@ -215,10 +215,18 @@ class Anitya(OpenIdBaseClient):
         )
 
         # Try to guess at what backend to prefill...
-        for target, backend in backends.items():
-            if target in homepage:
+
+        # Start with package prefix first...
+        for prefix, backend in prefixes.items():
+            if name.startswith(prefix) and backend != None:
                 data['backend'] = backend
-                break
+
+        # And try homepage if backend was not detected based on prefix
+        if 'backend' not in data:
+            for target, backend in backends.items():
+                if target in homepage:
+                    data['backend'] = backend
+                    break
 
         if 'backend' not in data:
             raise AnityaException('Could not determine backend '
