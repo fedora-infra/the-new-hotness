@@ -81,6 +81,43 @@ def _parse_service_form(response):
     return (parsed.form.attrs['action'], inputs)
 
 
+def determine_backend(project_name, project_homepage):
+    """
+    Determine the Anitya backend to use for a given project name and homepage.
+
+    This is not a 100% accurate process. If the ``project_name`` has a prefix with
+    a backend associated with it in :data:`prefixes`, that is preferred. Otherwise,
+    the homepage is checked to see if the host is mapped to known backend.
+
+    Args:
+        project_name (str): The project's name, possibly containing the RPM prefix
+            (e.g. ``python-`` for Python packages).
+        project_homepage (str): The project's homepage URL.
+
+    Returns:
+        str: The backend name to use with Anitya.
+
+    Raises:
+        AnityaException: When the backend could not be determined.
+    """
+    for prefix, backend in prefixes.items():
+        if project_name.startswith(prefix) and backend is not None:
+            return backend
+
+    for target, backend in backends.items():
+        if target in project_homepage:
+            return backend
+
+    err = ("the-new-hotness was unable to automatically determine the Anitya backend "
+           "to use with the {name} ({homepage}) project. Please search {anitya_url} "
+           "for this project. If it already exists, ensure there is a distribution "
+           "mapping for Fedora. If it does not already exist, please create the "
+           "project manually. Doing so enables us to automatically notify package "
+           "maintainers when new versions are released.").format(
+                name=project_name, homepage=project_homepage, anitya_url=ANITYA_URL)
+    raise AnityaException(err)
+
+
 class Anitya(OpenIdBaseClient):
     def __init__(self, url=ANITYA_URL, insecure=False):
         super(Anitya, self).__init__(
@@ -212,25 +249,8 @@ class Anitya(OpenIdBaseClient):
             homepage=homepage,
             distro='Fedora',
             package_name=name,
+            backend=determine_backend(name, homepage)
         )
-
-        # Try to guess at what backend to prefill...
-
-        # Start with package prefix first...
-        for prefix, backend in prefixes.items():
-            if name.startswith(prefix) and backend != None:
-                data['backend'] = backend
-
-        # And try homepage if backend was not detected based on prefix
-        if 'backend' not in data:
-            for target, backend in backends.items():
-                if target in homepage:
-                    data['backend'] = backend
-                    break
-
-        if 'backend' not in data:
-            raise AnityaException('Could not determine backend '
-                                  'for %s' % homepage)
 
         # It's not always the case that these need removed, but often
         # enough...
