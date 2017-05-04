@@ -29,6 +29,7 @@ backends = {
     'pear.php.net': 'PEAR',
     'pecl.php.net': 'PECL',
     'pypi.python.org': 'PyPI',
+    'pypi.org': 'PyPI',
     'rubygems.org': 'Rubygems',
     'sourceforge.net': 'Sourceforge',
 }
