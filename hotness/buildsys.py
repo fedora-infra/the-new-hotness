@@ -277,7 +277,7 @@ def _validate_spec_urls(specfile_path):
             parsed_url = urlparse(url)
             if not parsed_url.scheme or not parsed_url.netloc:
                 msg = ("One or more of the specfile's Sources is not a valid URL "
-                       "so we cannot automatically build the new version for you."
+                       "so we cannot automatically build the new version for you. "
                        "Please use a URL in your Source declarations if possible.")
                 raise exceptions.SpecUrlException(msg)
 
