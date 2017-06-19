@@ -346,9 +346,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 self.bugzilla.follow_up(str(e), bz)
             except Exception as e:
                 _log.exception(e)
-                note = ("An unexpected error occured creating the scratch build: "
-                        "please report this issue to the-new-hotness issue tracker "
-                        "at https://github.com/fedora-infra/the-new-hotness/issues")
+                note = ("An unexpected error occurred while creating the scratch build "
+                        "and has been automatically reported. Sorry!")
                 self.bugzilla.follow_up(note, bz)
 
     def handle_buildsys_scratch(self, msg):

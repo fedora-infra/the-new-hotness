@@ -163,8 +163,13 @@ class Koji(object):
             new_sources = spec_sources(specfile, tmp)
             compare_sources(old_sources, new_sources)
 
-            output = self.run(
-                ['rpmbuild', '-D', '_sourcedir .', '-D', '_topdir .', '-bs', specfile], cwd=tmp)
+            try:
+                output = sp.check_output(
+                    ['rpmbuild', '-D', '_sourcedir .', '-D', '_topdir .', '-bs', specfile],
+                    cwd=tmp)
+            except sp.CalledProcessError as e:
+                msg = 'Failed to build the SRPM: {stderr}'.format(stderr=e.stderr)
+                raise exceptions.HotnessException(msg)
 
             srpm = os.path.join(tmp, output.strip().split()[-1])
             _log.debug("Got srpm %r" % srpm)
