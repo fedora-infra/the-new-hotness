@@ -1,3 +1,25 @@
+0.9.0
+-----
+
+Features
+^^^^^^^^
+
+ - Detect Anitya backend using package name prefix (#172)
+
+ - pypi.org has been added to the Anitya backend mapping dictionary (#173)
+
+ - SRPM build failures now report details to the user (#178)
+
+
+Bugfixes
+^^^^^^^^
+
+ - Fix a grammatical error in an error message (#175)
+
+
+Many thanks to the contributors for this release!
+
+
 0.8.1
 -----
 
