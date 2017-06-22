@@ -21,6 +21,7 @@ Authors:    Ralph Bean <rbean@redhat.com>
 
 import logging
 import socket
+import subprocess
 
 from requests.packages.urllib3.util import retry
 import fedmsg
@@ -344,6 +345,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 self.bugzilla.attach_patch(patch_filename, description, bz)
             except exceptions.HotnessException as e:
                 self.bugzilla.follow_up(str(e), bz)
+            except subprocess.CalledProcessError as e:
+                note = ('Skipping the scratch build because an SRPM could not be built: '
+                        '{cmd} returned {code}: {output}'.format(
+                            cmd=e.cmd, code=e.returncode, output=e.output))
+                self.bugzilla.follow_up(note, bz)
             except Exception as e:
                 _log.exception(e)
                 note = ("An unexpected error occurred while creating the scratch build "

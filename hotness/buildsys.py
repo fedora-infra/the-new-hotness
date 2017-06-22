@@ -112,25 +112,19 @@ class Koji(object):
             name=name, url=self.url_for(task_id)))
         return task_id
 
-    def run(self, cmd, cwd=None):
-        _log.info("Running %r in %r", cmd, cwd)
-        p = sp.Popen(cmd, cwd=cwd, stdout=sp.PIPE, stderr=sp.PIPE)
-        out, err = p.communicate()
-        if out:
-            _log.debug(out)
-        if err:
-            _log.warning(err)
-        if p.returncode != 0:
-            message = 'cmd:  %s\nreturn code:  %r\nstdout:\n%s\nstderr:\n%s'
-            raise Exception(message % (' '.join(cmd), p.returncode, out, err))
-        return out
-
     def handle(self, package, upstream, version, rhbz):
         """ Main API entry point.
 
         Bumps the version on a package and requests a scratch build.
 
-        Returns the task_id of the scratch build.
+        Args:
+            package (str): The package name.
+            upstream (str): The new upstream version.
+            version (str): Unused, exists for API compatibility at the moment.
+            rhbz (?): The bugzilla object with a ``bug_id`` attribute.
+
+        Returns:
+            tuple: A tuple of (koji task ID, patch path, BZ attachment name).
         """
 
         # Clone the package to a tempdir
@@ -138,7 +132,7 @@ class Koji(object):
         try:
             url = self.git_url.format(package=package)
             _log.info("Cloning %r to %r" % (url, tmp))
-            self.run(['git', 'clone', url, tmp])
+            sp.check_output(['git', 'clone', url, tmp], stderr=sp.STDOUT)
 
             specfile = tmp + '/' + package + '.spec'
 
@@ -152,7 +146,7 @@ class Koji(object):
                 '-u', ' '.join(self.email_user),
                 specfile,
             ]
-            output = self.run(cmd)
+            sp.check_output(cmd, stderr=sp.STDOUT)
 
             # We compare the old sources to the new ones to make sure we download
             # new sources from bumping the specfile version. Some packages don't
@@ -163,13 +157,11 @@ class Koji(object):
             new_sources = spec_sources(specfile, tmp)
             compare_sources(old_sources, new_sources)
 
-            try:
-                output = sp.check_output(
-                    ['rpmbuild', '-D', '_sourcedir .', '-D', '_topdir .', '-bs', specfile],
-                    cwd=tmp)
-            except sp.CalledProcessError as e:
-                msg = 'Failed to build the SRPM: {stderr}'.format(stderr=e.stderr)
-                raise exceptions.HotnessException(msg)
+            output = sp.check_output(
+                ['rpmbuild', '-D', '_sourcedir .', '-D', '_topdir .', '-bs', specfile],
+                cwd=tmp,
+                stderr=sp.STDOUT,
+            )
 
             srpm = os.path.join(tmp, output.strip().split()[-1])
             _log.debug("Got srpm %r" % srpm)
@@ -178,10 +170,13 @@ class Koji(object):
             task_id = self.scratch_build(session, package, srpm)
 
             # Now, craft a patch to attach to the ticket
-            self.run(['git', 'config', 'user.name', self.email_user[0]], cwd=tmp)
-            self.run(['git', 'config', 'user.email', self.email_user[1]], cwd=tmp)
-            self.run(['git', 'commit', '-a', '-m', comment], cwd=tmp)
-            filename = self.run(['git', 'format-patch', 'HEAD^'], cwd=tmp)
+            sp.check_output(
+                ['git', 'config', 'user.name', self.email_user[0]], cwd=tmp, stderr=sp.STDOUT)
+            sp.check_output(
+                ['git', 'config', 'user.email', self.email_user[1]], cwd=tmp, stderr=sp.STDOUT)
+            sp.check_output(['git', 'commit', '-a', '-m', comment], cwd=tmp, stderr=sp.STDOUT)
+            filename = sp.check_output(
+                ['git', 'format-patch', 'HEAD^'], cwd=tmp, stderr=sp.STDOUT)
             filename = filename.strip()
 
             # Copy the patch out of this doomed dir so bz can find it
@@ -237,22 +232,20 @@ def dist_git_sources(dist_git_path):
 
     Returns:
         list: A list of absolute paths to source files downloaded
+
+    Raises:
+        subprocess.CalledProcessError: When downloading the sources fails.
     """
     files = []
-    try:
-        # The output format is:
-        # Downloading requests-2.12.4.tar.gz
-        # ####################################################################### 100.0%
-        # Downloading requests-2.12.4-tests.tar.gz
-        # ####################################################################### 100.0%
-        output = sp.check_output(['fedpkg', 'sources'], cwd=dist_git_path)
-        for line in output.splitlines():
-            if line.startswith('Downloading'):
-                files.append(os.path.join(dist_git_path, line.split()[-1]))
-    except sp.CalledProcessError as e:
-        _log.error('{cmd} failed (exit {code}): {msg}'.format(
-            cmd=e.cmd, code=e.returncode, msg=e.output))
-        raise exceptions.DownloadException(e.output)
+    # The output format is:
+    # Downloading requests-2.12.4.tar.gz
+    # ####################################################################### 100.0%
+    # Downloading requests-2.12.4-tests.tar.gz
+    # ####################################################################### 100.0%
+    output = sp.check_output(['fedpkg', 'sources'], cwd=dist_git_path)
+    for line in output.splitlines():
+        if line.startswith('Downloading'):
+            files.append(os.path.join(dist_git_path, line.split()[-1]))
 
     return files
 
