@@ -1,3 +1,14 @@
+0.9.1
+-----
+
+Bugfixes
+^^^^^^^^
+
+* Errors are actually reported when subprocess commands fail
+
+* Fix compatibility with python-bugzilla-2.1+
+
+
 0.9.0
 -----
 
