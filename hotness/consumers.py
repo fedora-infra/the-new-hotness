@@ -26,6 +26,7 @@ import subprocess
 from requests.packages.urllib3.util import retry
 import fedmsg
 import fedmsg.consumers
+import fedmsg.meta
 import requests
 
 from hotness import exceptions
@@ -123,7 +124,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         # First, initialize fedmsg and bugzilla in this thread's context.
         hostname = socket.gethostname().split('.', 1)[0]
-        fedmsg.init(name='hotness.%s' % hostname)
+        if not getattr(getattr(fedmsg, '__local', None), '__context', None):
+            fedmsg.init(name='hotness.%s' % hostname)
         fedmsg.meta.make_processors(**self.hub.config)
 
         self.bugzilla = hotness.bz.Bugzilla(
