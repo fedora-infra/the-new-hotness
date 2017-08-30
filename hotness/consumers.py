@@ -28,6 +28,7 @@ import fedmsg
 import fedmsg.consumers
 import fedmsg.meta
 import requests
+import yaml
 
 from hotness import exceptions
 import hotness.anitya
@@ -135,6 +136,10 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         default = 'https://admin.fedoraproject.org/pkgdb/api'
         self.pkgdb_url = self.config.get('hotness.pkgdb_url', default)
+        default = 'https://pagure.io/releng/fedora-scm-requests'
+        self.repo_url = self.config.get('hotness.repo_url', default)
+        default = 'https://pdc.fedoraproject.org'
+        self.pdc_url = self.config.get('hotness.pdc_url', default)
 
         anitya_config = self.config.get('hotness.anitya', {})
         default = 'https://release-monitoring.org'
@@ -689,9 +694,15 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 reason=reason))
 
     def is_monitored(self, package):
-        """ Returns True if a package is marked as 'monitored' in pkgdb2. """
+        """ Returns True if a package is marked as 'monitored' in git. """
+        # First, check to see if the package is retired.
+        # Even if the package says it is monitored.. if it is retired, then
+        # let's not file any bugs or anything for it.
+        if self.is_retired(package):
+            _log.info("Package %s is retired.  Ignoring monitoring." % package)
+            return False
 
-        url = '{0}/package/{1}'.format(self.pkgdb_url, package)
+        url = '{0}/raw/master/f/rpms/{1}'.format(self.repo_url, package)
         _log.debug("Checking %r" % url)
         r = self.requests_session.get(url, timeout=self.timeout)
 
@@ -700,19 +711,36 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             return False
 
         try:
-            data = r.json()
-            package = data['packages'][0]
-
-            # Even if the package says it is monitored.. if it is retired, then
-            # let's not file any bugs or anything for it.
-            if package['package']['status'] == "Retired":
-                return False
-
-            # Otherwise, if it is not retired, then return the monitor flag.
-            return package['package'].get('monitor', True)
+            data = yaml.safe_load(r.text)
+            string_value = data.get('monitoring', 'no-monitoring')
+            return_values = {
+                'monitoring': 'nobuild',
+                'monitoring-with-scratch': True,
+                'no-monitoring': False,
+            }
+            return return_values[string_value]
         except:
-            _log.exception("Problem interacting with pkgdb.")
+            _log.exception("Problem interacting with the pagure repo.")
             return False
+
+    def is_retired(self, package):
+        url = '{0}/rest_api/v1/component-branches/'.format(self.pdc_url)
+        params = dict(
+            name='master',
+            global_component=package,
+            type='rpm',
+            active=True,
+        )
+        _log.debug("Checking %r, %r" % (url, params))
+        r = self.requests_session.get(url, params=params, timeout=self.timeout)
+
+        if not r.status_code == 200:
+            _log.warning('URL %s returned code %s', r.url, r.status_code)
+            return True
+
+        # If there are zero active master branches for this package, then it is
+        # retired.
+        return r.json()['count'] == 0
 
     @hotness.cache.cache.cache_on_arguments()
     def in_pkgdb(self, package):
