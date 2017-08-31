@@ -204,8 +204,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.handle_anitya_map_new(msg)
         elif topic.endswith('buildsys.task.state.change'):
             self.handle_buildsys_scratch(msg)
-        elif topic.endswith('buildsys.build.state.change'):
-            self.handle_buildsys_real(msg)
         elif topic.endswith('pkgdb.package.new'):
             listing = msg['msg']['package_listing']
             if listing['collection']['branchname'] != 'master':
@@ -424,86 +422,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         if not bugs:
             _log.debug("No bugs to update for %r" % msg.get('msg_id'))
             return
-
-    def handle_buildsys_real(self, msg):
-        """
-        Message handlers for real builds (not scratch) in the build system.
-
-        This handles messages for the real builds. It only examines builds
-        for Rawhide. It comments on bugs filed by this consumer previously.
-
-        Topic: 'org.fedoraproject.prod.buildsys.build.state.change'
-        """
-        idx = msg['msg']['build_id']
-        state = msg['msg']['new']
-        release = msg['msg']['release'].split('.')[-1]
-        instance = msg['msg']['instance']
-
-        if instance != 'primary':
-            _log.debug("Ignoring secondary arch build...")
-            return
-
-        rawhide = self.get_dist_tag()
-        if not release.endswith(rawhide):
-            _log.debug("Koji build=%r, %r is not rawhide(%r). Drop it." % (
-                idx, release, rawhide))
-            return
-
-        if state != 1:
-            _log.debug("Koji build_id=%r is not complete.  Drop it." % idx)
-            return
-
-        package = msg['msg']['name']
-        version = msg['msg']['version']
-        release = msg['msg']['release']
-
-        is_monitored = self.is_monitored(package)
-        if not is_monitored:
-            _log.debug('%r not monitored, dropping koji build' % package)
-            return
-
-        if is_monitored == 'nobuild':
-            _log.debug('%r set to "nobuild", dropping build' % package)
-            return
-
-        _log.info("Handling koji build msg %r" % msg.get('msg_id', None))
-
-        # Search for all FTBFS bugs and any upstream bugs we filed earlier.
-        bugs = list(self.bugzilla.ftbfs_bugs(name=package)) + [
-            self.bugzilla.exact_bug(name=package, upstream=version),
-        ]
-        # Filter out None values
-        bugs = [bug for bug in bugs if bug]
-
-        if not bugs:
-            _log.info("No bugs found for %s-%s.%s." % (
-                package, version, release))
-            return
-
-        url = fedmsg.meta.msg2link(msg, **self.hub.config)
-        subtitle = fedmsg.meta.msg2subtitle(msg, **self.hub.config)
-        text = "%s %s" % (subtitle, url)
-
-        for bug in bugs:
-            # Don't followup on bugs that we have just recently followed up on.
-            # https://github.com/fedora-infra/the-new-hotness/issues/17
-            latest = bug.comments[-1]    # Check just the latest comment
-            target = subtitle            # Our comments have this in it
-            me = self.bugzilla.username  # Our comments are, obviously, by us.
-            if latest['creator'] == me and target in latest['text']:
-                _log.info("%s has a recent comment from me." % bug.weburl)
-                continue
-
-            # Don't followup on bugs that are already closed... otherwise we
-            # would followup for ALL ETERNITY.
-            if bug.status in self.bugzilla.bug_status_closed:
-                _log.info("Bug %s is %s.  Dropping." % (
-                    bug.weburl, bug.status))
-                continue
-
-            self.bugzilla.follow_up(text, bug)
-            self.publish("update.bug.followup", msg=dict(
-                trigger=msg, bug=dict(bug_id=bug.bug_id)))
 
     def handle_new_package(self, msg, package):
         """
