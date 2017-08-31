@@ -14,6 +14,10 @@ from hotness import consumers
 class TestConsumer(unittest.TestCase):
     def setUp(self):
         test_config = fedmsg.config.load_config()
+        test_config["hotness.cache"] = {
+            "backend": "dogpile.cache.memory",
+            "expiration_time": 0,
+        }
 
         class MockHub(mock.MagicMock):
             config = test_config
@@ -53,4 +57,16 @@ class TestConsumer(unittest.TestCase):
         package = 'xmlrunner'
         expected = True
         actual = self.consumer.is_monitored(package)
+        self.assertEquals(expected, actual)
+
+    def test_is_in_pkgdb(self):
+        package = 'python-requests'
+        expected = True
+        actual = self.consumer.in_pkgdb(package)
+        self.assertEquals(expected, actual)
+
+    def test_is_not_in_pkgdb(self):
+        package = 'not-a-real-package'
+        expected = False
+        actual = self.consumer.in_pkgdb(package)
         self.assertEquals(expected, actual)
