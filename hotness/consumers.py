@@ -53,15 +53,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
     * 'org.fedoraproject.prod.buildsys.build.state.change'
       handled by :method:`BugzillaTicketFiler.handle_buildsys_real`
 
-    * 'org.fedoraproject.prod.pkgdb.package.new'
-      handled by :method:`BugzillaTicketFiler.handle_new_package`
-
-    * 'org.fedoraproject.prod.pkgdb.package.update'
-      handled by :method:`BugzillaTicketFiler.handle_updated_package`
-
-    * 'org.fedoraproject.prod.pkgdb.package.monitor.update'
-      handled by :method:`BugzillaTicketFiler.handle_monitor_toggle`
-
     * 'org.release-monitoring.prod.anitya.project.version.update'
       handled by :method:`BugzillaTicketFiler.handle_anitya_version_update`
 
@@ -84,21 +75,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # Furthermore, we look for official builds and also circle back
         # and comment about those (when they succeed).
         'org.fedoraproject.prod.buildsys.build.state.change',
-
-        # We look for new packages being added to Fedora for the very
-        # first time so that we can double-check that they have an entry in
-        # release-monitoring.org.  If they don't, then we try to add them when
-        # we can.
-        'org.fedoraproject.prod.pkgdb.package.new',
-
-        # We also look for when packages get their upstream_url changed in
-        # Fedora and try to perform anitya modifications in response.
-        'org.fedoraproject.prod.pkgdb.package.update',
-
-        # Lastly, look for packages that get their monitoring flag switched on
-        # and off.  We'll use that as another opportunity to map stuff in
-        # anitya.
-        'org.fedoraproject.prod.pkgdb.package.monitor.update',
     ]
 
     config_key = 'hotness.bugzilla.enabled'
@@ -134,12 +110,12 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         self.buildsys = hotness.buildsys.Koji(
             consumer=self, config=self.config['hotness.koji'])
 
-        default = 'https://admin.fedoraproject.org/pkgdb/api'
-        self.pkgdb_url = self.config.get('hotness.pkgdb_url', default)
         default = 'https://pagure.io/releng/fedora-scm-requests'
         self.repo_url = self.config.get('hotness.repo_url', default)
         default = 'https://pdc.fedoraproject.org'
         self.pdc_url = self.config.get('hotness.pdc_url', default)
+        default = 'https://src.fedoraproject.org'
+        self.dist_git_url = self.config.get('hotness.dist_git_url', default)
 
         anitya_config = self.config.get('hotness.anitya', {})
         default = 'https://release-monitoring.org'
@@ -204,16 +180,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             self.handle_anitya_map_new(msg)
         elif topic.endswith('buildsys.task.state.change'):
             self.handle_buildsys_scratch(msg)
-        elif topic.endswith('pkgdb.package.new'):
-            listing = msg['msg']['package_listing']
-            if listing['collection']['branchname'] != 'master':
-                _log.debug("Ignoring non-rawhide new package...")
-                return
-            self.handle_new_package(msg, listing['package'])
-        elif topic.endswith('pkgdb.package.update'):
-            self.handle_updated_package(msg)
-        elif topic.endswith('pkgdb.package.monitor.update'):
-            self.handle_monitor_toggle(msg)
         else:
             _log.debug("Dropping %r %r" % (topic, msg['msg_id']))
             pass
@@ -316,7 +282,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 upstream, version, release))
 
             if not is_monitored:
-                _log.info("Pkgdb says not to monitor %r.  Dropping." % package)
+                _log.info("repo says not to monitor %r.  Dropping." % package)
                 self.publish("update.drop", msg=dict(trigger=msg, reason="pkgdb"))
                 return
 
@@ -415,201 +381,13 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # not already in Fedora (it would be a waste of time to query bugzilla
         # if the review is already approved and scm has been processed).
         package_name = '-'.join(msg['msg']['srpm'].split('-')[:-2])
-        if package_name and not self.in_pkgdb(package_name):
+        if package_name and not self.in_dist_git(package_name):
             for bug in self.bugzilla.review_request_bugs(package_name):
                 bugs.append((bug, text))
 
         if not bugs:
             _log.debug("No bugs to update for %r" % msg.get('msg_id'))
             return
-
-    def handle_new_package(self, msg, package):
-        """
-        Message handler for newly added packages in pkgdb.
-
-        When a new package is added to pkgdb, this ensures that there is a
-        mapping in release-monitoring.org for that package. If it is not
-        present, this adds it, if possible.
-
-        Topic: 'org.fedoraproject.prod.pkgdb.package.new',
-
-        Publish a message to ``project.map`` with the results of the attempt
-        map the package to a project.
-        """
-        name = package['name']
-        homepage = package['upstream_url']
-
-        if not homepage:
-            # If there is not homepage set at the outset in pkgdb, there's
-            # nothing smart we can do with respect to anitya, so.. wait.
-            # pkgdb has a cron script that runs weekly that updates the
-            # upstream url there, so when that happens, we'll be triggered
-            # and can try again.
-            _log.warn("New package %r has no homepage.  Dropping." % name)
-            return
-
-        _log.info("Considering new package %r with %r" % (name, homepage))
-
-        anitya = hotness.anitya.Anitya(self.anitya_url)
-        results = anitya.search_by_homepage(name, homepage)
-
-        projects = results['projects']
-        total = results['total']
-        if total > 1:
-            _log.warning("Fail. %i matching projects on anitya." % total)
-            self.publish("project.map", msg=dict(
-                trigger=msg, total=total, success=False))
-        elif total == 1:
-            _log.info("Found one match on Anitya.")
-            project = projects[0]
-            anitya.login(self.anitya_username, self.anitya_password)
-
-            reason = None
-            try:
-                anitya.map_new_package(name, project)
-            except hotness.anitya.AnityaException as e:
-                reason = str(e)
-                _log.warn("Failed to map: %r" % reason)
-
-            self.publish("project.map", msg=dict(
-                trigger=msg,
-                project=project,
-                success=not bool(reason),
-                reason=reason))
-        else:
-            _log.info("Saw 0 matching projects on anitya.  Adding.")
-            anitya.login(self.anitya_username, self.anitya_password)
-
-            reason = None
-            try:
-                anitya.add_new_project(name, homepage)
-            except hotness.anitya.AnityaException as e:
-                reason = str(e)
-                _log.warn("Failed to create: %r" % reason)
-
-            self.publish("project.map", msg=dict(
-                trigger=msg,
-                success=not bool(reason),
-                reason=reason))
-
-    def handle_updated_package(self, msg):
-        """
-        Message handler for updates to packages in pkgdb.
-
-        When a package is updated in pkgdb, this ensures that if the
-        upstream_url changes in pkgdb, the changes are pushed to Anitya.
-        This can result in either an update to the Anitya project entry,
-        or an entirely new entry if the package did not previously exist
-        in Anitya.
-
-        Topic: 'org.fedoraproject.prod.pkgdb.package.update',
-
-        Publish a message to ``project.map`` with the results of the attempt
-        map the package to a project if the project is not already on Anitya.
-        """
-        _log.info("Handling pkgdb update msg %r" % msg.get('msg_id'))
-
-        fields = msg['msg']['fields']
-        if 'upstream_url' not in fields:
-            _log.info("Ignoring package edit with no url change.")
-            return
-
-        package = msg['msg']['package']
-        name = package['name']
-        homepage = package['upstream_url']
-
-        _log.info("Trying url change on %s: %s" % (name, homepage))
-
-        # There are two possible scenarios here.
-        # 1) the package already *is mapped* in anitya, in which case we can
-        #    update the old url there
-        # 2) the package is not mapped there, in which case we handle this like
-        #    a new package (and try to create it and map it)
-
-        anitya = hotness.anitya.Anitya(self.anitya_url)
-        project = anitya.get_project_by_package(name)
-
-        if project:
-            _log.info("Found project with name %s" % project['name'])
-            anitya.login(self.anitya_username, self.anitya_password)
-            if project['homepage'] == homepage:
-                _log.info("No need to update anitya for %s.  Homepages"
-                          " are already in sync." % project['name'])
-                return
-
-            _log.info("Updating anitya url on %s" % project['name'])
-            anitya.update_url(project, homepage)
-            anitya.force_check(project)
-        else:
-            # Just pretend like it's a new package, since its not in anitya.
-            self.handle_new_package(msg, package)
-
-    def handle_monitor_toggle(self, msg):
-        """
-        Message handler for packages whose monitoring is adjusted in pkgdb.
-
-        If a package has its monitoring turned off, this does nothing. If it is
-        turned on, this ensures the package exists in Anitya and forces Anitya
-        to check for the latest version.
-
-        Topic: 'org.fedoraproject.prod.pkgdb.package.monitor.update'
-        """
-        status = msg['msg']['status']
-        name = msg['msg']['package']['name']
-        homepage = msg['msg']['package']['upstream_url']
-
-        _log.info("Considering monitored %r with %r" % (name, homepage))
-
-        if not status:
-            _log.info(".. but it was turned off.  Dropping.")
-            return
-
-        anitya = hotness.anitya.Anitya(self.anitya_url)
-        results = anitya.search_by_homepage(name, homepage)
-        total = results['total']
-
-        if total > 1:
-            _log.info("%i projects with %r %r already exist in anitya." % (
-                total, name, homepage))
-            return
-        elif total == 1:
-            # The project might exist in anitya, but it might not be mapped to
-            # a Fedora package yet, so map it if necessary.
-            project = results['projects'][0]
-
-            anitya.login(self.anitya_username, self.anitya_password)
-
-            reason = None
-            try:
-                anitya.map_new_package(name, project)
-            except hotness.anitya.AnityaException as e:
-                reason = str(e)
-                _log.warn("Failed to map: %r" % reason)
-
-            self.publish("project.map", msg=dict(
-                trigger=msg,
-                project=project,
-                success=not bool(reason),
-                reason=reason))
-
-            # After mapping, force a check for new tarballs
-            anitya.force_check(project)
-        else:
-            # OTHERWISE, there is *nothing* on anitya about it, so add one.
-            _log.info("Saw 0 matching projects on anitya.  Adding.")
-            anitya.login(self.anitya_username, self.anitya_password)
-
-            reason = None
-            try:
-                anitya.add_new_project(name, homepage)
-            except hotness.anitya.AnityaException as e:
-                reason = str(e)
-                _log.warn("Failed to create: %r" % reason)
-
-            self.publish("project.map", msg=dict(
-                trigger=msg,
-                success=not bool(reason),
-                reason=reason))
 
     def is_monitored(self, package):
         """ Returns True if a package is marked as 'monitored' in git. """
@@ -661,12 +439,12 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         return r.json()['count'] == 0
 
     @hotness.cache.cache.cache_on_arguments()
-    def in_pkgdb(self, package):
-        """ Returns True if a package is in the Fedora pkgdb. """
+    def in_dist_git(self, package):
+        """ Returns True if a package is in the Fedora dist-git. """
 
-        url = '{0}/package/{1}'.format(self.pkgdb_url, package)
+        url = '{0}/rpms/{1}'.format(self.dist_git_url, package)
         _log.debug("Checking %r" % url)
-        r = self.requests_session.get(url, timeout=self.timeout)
+        r = self.requests_session.head(url, timeout=self.timeout)
 
         if r.status_code == 404:
             return False
@@ -674,18 +452,3 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             _log.warning('URL %s returned code %s', r.url, r.status_code)
             return False
         return True
-
-    @hotness.cache.cache.cache_on_arguments()
-    def get_dist_tag(self):
-        url = '{0}/collections/master/'.format(self.pkgdb_url)
-        _log.debug("Getting dist tag from %r" % url)
-        r = self.requests_session.get(url, timeout=self.timeout)
-
-        if not r.status_code == 200:
-            raise IOError('URL %s returned code %s', r.url, r.status_code)
-
-        data = r.json()
-        collection = data['collections'][0]
-        tag = collection['dist_tag'][1:]
-        _log.debug("Got rawhide suffix %r" % tag)
-        return tag

@@ -59,14 +59,14 @@ class TestConsumer(unittest.TestCase):
         actual = self.consumer.is_monitored(package)
         self.assertEquals(expected, actual)
 
-    def test_is_in_pkgdb(self):
+    def test_is_in_dist_git(self):
         package = 'python-requests'
         expected = True
-        actual = self.consumer.in_pkgdb(package)
+        actual = self.consumer.in_dist_git(package)
         self.assertEquals(expected, actual)
 
-    def test_is_not_in_pkgdb(self):
+    def test_is_not_in_dist_git(self):
         package = 'not-a-real-package'
         expected = False
-        actual = self.consumer.in_pkgdb(package)
+        actual = self.consumer.in_dist_git(package)
         self.assertEquals(expected, actual)

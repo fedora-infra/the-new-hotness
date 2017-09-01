@@ -207,13 +207,6 @@ Downloading requests-2.13.0.tar.gz
         mock_check_output.assert_called_once_with(['fedpkg', 'sources'], cwd='/my/repo')
         self.assertEqual(['/my/repo/requests-2.13.0.tar.gz'], sources)
 
-    @mock.patch('hotness.buildsys.sp.check_output')
-    def test_download_failure(self, mock_check_output):
-        """Assert any subprocess.CalledProcessError is converted to a hotness exception"""
-        mock_check_output.side_effect = subprocess.CalledProcessError(1, 'mock_cmd')
-        self.assertRaises(exceptions.DownloadException, buildsys.dist_git_sources,
-                          '/my/repo')
-
 
 class ValidateSpecUrlsTests(unittest.TestCase):
     """Tests for the :func:`buildsys.compare_sources` function"""
