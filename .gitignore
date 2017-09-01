@@ -14,3 +14,4 @@ fedmsg.d/hotness.py
 # Vagrant-related files
 Vagrantfile
 *.retry
+.cache
