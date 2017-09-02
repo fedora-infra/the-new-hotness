@@ -61,9 +61,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
     * 'org.fedoraproject.prod.buildsys.task.state.change'
       handled by :method:`BugzillaTicketFiler.handle_buildsys_scratch`
 
-    * 'org.fedoraproject.prod.buildsys.build.state.change'
-      handled by :method:`BugzillaTicketFiler.handle_buildsys_real`
-
     * 'org.release-monitoring.prod.anitya.project.version.update'
       handled by :method:`BugzillaTicketFiler.handle_anitya_version_update`
 
@@ -82,10 +79,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
         # Anyways, we also listen for koji scratch builds to circle back:
         'org.fedoraproject.prod.buildsys.task.state.change',
-
-        # Furthermore, we look for official builds and also circle back
-        # and comment about those (when they succeed).
-        'org.fedoraproject.prod.buildsys.build.state.change',
     ]
 
     config_key = 'hotness.bugzilla.enabled'
