@@ -3,6 +3,7 @@ Unit tests for hotness.consumer
 """
 from __future__ import unicode_literals, absolute_import
 
+import logging
 import unittest
 
 import fedmsg.config
@@ -28,7 +29,6 @@ class TestConsumer(unittest.TestCase):
             config = test_config
 
         self.consumer = consumers.BugzillaTicketFiler(MockHub())
-        import logging
         logging.basicConfig(level=logging.DEBUG)
 
     def tearDown(self):
