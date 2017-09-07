@@ -41,17 +41,6 @@ import hotness.helpers
 _log = logging.getLogger(__name__)
 
 
-def logged(fn):
-    """ A logging decorator, for debugging. """
-    def wrapper(self, *args, **kw):
-        result = fn(self, *args, **kw)
-        _log.debug("%s(*%r, **%r) returned %r" % (fn.__name__, args, kw, result))
-        return result
-    wrapper.__name__ = fn.__name__
-    wrapper.__doc__ = fn.__doc__
-    return wrapper
-
-
 class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
     """
     A fedmsg consumer that is the heart of the-new-hotness.
@@ -393,7 +382,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             _log.debug("No bugs to update for %r" % msg.get('msg_id'))
             return
 
-    @logged
     def is_monitored(self, package):
         """ Returns True if a package is marked as 'monitored' in git. """
         # First, check to see if the package is retired.
@@ -424,7 +412,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             _log.exception("Problem interacting with the pagure repo.")
             return False
 
-    @logged
     def is_retired(self, package):
         url = '{0}/rest_api/v1/component-branches/'.format(self.pdc_url)
         params = dict(
@@ -444,7 +431,6 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # retired.
         return r.json()['count'] == 0
 
-    @logged
     @hotness.cache.cache.cache_on_arguments()
     def in_dist_git(self, package):
         """ Returns True if a package is in the Fedora dist-git. """
