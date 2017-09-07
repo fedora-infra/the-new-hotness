@@ -392,7 +392,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             return False
 
         url = '{0}/raw/master/f/rpms/{1}'.format(self.repo_url, package)
-        _log.debug("Checking %r" % url)
+        _log.debug("Checking %r to see if %s is monitored." % (url, package))
         r = self.requests_session.get(url, timeout=self.timeout)
 
         if not r.status_code == 200:
@@ -420,7 +420,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             type='rpm',
             active=True,
         )
-        _log.debug("Checking %r, %r" % (url, params))
+        _log.debug("Checking %r to see if %s is retired, %r" % (
+            url, package, params))
         r = self.requests_session.get(url, params=params, timeout=self.timeout)
 
         if not r.status_code == 200:
@@ -436,7 +437,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         """ Returns True if a package is in the Fedora dist-git. """
 
         url = '{0}/rpms/{1}'.format(self.dist_git_url, package)
-        _log.debug("Checking %r" % url)
+        _log.debug("Checking %r to see if %s is in dist-git" % (url, package))
         r = self.requests_session.head(url, timeout=self.timeout)
 
         if r.status_code == 404:
