@@ -62,6 +62,7 @@ class TestConsumer(unittest.TestCase):
         self.assertEquals(expected, actual)
 
     def test_is_monitored_negative(self):
+        """ Ensure a `no-monitoring` flag in git yields False internally. """
         response = mock.MagicMock()
         response.status_code = 200
         response.text = 'monitoring: no-monitoring'
@@ -77,6 +78,7 @@ class TestConsumer(unittest.TestCase):
         self.assertEquals(expected, actual)
 
     def test_is_monitored_nobuild(self):
+        """ Ensure a `monitoring` flag in git yields 'nobuild' internally. """
         response = mock.MagicMock()
         response.status_code = 200
         response.text = 'monitoring: monitoring'
@@ -92,6 +94,9 @@ class TestConsumer(unittest.TestCase):
         self.assertEquals(expected, actual)
 
     def test_is_monitored_positive(self):
+        """ Ensure a `monitoring-with-scratch` flag in git yields True
+        internally.
+        """
         response = mock.MagicMock()
         response.status_code = 200
         response.text = 'monitoring: monitoring-with-scratch'
@@ -107,6 +112,7 @@ class TestConsumer(unittest.TestCase):
         self.assertEquals(expected, actual)
 
     def test_is_in_dist_git(self):
+        """ Check that HTTP/200 from dist-git returns True in our helper. """
         response = mock.MagicMock()
         response.status_code = 200
         self.consumer.requests_session = mock.MagicMock()
@@ -118,6 +124,7 @@ class TestConsumer(unittest.TestCase):
         self.assertEquals(expected, actual)
 
     def test_is_not_in_dist_git(self):
+        """ Check that HTTP/404 from dist-git returns False in our helper. """
         response = mock.MagicMock()
         response.status_code = 404
         self.consumer.requests_session = mock.MagicMock()
