@@ -35,7 +35,7 @@ class TestConsumer(unittest.TestCase):
         self.bz.__exit__()
         self.koji.__exit__()
 
-    def test_is_retired_negative(self):
+    def test_is_retired_positive(self):
         """ python-sqlite2 was rolled into the stdlib.  retired. """
         response = mock.MagicMock()
         response.status_code = 200
@@ -48,7 +48,7 @@ class TestConsumer(unittest.TestCase):
         actual = self.consumer.is_retired(package)
         self.assertEquals(expected, actual)
 
-    def test_is_retired_positive(self):
+    def test_is_retired_negative(self):
         """ Ensure that nethack never dies. """
         response = mock.MagicMock()
         response.status_code = 200
