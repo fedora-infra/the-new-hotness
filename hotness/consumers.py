@@ -383,7 +383,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             return
 
     def is_monitored(self, package):
-        """ Returns True if a package is marked as 'monitored' in git. """
+        """ Returns True if a package is marked as 'monitored' in git.
+
+        This is a thin wrapper around a requests.get call and could raise any
+        exceptions raised by that function.
+        """
         # First, check to see if the package is retired.
         # Even if the package says it is monitored.. if it is retired, then
         # let's not file any bugs or anything for it.
@@ -413,6 +417,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             return False
 
     def is_retired(self, package):
+        """ Returns True if a package is marked as 'retired' in PDC.
+
+        This is a thin wrapper around a requests.get call and could raise any
+        exceptions raised by that function.
+        """
         url = '{0}/rest_api/v1/component-branches/'.format(self.pdc_url)
         params = dict(
             name='master',
@@ -434,7 +443,11 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
     @hotness.cache.cache.cache_on_arguments()
     def in_dist_git(self, package):
-        """ Returns True if a package is in the Fedora dist-git. """
+        """ Returns True if a package is in the Fedora dist-git.
+
+        This is a thin wrapper around a requests.head call and could raise any
+        exceptions raised by that function.
+        """
 
         url = '{0}/rpms/{1}'.format(self.dist_git_url, package)
         _log.debug("Checking %r to see if %s is in dist-git" % (url, package))
