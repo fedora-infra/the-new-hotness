@@ -5,9 +5,8 @@ from __future__ import unicode_literals, absolute_import
 
 import unittest
 
-import mock
-
 import fedmsg.config
+import mock
 
 from hotness import consumers
 
