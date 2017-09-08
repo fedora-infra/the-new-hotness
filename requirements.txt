@@ -4,3 +4,4 @@ dogpile.cache
 requests
 six
 fedmsg_meta_fedora_infrastructure
+PyYAML
