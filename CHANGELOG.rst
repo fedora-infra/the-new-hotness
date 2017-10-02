@@ -1,3 +1,12 @@
+0.10.0
+------
+
+Features
+^^^^^^^^
+
+* Use fedora-scm-requests rather than pkgdb for monitoring configuration (#185)
+
+
 0.9.1
 -----
 
