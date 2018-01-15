@@ -268,16 +268,20 @@ def _validate_spec_urls(specfile_path):
     # Patch0: patch-we-expect-to-be-in-dist-git.patch
     # ...
     output = sp.check_output(['spectool', '-l', specfile_path])
+    bad_urls = []
     for line in output.splitlines():
         if line.startswith('Source'):
             # Parse to make sure it's a url
             url = line.split(':', 1)[1].strip()
             parsed_url = urlparse(url)
             if not parsed_url.scheme or not parsed_url.netloc:
-                msg = ("One or more of the specfile's Sources is not a valid URL "
-                       "so we cannot automatically build the new version for you. "
-                       "Please use a URL in your Source declarations if possible.")
-                raise exceptions.SpecUrlException(msg)
+                bad_urls.append(url)
+    if bad_urls:
+        msg = ("The following Sources of the specfile are not valid URLs "
+               "so we cannot automatically build the new version for you.  "
+               "Please use URLs in your Source declarations if possible.\n\n"
+               "- " + '\n- '.join(bad_urls))
+        raise exceptions.SpecUrlException(msg)
 
 
 def spec_sources(specfile_path, target_dir):
