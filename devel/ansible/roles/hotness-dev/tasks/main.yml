@@ -10,6 +10,10 @@
     - tmux
     - tree
     - vim-enhanced
+    - tox
+    - rpm-devel
+    - gcc
+    - krb5-devel
 
 - name: Install the-new-hotness development packages
   dnf: name={{ item }} state=present

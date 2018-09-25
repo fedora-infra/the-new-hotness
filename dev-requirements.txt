@@ -1,2 +1,5 @@
 mock
 sphinx
+pytest
+pytest-cov
+unittest2
