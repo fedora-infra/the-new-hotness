@@ -7,6 +7,10 @@ dist
 *.key
 *.gpg
 fedmsg.d/hotness.py
+.tox/
+.coverage
+coverage.xml
+htmlcov/
 
 # Docs
 *_build/
@@ -15,3 +19,4 @@ fedmsg.d/hotness.py
 Vagrantfile
 *.retry
 .cache
+.vagrant/

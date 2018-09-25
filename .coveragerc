@@ -1,0 +1,13 @@
+[run]
+branch = True
+include =
+    hotness/*
+
+[report]
+fail_under = 90
+precision = 2
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+omit =
+    hotness/tests/*
