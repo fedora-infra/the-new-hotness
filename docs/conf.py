@@ -59,7 +59,7 @@ master_doc = 'index'
 # General information about the project.
 project = 'The New Hotness'
 author = 'Red Hat, Inc. and others'
-copyright = '2016, ' + author
+copyright = '2018, ' + author
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
