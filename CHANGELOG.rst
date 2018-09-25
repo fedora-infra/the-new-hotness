@@ -1,3 +1,11 @@
+master
+------
+
+Features
+^^^^^^^^
+
+* Update documentation (#195)
+
 0.10.0
 ------
 
@@ -127,6 +135,7 @@ Commits
   https://github.com/fedora-infra/the-new-hotness/commit/48bcd0048
 - 3a2b1b834 .. but do also publish in this case.
   https://github.com/fedora-infra/the-new-hotness/commit/3a2b1b834
+
 A bugfix to the last release which should attach more information to bugs when
 rebase-helper fails to bump things.
 
@@ -162,6 +171,7 @@ Commits
   https://github.com/fedora-infra/the-new-hotness/commit/20f9bd6bb
 - 0f3b72e62 Handle repoquery differently for yum and dnf.
   https://github.com/fedora-infra/the-new-hotness/commit/0f3b72e62
+
 This release swaps out usage of 'rpmdev-bumpspec' for the new 'rebase-helper'.
 Credit due to Petr Hracek.
 

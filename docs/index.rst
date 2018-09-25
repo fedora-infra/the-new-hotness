@@ -11,18 +11,21 @@ via `fedmsg <https://fedmsg.com>`_ to automatically perform tasks when a project
 For example, the Fedora project uses it to file Bugzilla reports when new versions are available.
 The New Hotness attempts to build the new version and reports problems on the bug it files.
 
-Contents:
+:Github page: https://github.com/fedora-infra/the-new-hotness
+
+Developer guide
+---------------
 
 .. toctree::
    :maxdepth: 2
 
    dev-guide
 
+Releases
+--------
 
-Indices and tables
-==================
+.. toctree::
+   :maxdepth: 2
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   release-notes
 
