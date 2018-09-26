@@ -1,14 +1,27 @@
 
 Welcome to The New Hotness development environment!
 
+To start development you need to do this first:
+
+* add your bugzilla credentials to ~/.fedmsg.d/hotness.py
+
+* acquire a valid Kerberos ticket by `kinit <fas-username>@FEDORAPROJECT.ORG`
+
 Here are some tips:
 
 * The code for the-new-hotness is located at ~/devel/
 
 * Run `hotstart` to start the development services and `hotstop` to stop it.
 
-* Logs for the server are available with `journalctl`; the services are run
+* Logs for the server are available with `journalctl` or `hotlog`; the services are run
   as systemd user units in ~/.config/systemd/user/
+
+* Run tests with `tox`
+
+* To build documentation run `tox -e docs`
+
+* For additional informations see documentation
+  <https://the-new-hotness.readthedocs.io/en/stable/>
 
 Happy hacking!
 

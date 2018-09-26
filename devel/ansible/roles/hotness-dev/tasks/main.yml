@@ -64,3 +64,8 @@
   with_items:
     - hub.service
     - relay.service
+
+- name: Reload the systemd daemon
+  become_user: "{{ ansible_env.SUDO_USER }}"
+  command: systemctl --user daemon-reload
+
