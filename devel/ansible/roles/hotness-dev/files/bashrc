@@ -27,3 +27,7 @@ hotrestart (){
 hotstatus (){
     systemctl --user status hub.service relay.service
 }
+
+hotlog (){
+    journalctl -f --user-unit hub.service --user-unit relay.service
+}
