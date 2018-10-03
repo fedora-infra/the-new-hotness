@@ -1,0 +1,23 @@
+language: python
+install:
+  - pip install tox
+script:
+  - tox
+after_success:
+  - source .tox/${TOXENV}/bin/activate && pip install codecov && codecov
+
+env:
+  global:
+    - PYTHONWARNINGS=always::DeprecationWarning
+  matrix:
+    - TOXENV=lint
+    - TOXENV=py27
+    - TOXENV=format
+matrix:
+  include:
+    - python: 3.5
+      env: TOXENV=py35
+    - python: 3.6
+      env: TOXENV=py35
+    - python: 3.6
+      env: TOXENV=docs
