@@ -14,16 +14,14 @@ from hotness import consumers
 
 class TestConsumer(unittest.TestCase):
     def setUp(self):
-        self.bz = mock.patch('hotness.bz.Bugzilla')
+        self.bz = mock.patch("hotness.bz.Bugzilla")
         self.bz.__enter__()
-        self.koji = mock.patch('hotness.buildsys.Koji')
+        self.koji = mock.patch("hotness.buildsys.Koji")
         self.koji.__enter__()
 
         test_config = fedmsg.config.load_config()
-        test_config["hotness.cache"] = {
-            "backend": "dogpile.cache.null",
-        }
-        test_config['hotness.requests_retries'] = 0
+        test_config["hotness.cache"] = {"backend": "dogpile.cache.null"}
+        test_config["hotness.requests_retries"] = 0
 
         class MockHub(mock.MagicMock):
             config = test_config
@@ -39,11 +37,11 @@ class TestConsumer(unittest.TestCase):
         """ python-sqlite2 was rolled into the stdlib.  retired. """
         response = mock.MagicMock()
         response.status_code = 200
-        response.json.return_value = {'count': 0}
+        response.json.return_value = {"count": 0}
         self.consumer.requests_session = mock.MagicMock()
         self.consumer.requests_session.get.return_value = response
 
-        package = 'python-sqlite2'
+        package = "python-sqlite2"
         expected = True
         actual = self.consumer.is_retired(package)
         self.assertEquals(expected, actual)
@@ -52,11 +50,11 @@ class TestConsumer(unittest.TestCase):
         """ Ensure that nethack never dies. """
         response = mock.MagicMock()
         response.status_code = 200
-        response.json.return_value = {'count': 1}
+        response.json.return_value = {"count": 1}
         self.consumer.requests_session = mock.MagicMock()
         self.consumer.requests_session.get.return_value = response
 
-        package = 'nethack'
+        package = "nethack"
         expected = False
         actual = self.consumer.is_retired(package)
         self.assertEquals(expected, actual)
@@ -65,14 +63,14 @@ class TestConsumer(unittest.TestCase):
         """ Ensure a `no-monitoring` flag in git yields False internally. """
         response = mock.MagicMock()
         response.status_code = 200
-        response.text = 'monitoring: no-monitoring'
+        response.text = "monitoring: no-monitoring"
         self.consumer.requests_session = mock.MagicMock()
         self.consumer.requests_session.get.return_value = response
 
         self.consumer.is_retired = mock.MagicMock()
         self.consumer.is_retired.return_value = False
 
-        package = 'php-pecl-timecop'
+        package = "php-pecl-timecop"
         expected = False
         actual = self.consumer.is_monitored(package)
         self.assertEquals(expected, actual)
@@ -81,15 +79,15 @@ class TestConsumer(unittest.TestCase):
         """ Ensure a `monitoring` flag in git yields 'nobuild' internally. """
         response = mock.MagicMock()
         response.status_code = 200
-        response.text = 'monitoring: monitoring'
+        response.text = "monitoring: monitoring"
         self.consumer.requests_session = mock.MagicMock()
         self.consumer.requests_session.get.return_value = response
 
         self.consumer.is_retired = mock.MagicMock()
         self.consumer.is_retired.return_value = False
 
-        package = 'ocaml-cudf'
-        expected = 'nobuild'
+        package = "ocaml-cudf"
+        expected = "nobuild"
         actual = self.consumer.is_monitored(package)
         self.assertEquals(expected, actual)
 
@@ -99,14 +97,14 @@ class TestConsumer(unittest.TestCase):
         """
         response = mock.MagicMock()
         response.status_code = 200
-        response.text = 'monitoring: monitoring-with-scratch'
+        response.text = "monitoring: monitoring-with-scratch"
         self.consumer.requests_session = mock.MagicMock()
         self.consumer.requests_session.get.return_value = response
 
         self.consumer.is_retired = mock.MagicMock()
         self.consumer.is_retired.return_value = False
 
-        package = 'xmlrunner'
+        package = "xmlrunner"
         expected = True
         actual = self.consumer.is_monitored(package)
         self.assertEquals(expected, actual)
@@ -118,7 +116,7 @@ class TestConsumer(unittest.TestCase):
         self.consumer.requests_session = mock.MagicMock()
         self.consumer.requests_session.head.return_value = response
 
-        package = 'python-requests'
+        package = "python-requests"
         expected = True
         actual = self.consumer.in_dist_git(package)
         self.assertEquals(expected, actual)
@@ -130,7 +128,7 @@ class TestConsumer(unittest.TestCase):
         self.consumer.requests_session = mock.MagicMock()
         self.consumer.requests_session.head.return_value = response
 
-        package = 'not-a-real-package'
+        package = "not-a-real-package"
         expected = False
         actual = self.consumer.in_dist_git(package)
         self.assertEquals(expected, actual)

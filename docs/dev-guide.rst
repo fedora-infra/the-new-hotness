@@ -18,6 +18,10 @@ The test suite includes a test that enforces the required style, so all you need
 run the tests to ensure your code follows the style. If the unit test passes, you are
 good to go!
 
+We are using `Black <https://github.com/ambv/black>` to automatically format
+the source code. It is also checked in CI. The Black webpage contains
+instructions to configure your editor to run it on the files you edit.
+
 Unit tests
 ^^^^^^^^^^
 

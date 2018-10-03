@@ -29,7 +29,7 @@ pp = pprint_module.PrettyPrinter(indent=4)
 pprint = pp.pprint
 
 __html_regex = re.compile(r'\bhref\s*=\s*["\']([^"\'/]+)/["\']', re.I)
-__text_regex = re.compile(r'^d.+\s(\S+)\s*$', re.I | re.M)
+__text_regex = re.compile(r"^d.+\s(\S+)\s*$", re.I | re.M)
 
 
 def expand_subdirs(url, glob_char="*"):
@@ -46,10 +46,10 @@ def expand_subdirs(url, glob_char="*"):
     glob_str = glob_match.group(1)
 
     # url until first slash before glob_match
-    url_prefix = url[0:glob_match.start() + 1]
+    url_prefix = url[0 : glob_match.start() + 1]
 
     # everything after the slash after glob_match
-    url_suffix = url[glob_match.end():]
+    url_suffix = url[glob_match.end() :]
 
     if url_prefix != "":
         dir_listing = get_html(url_prefix)
@@ -73,6 +73,7 @@ def expand_subdirs(url, glob_char="*"):
 def get_html(url, callback=None, errback=None):
     if url.startswith("ftp://"):
         import urllib
+
         req = urllib.urlopen(url)
         data = req.read()
         if callback:
@@ -85,6 +86,7 @@ def get_html(url, callback=None, errback=None):
     else:
         if callback:
             from twisted.web.client import getPage
+
             df = getPage(url)
             try:
                 for cb in callback:
@@ -113,7 +115,8 @@ def get_html(url, callback=None, errback=None):
             c.setopt(
                 pycurl.USERAGENT,
                 "Fedora Upstream Release Monitoring "
-                "(https://fedoraproject.org/wiki/Upstream_release_monitoring)")
+                "(https://fedoraproject.org/wiki/Upstream_release_monitoring)",
+            )
             c.setopt(pycurl.CONNECTTIMEOUT, 10)
             c.setopt(pycurl.TIMEOUT, 30)
 
@@ -163,13 +166,13 @@ def upstream_cmp(v1, v2):
 
     if rc1 and rc2:
         # both are rc, higher rc is newer
-        diff = cmp(rc1.lower(), rc2.lower())
+        diff = (rc1.lower() > rc2.lower()) - (rc1.lower() > rc2.lower())
         if diff != 0:
             # rc > pre > beta > alpha
             return diff
         if rcn1 and rcn2:
             # both have rc number
-            return cmp(int(rcn1), int(rcn2))
+            return (int(rcn1) > int(rcn2)) - (int(rcn1) > int(rcn2))
         if rcn1:
             # only first has rc number, then it is newer
             return 1
@@ -190,10 +193,8 @@ def upstream_cmp(v1, v2):
     return 0
 
 
-__rc_upstream_regex = re.compile("(.*?)\.?(-?(rc|pre|beta|alpha|dev)([0-9]*))",
-                                 re.I)
-__rc_release_regex = re.compile(r'0\.[0-9]+\.(rc|pre|beta|alpha|dev)([0-9]*)',
-                                re.I)
+__rc_upstream_regex = re.compile("(.*?)\.?(-?(rc|pre|beta|alpha|dev)([0-9]*))", re.I)
+__rc_release_regex = re.compile(r"0\.[0-9]+\.(rc|pre|beta|alpha|dev)([0-9]*)", re.I)
 
 
 def split_rc(version):
@@ -240,7 +241,7 @@ def cmp_upstream_repo(upstream_v, repo_vr):
 
     # Strip a leading 'v' which is sometimes prefixed to github releases
     # https://github.com/fedora-infra/anitya/issues/102
-    upstream_v = upstream_v.lstrip('v')
+    upstream_v = upstream_v.lstrip("v")
 
     return upstream_cmp(upstream_v, repo_version)
 
