@@ -19,4 +19,3 @@ htmlcov/
 Vagrantfile
 *.retry
 .cache
-.vagrant/
