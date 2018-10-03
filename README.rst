@@ -10,7 +10,7 @@ For additional information see `documentation <https://the-new-hotness.readthedo
 Development
 ^^^^^^^^^^^
 
-Contributions are welcome, check out `contribution guidelines <https://the-new-hotness.readthedocs.io/en/stable/dev-guide.html#contribution-guidelines>_`.
+Contributions are welcome, check out `contribution guidelines <https://the-new-hotness.readthedocs.io/en/stable/dev-guide.html#contribution-guidelines>`_.
 
 Future Plans
 ^^^^^^^^^^^^
