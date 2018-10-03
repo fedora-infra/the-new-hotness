@@ -26,15 +26,23 @@ class DetermineBackendTests(unittest.TestCase):
     """Unit tests for :meth:`hotness.anitya.Anitya.determine_backend`."""
 
     def test_no_backend_found(self):
-        self.assertRaises(anitya.AnityaException, anitya.determine_backend,
-                          'nonsense-package-name', 'http://example.com/home')
+        self.assertRaises(
+            anitya.AnityaException,
+            anitya.determine_backend,
+            "nonsense-package-name",
+            "http://example.com/home",
+        )
 
     def test_backend_ruby_prefix(self):
         """Assert packages with the ``rubygem-`` prefix receive the Rubygems backend."""
-        backend = anitya.determine_backend('rubygem-myproject', 'http://example.com/home')
-        self.assertEqual('Rubygems', backend)
+        backend = anitya.determine_backend(
+            "rubygem-myproject", "http://example.com/home"
+        )
+        self.assertEqual("Rubygems", backend)
 
     def test_backend_ruby_homepage(self):
         """Assert packages with a ``rubygems.org`` homepage receive the Rubygems backend."""
-        backend = anitya.determine_backend('ishouldhaveaprefix-project', 'http://rubygems.org/home')
-        self.assertEqual('Rubygems', backend)
+        backend = anitya.determine_backend(
+            "ishouldhaveaprefix-project", "http://rubygems.org/home"
+        )
+        self.assertEqual("Rubygems", backend)

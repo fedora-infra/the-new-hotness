@@ -8,16 +8,8 @@ config = dict(
         disable_existing_loggers=False,
         # The root logger configuration; this is a catch-all configuration
         # that applies to all log messages not handled by a different logger
-        root={
-            'level': 'INFO',
-            'handlers': ['console'],
-        },
-        formatters=dict(
-            bare={
-                "datefmt": "%Y-%m-%d %H:%M:%S",
-                "format": bare_format
-            },
-        ),
+        root={"level": "INFO", "handlers": ["console"]},
+        formatters=dict(bare={"datefmt": "%Y-%m-%d %H:%M:%S", "format": bare_format}),
         handlers=dict(
             console={
                 "class": "logging.StreamHandler",
@@ -27,21 +19,9 @@ config = dict(
             }
         ),
         loggers=dict(
-            fedmsg={
-                "level": "INFO",
-                "propagate": False,
-                "handlers": ["console"],
-            },
-            moksha={
-                "level": "INFO",
-                "propagate": False,
-                "handlers": ["console"],
-            },
-            root={
-                "level": "INFO",
-                "propagate": False,
-                "handlers": ["console"],
-            },
+            fedmsg={"level": "INFO", "propagate": False, "handlers": ["console"]},
+            moksha={"level": "INFO", "propagate": False, "handlers": ["console"]},
+            root={"level": "INFO", "propagate": False, "handlers": ["console"]},
         ),
-    ),
+    )
 )
