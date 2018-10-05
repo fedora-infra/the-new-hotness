@@ -6,7 +6,7 @@
     - git
     - ngrep
     - nmap-ncat
-    - python-rpdb
+    - python3-rpdb
     - tmux
     - tree
     - vim-enhanced
@@ -24,15 +24,15 @@
     - fedpkg
     - koji
     - rpm-python
-    - python-bugzilla
-    - python-dogpile-cache
-    - python-flake8
-    - python-mock
-    - python2-requests
-    - python-sh
-    - python-six
-    - python2-fedmsg-meta-fedora-infrastructure
-    - python2-fedmsg-commands
+    - python3-bugzilla
+    - python3-dogpile-cache
+    - python3-flake8
+    - python3-mock
+    - python3-requests
+    - python3-sh
+    - python3-six
+    - python-fedmsg-meta-fedora-infrastructure
+    - python3-fedmsg
     - rpmdevtools
 
 # Add various helpful configuration files
