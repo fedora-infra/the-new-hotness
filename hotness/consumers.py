@@ -118,8 +118,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # Also, set up our global cache object.
         _log.info("Configuring cache.")
         with hotness.cache.cache_lock:
-            if not hasattr(hotness.cache.cache, "backend"):
-                hotness.cache.cache.configure(**self.config["hotness.cache"])
+            if not hotness.cache.cache.is_configured:
+                hotness.cache.cache.configure(**self.config['hotness.cache'])
 
         self.mdapi_url = self.config.get("hotness.mdapi_url")
         _log.info("Using hotness.mdapi_url=%r" % self.mdapi_url)
