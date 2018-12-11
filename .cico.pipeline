@@ -30,19 +30,15 @@ podTemplate(name: 'mypod',
                 checkout scm
             }
             stage ('run tox'){
-                parallel f28: {
-                    stage('f28'){
-                        container("f28"){
-                            sh "tox"
+                stage('f28'){
+                    container("f28"){
+                        sh "tox"
 
-                        }
                     }
-                },
-                f29: {
-                    stage('f29'){
-                        container("f29"){
-                            sh "tox"
-                        }
+                }
+                stage('f29'){
+                    container("f29"){
+                        sh "tox"
                     }
                 }
             }
