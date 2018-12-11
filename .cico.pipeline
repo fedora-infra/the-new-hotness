@@ -1,0 +1,49 @@
+podTemplate(name: 'mypod',
+            label: 'mypod',
+            cloud: 'openshift',
+            namespace: 'bstinson',
+
+            containers: [
+                containerTemplate(name: 'jnlp',
+                                  image: "docker-registry.default.svc:5000/bstinson/agent-python3-tox:latest",
+                                  ttyEnabled: false,
+                                  args: '${computer.jnlpmac} ${computer.name}',
+                                  workingDir: "/workdir"),
+                containerTemplate(name: 'f28',
+                                  image: "docker-registry.default.svc:5000/bstinson/python-tox:f28",
+                                  ttyEnabled: true,
+                                  command: "cat",
+                                  workingDir: '/workdir'),
+                containerTemplate(name: 'f29',
+                                  image: "docker-registry.default.svc:5000/bstinson/python-tox:f29",
+                                  ttyEnabled: true,
+                                  command: "cat",
+                                  workingDir: '/workdir')
+
+                ]
+){
+    node('mypod'){
+        ansiColor('xterm'){
+            stage ('checkout'){
+                checkout scm
+            }
+            stage ('run tox'){
+                parallel f28: {
+                    stage('f28'){
+                        container("f28"){
+                            sh "tox"
+
+                        }
+                    }
+                },
+                f29: {
+                    stage('f29'){
+                        container("f29"){
+                            sh "tox"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
