@@ -12,11 +12,13 @@ podTemplate(name: 'mypod',
                 containerTemplate(name: 'f28',
                                   image: "docker-registry.default.svc:5000/bstinson/python-tox:f28",
                                   ttyEnabled: true,
+                                  alwaysPullImage: true,
                                   command: "cat",
                                   workingDir: '/workdir'),
                 containerTemplate(name: 'f29',
                                   image: "docker-registry.default.svc:5000/bstinson/python-tox:f29",
                                   ttyEnabled: true,
+                                  alwaysPullImage: true,
                                   command: "cat",
                                   workingDir: '/workdir')
 
