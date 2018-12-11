@@ -1,0 +1,20 @@
+pull_request_rules:
+- actions:
+    merge:
+      method: rebase
+      rebase_fallback: null
+      strict: true
+    conditions:
+    - label!=no-mergify
+    - approved-reviews-by=zlopez
+    name: default
+- actions:
+    merge:
+      method: rebase
+      rebase_fallback: null
+      strict: true
+    conditions:
+    - label!=no-mergify
+    - author=zlopez
+    - "#approved-reviews-by>=1"
+    name: default-zlopez
