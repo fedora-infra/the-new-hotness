@@ -30,15 +30,19 @@ podTemplate(name: 'mypod',
                 checkout scm
             }
             stage ('run tox'){
-                stage('f28'){
-                    container("f28"){
-                        sh "tox", propagate: false
+                try {
+                    stage('f28'){
+                        container("f28"){
+                            sh "tox"
+                        }
                     }
-                }
-                stage('f29'){
-                    container("f29"){
-                        sh "tox", propagate: false
+                    stage('f29'){
+                        container("f29"){
+                            sh "tox"
+                        }
                     }
+                } catch Exception err {
+                    currentBuild.result = 'UNSTABLE'
                 }
             }
         }
