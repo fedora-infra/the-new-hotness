@@ -13,21 +13,21 @@ fi
 # by defining a variable with name _<function>_help containing the help text
 
 hotstart (){
-    systemctl --user start hub.service relay.service
+    systemctl --user start hotness.service
 }
 
 hotstop (){
-    systemctl --user stop hub.service relay.service
+    systemctl --user stop hotness.service
 }
 
 hotrestart (){
-    systemctl --user restart hub.service relay.service
+    systemctl --user restart hotness.service
 }
 
 hotstatus (){
-    systemctl --user status hub.service relay.service
+    systemctl --user status hotness.service
 }
 
 hotlog (){
-    journalctl -f --user-unit hub.service --user-unit relay.service
+    journalctl -f --user-unit hotness.service
 }

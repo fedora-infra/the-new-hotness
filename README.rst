@@ -1,7 +1,7 @@
 the-new-hotness
 ---------------
 
-`Fedmsg <http://fedmsg.com>`_ consumer that listens to `release-monitoring.org
+`Fedora-messaging <https://github.com/fedora-infra/fedora-messaging>`_ consumer that listens to `release-monitoring.org
 <http://release-monitoring.org>`_ and files bugzilla bugs in response (to
 notify packagers that they can update their packages).
 

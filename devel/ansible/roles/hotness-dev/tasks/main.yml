@@ -1,39 +1,47 @@
 ---
 
 - name: Install helpful development packages
-  dnf: name={{ item }} state=present
-  with_items:
-    - git
-    - ngrep
-    - nmap-ncat
-    - python3-rpdb
-    - tmux
-    - tree
-    - vim-enhanced
-    - tox
-    - rpm-devel
-    - gcc
-    - krb5-devel
+  dnf:
+    name: [
+      git,
+      ngrep,
+      nmap-ncat,
+      python3-rpdb,
+      tmux,
+      tree,
+      vim-enhanced,
+      tox,
+      rpm-devel,
+      gcc,
+      krb5-devel,
+      python3-black
+    ]
+    state: present
 
 - name: Install the-new-hotness development packages
-  dnf: name={{ item }} state=present
-  with_items:
-    - fedmsg
-    - fedmsg-hub
-    - fedmsg-relay
-    - fedpkg
-    - koji
-    - rpm-python
-    - python3-bugzilla
-    - python3-dogpile-cache
-    - python3-flake8
-    - python3-mock
-    - python3-requests
-    - python3-sh
-    - python3-six
-    - python-fedmsg-meta-fedora-infrastructure
-    - python3-fedmsg
-    - rpmdevtools
+  dnf:
+    name: [
+      fedmsg,
+      fedmsg-hub,
+      fedmsg-relay,
+      fedpkg,
+      koji,
+      rpm-python,
+      python3-bugzilla,
+      python3-dogpile-cache,
+      python3-flake8,
+      python3-mock,
+      python3-requests,
+      python3-sh,
+      python3-six,
+      python-fedmsg-meta-fedora-infrastructure,
+      python3-fedmsg,
+      rpmdevtools,
+      fedora-messaging,
+      python3-fedora-messaging,
+      rabbitmq-server
+    ]
+    state: present
 
 # Add various helpful configuration files
 - name: Install a custom bashrc
@@ -45,14 +53,24 @@
 
 - name: Install the-new-hotness package into /usr/lib
   pip:
-    name: /home/{{ ansible_env.SUDO_USER }}/devel/
+    name: "{{ item }}"
     extra_args: '-e'
+    executable: pip-3
+  with_items:
+    - "file:///home/{{ ansible_env.SUDO_USER }}/devel/"
+    - "file:///home/{{ ansible_env.SUDO_USER }}/devel/hotness_schema/"
 
-- name: Install fedmsg config to ~/.fedmsg.d
+- name: Install fedora-messaging config to ~/
   become_user: "{{ ansible_env.SUDO_USER }}"
   copy:
-    src: fedmsg.d/
-    dest: /home/{{ ansible_env.SUDO_USER }}/.fedmsg.d
+    src: config.toml
+    dest: /home/{{ ansible_env.SUDO_USER }}/
+
+- name: Enable RabbitMQ server
+  command: systemctl enable rabbitmq-server
+
+- name: Start RabbitMQ server
+  command: systemctl start rabbitmq-server
 
 - name: Create systemd user unit directory
   become_user: "{{ ansible_env.SUDO_USER }}"
@@ -66,8 +84,7 @@
     src: "{{ item }}"
     dest: /home/{{ ansible_env.SUDO_USER }}/.config/systemd/user/{{ item }}
   with_items:
-    - hub.service
-    - relay.service
+    - hotness.service
 
 - name: Reload the systemd daemon
   become_user: "{{ ansible_env.SUDO_USER }}"

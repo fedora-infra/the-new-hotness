@@ -51,7 +51,7 @@ Next, clone the repository and configure your Vagrantfile::
     $ vagrant ssh
 
 Before you can run ``the-new-hotness``, you need to add your bugzilla credentials
-to the configuration. You can set these credentials in ``~/.fedmsg.d/hotness.py``
+to the configuration. You can set these credentials in ``~/config.toml``
 in the virtual machine.
 
 You also need to acquire a valid Kerberos ticket to perform Koji scratch builds.
@@ -63,9 +63,17 @@ You can get this by performing ``kinit <fas-username>@FEDORAPROJECT.ORG``.
 You now have a functional development environment. The message of the day for the virtual machine
 has some helpful tips, but the basic services can be started in the virtual machine with::
 
-    $ systemctl --user start hub.service relay.service
+    $ systemctl --user start hotness.service
 
-Log output is viewable with ``journalctl --user-unit relay.service --user-unit hub.service``.
+Log output is viewable with ``journalctl --user-unit hotness.service``.
+
+You can also use aliases:
+
+   ``hotstart`` - start the-new-hotness
+   ``hotstop`` - stop the-new-hotness
+   ``hotlog`` - show log of the-new-hotness
+
+For other aliases look in the ``~/.bashrc`` file.
 
 Using Python virtual env
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -138,9 +146,9 @@ Simulating updates
 ^^^^^^^^^^^^^^^^^^
 
 You can now replay actual messages the production deployment of Anitya has sent
-with ``fedmsg-dg-replay``::
+with ``fedora-messaging-replay.py``::
 
-    $ fedmsg-dg-replay --msg-id <msg-id>
+    $ python3 devel/fedmsg-messaging-replay.py <msg-id>
 
 There's a helpful script to retrieve message IDs. From the root of the repository::
 
