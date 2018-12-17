@@ -1,0 +1,167 @@
+# A sample configuration for fedora-messaging. This file is in the TOML format.
+# For complete details on all configuration options, see the documentation
+# https://fedora-messaging.readthedocs.io/en/latest/configuration.html.
+
+amqp_url = "amqp://"
+
+publish_exchange = "amq.topic"
+
+callback = "hotness.consumers:BugzillaTicketFiler"
+
+# Note the double brackets below.
+# To add another binding, add another [[bindings]] section.
+[[bindings]]
+queue = "anitya"
+exchange = "amq.topic"
+routing_keys = [
+    "org.release-monitoring.prod.anitya.project.version.update",
+    "org.release-monitoring.prod.anitya.project.map.new",
+]
+
+[[bindings]]
+queue = "koji"
+exchange = "amq.topic"
+routing_keys = [
+    "org.fedoraproject.prod.buildsys.task.state.change",
+]
+
+[tls]
+ca_cert = "/etc/pki/tls/certs/ca-bundle.crt"
+keyfile = "/my/client/key.pem"
+certfile = "/my/client/cert.pem"
+
+[client_properties]
+app = "the-new-hotness"
+
+[exchanges.custom_exchange]
+type = "fanout"
+durable = false
+auto_delete = false
+arguments = {}
+
+[queues.anitya]
+durable = true
+auto_delete = false
+exclusive = false
+arguments = {}
+
+[queues.koji]
+durable = true
+auto_delete = false
+exclusive = false
+arguments = {}
+
+[qos]
+prefetch_size = 0
+prefetch_count = 25
+
+[log_config]
+version = 1
+disable_existing_loggers = true
+
+[log_config.formatters.simple]
+format = "[%(name)s %(levelname)s] %(message)s"
+
+[log_config.handlers.console]
+class = "logging.StreamHandler"
+formatter = "simple"
+stream = "ext://sys.stdout"
+
+[log_config.loggers.fedora_messaging]
+level = "INFO"
+propagate = false
+handlers = ["console"]
+
+[log_config.root]
+level = "WARNING"
+handlers = ["console"]
+
+# the-new-hotness consumer configuration
+[consumer_config]
+pkgdb_url = "https://admin.fedoraproject.org/pkgdb/api"
+mdapi_url = "https://apps.fedoraproject.org/mdapi"
+# The time in seconds the-new-hotness should wait for a socket to connect
+# before giving up.
+connect_timeout = 15
+# The time in seconds the-new-hotness should wait for a read from a socket
+# before giving up.
+read_timeout = 15
+# The number of times the-new-hotness should retry a network request that
+# that failed for any reason (e.g. read timeout, DNS error, etc)
+requests_retries = 3
+# If true, publish fedmsg messages instead of fedora-messaging messages
+legacy_messaging = false
+
+[consumer_config.bugzilla]
+enabled = true
+#user = None
+#password = None
+api_key = ""
+url = "https://partner-bugzilla.redhat.com"
+product = "Fedora"
+version = "rawhide"
+keywords = "FutureFeature,Triaged"
+bug_status = "NEW"
+explanation_url = "https://fedoraproject.org/wiki/upstream_release_monitoring"
+short_desc_template = "%(name)s-%(latest_upstream)s is available"
+description_template = """
+Latest upstream release: %(latest_upstream)s
+
+Current version/release in %(repo_name)s: %(repo_version)s-%(repo_release)s
+
+URL: %(url)s
+
+
+    Please consult the package updates policy before you
+issue an update to a stable branch:
+    https://fedoraproject.org/wiki/Updates_Policy
+
+
+More information about the service that created this bug can be found at:
+
+    %(explanation_url)s
+
+
+    Please keep in mind that with any upstream change, there may also be packaging
+    changes that need to be made. Specifically, please remember that it is your
+    responsibility to review the new version to ensure that the licensing is still
+    correct and that no non-free or legally problematic items have been added
+    upstream.
+
+Based on the information from anitya: https://release-monitoring.org/project/%(projectid)s/
+"""
+
+[consumer_config.koji]
+server = "https://koji.fedoraproject.org/kojihub"
+weburl = "https://koji.fedoraproject.org/koji"
+# Kerberos configuration to authenticate with Koji. In development
+# environments, use `kinit <fas-name>@FEDORAPROJECT.ORG` to get a
+# Kerberos ticket and use the default settings below.
+krb_principal = ""
+krb_keytab = ""
+krb_ccache = ""
+krb_proxyuser = ""
+krb_sessionopts = {timeout = 3600, krb_rdns = false}
+git_url = "https://src.fedoraproject.org/cgit/rpms/{package}.git"
+user_email = [
+    "Upstream Monitor",
+    "<upstream-release-monitoring@fedoraproject.org>",
+]
+opts = {scratch = true}
+priority = 30
+target_tag = "rawhide"
+# These are errors that we won't scream about.
+passable_errors = [
+    # This is the packager's problem, not ours.
+    "unclosed macro or bad line continuation"
+]
+
+[consumer_config.anitya]
+url = "https://release-monitoring.org"
+#username = '....'
+#password = '....'
+
+[consumer_config.cache]
+backend = "dogpile.cache.dbm"
+expiration_time = 300
+arguments = {filename = "/var/tmp/the-new-hotness-cache.dbm"}

@@ -6,8 +6,9 @@
 Welcome to The New Hotness documentation!
 =========================================
 
-The New Hotness is a service integrates with `Anitya <https://github.com/fedora-infra/anitya/>`_
-via `fedmsg <https://fedmsg.com>`_ to automatically perform tasks when a project is updated.
+The New Hotness is a service that integrates with `Anitya <https://github.com/fedora-infra/anitya/>`_
+via `Fedora-messaging <https://github.com/fedora-infra/fedora-messaging>`_
+to automatically perform tasks when a project is updated.
 For example, the Fedora project uses it to file Bugzilla reports when new versions are available.
 The New Hotness attempts to build the new version and reports problems on the bug it files.
 

@@ -20,15 +20,17 @@ Authors:    Ralph Bean <rbean@redhat.com>
 """
 
 import logging
-import socket
 import subprocess
 
 from requests.packages.urllib3.util import retry
-import fedmsg
-import fedmsg.consumers
-import fedmsg.meta
+from fedora_messaging.config import conf
+from fedora_messaging.api import publish as fm_publish
+from fedora_messaging.exceptions import PublishReturned, ConnectionException
+from fedora_messaging.message import Message
+
 import requests
 import yaml
+import fedmsg
 
 from hotness import exceptions
 import hotness.anitya
@@ -41,9 +43,9 @@ import hotness.helpers
 _log = logging.getLogger(__name__)
 
 
-class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
+class BugzillaTicketFiler(object):
     """
-    A fedmsg consumer that is the heart of the-new-hotness.
+    A fedora-messaging consumer that is the heart of the-new-hotness.
 
     This consumer subscribes to the following topics:
 
@@ -57,59 +59,24 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
       handled by :method:`BugzillaTicketFiler.handle_anitya_map_new`
     """
 
-    # We can do multiple topics like this as of moksha.hub-1.4.4
-    # https://github.com/mokshaproject/moksha/pull/25
-    topic = [
-        # This is the real production topic
-        "org.release-monitoring.prod.anitya.project.version.update",
-        # Also listen for when projects are newly mapped to Fedora
-        "org.release-monitoring.prod.anitya.project.map.new",
-        # Anyways, we also listen for koji scratch builds to circle back:
-        "org.fedoraproject.prod.buildsys.task.state.change",
-    ]
-
-    config_key = "hotness.bugzilla.enabled"
-
-    def __init__(self, hub):
-
-        # If we're in development mode, rewrite some of our topics so that
-        # local playback with fedmsg-dg-replay works as expected.
-        if hub.config["environment"] == "dev":
-            # Keep the original set, but append a duplicate set for local work
-            prefix, env = hub.config["topic_prefix"], hub.config["environment"]
-            self.topic = self.topic + [
-                ".".join([prefix, env] + topic.split(".")[3:]) for topic in self.topic
-            ]
-
-        super(BugzillaTicketFiler, self).__init__(hub)
-
-        if not self._initialized:
-            return
+    def __init__(self):
 
         # This is just convenient.
-        self.config = self.hub.config
-
-        # First, initialize fedmsg and bugzilla in this thread's context.
-        hostname = socket.gethostname().split(".", 1)[0]
-        if not getattr(getattr(fedmsg, "__local", None), "__context", None):
-            fedmsg.init(name="hotness.%s" % hostname)
-        fedmsg.meta.make_processors(**self.hub.config)
+        self.config = conf["consumer_config"]
 
         self.bugzilla = hotness.bz.Bugzilla(
-            consumer=self, config=self.config["hotness.bugzilla"]
+            consumer=self, config=self.config["bugzilla"]
         )
-        self.buildsys = hotness.buildsys.Koji(
-            consumer=self, config=self.config["hotness.koji"]
-        )
+        self.buildsys = hotness.buildsys.Koji(consumer=self, config=self.config["koji"])
 
         default = "https://pagure.io/releng/fedora-scm-requests"
-        self.repo_url = self.config.get("hotness.repo_url", default)
+        self.repo_url = self.config.get("repo_url", default)
         default = "https://pdc.fedoraproject.org"
-        self.pdc_url = self.config.get("hotness.pdc_url", default)
+        self.pdc_url = self.config.get("pdc_url", default)
         default = "https://src.fedoraproject.org"
-        self.dist_git_url = self.config.get("hotness.dist_git_url", default)
+        self.dist_git_url = self.config.get("dist_git_url", default)
 
-        anitya_config = self.config.get("hotness.anitya", {})
+        anitya_config = self.config.get("anitya", {})
         default = "https://release-monitoring.org"
         self.anitya_url = anitya_config.get("url", default)
         self.anitya_username = anitya_config.get("username", default)
@@ -119,21 +86,21 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         _log.info("Configuring cache.")
         with hotness.cache.cache_lock:
             if not hotness.cache.cache.is_configured:
-                hotness.cache.cache.configure(**self.config['hotness.cache'])
+                hotness.cache.cache.configure(**self.config["cache"])
 
-        self.mdapi_url = self.config.get("hotness.mdapi_url")
+        self.mdapi_url = self.config.get("mdapi_url")
         _log.info("Using hotness.mdapi_url=%r" % self.mdapi_url)
-        self.repoid = self.config.get("hotness.repoid", "rawhide")
+        self.repoid = self.config.get("repoid", "rawhide")
         _log.info("Using hotness.repoid=%r" % self.repoid)
-        self.distro = self.config.get("hotness.distro", "Fedora")
+        self.distro = self.config.get("distro", "Fedora")
         _log.info("Using hotness.distro=%r" % self.distro)
 
         # Retrieve the requests configuration; by default requests time out
         # after 15 seconds and are retried up to 3 times.
         self.requests_session = requests.Session()
         self.timeout = (
-            self.config.get("hotness.connect_timeout", 15),
-            self.config.get("hotness.read_timeout", 15),
+            self.config.get("connect_timeout", 15),
+            self.config.get("read_timeout", 15),
         )
         retries = self.config.get("hotness.requests_retries", 3)
         retry_conf = retry.Retry(
@@ -160,17 +127,35 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
 
     def publish(self, topic, msg):
         """
-        Publish a fedmsg message to the specified topic.
+        Publish a feora-messaging message to the specified topic.
+
+        Args:
+            topic (str): Topic to publish to
+            msg (dict): Message to be send
         """
         _log.info("publishing topic %r" % topic)
-        fedmsg.publish(modname="hotness", topic=topic, msg=msg)
+        if self.config["legacy_messaging"]:
+            fedmsg.publish(modname="hotness", topic=topic, msg=msg)
+        else:
+            try:
+                fm_publish(Message(topic=topic, body=msg))
+            except PublishReturned as e:
+                _log.warning(
+                    "Fedora messaging broker rejected message %s:%s", msg.id, e
+                )
+            except ConnectionException as e:
+                _log.warning("Error sending the message %s:%s", msg.id, e)
 
-    def consume(self, msg):
+    def __call__(self, msg):
         """
-        Called when a message arrives on the fedmsg bus.
+        Called when a message is received from queue.
+
+        Params:
+            msg (fedora_messaging.message.Message) The message we received
+                from the queue.
         """
-        topic, msg = msg["topic"], msg["body"]
-        _log.debug("Received %r" % msg.get("msg_id", None))
+        topic, body, msg_id = msg.topic, msg._body, msg.id
+        _log.debug("Received %r" % msg_id)
 
         if topic.endswith("anitya.project.version.update"):
             self.handle_anitya_version_update(msg)
@@ -179,7 +164,7 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         elif topic.endswith("buildsys.task.state.change"):
             self.handle_buildsys_scratch(msg)
         else:
-            _log.debug("Dropping %r %r" % (topic, msg["msg_id"]))
+            _log.debug("Dropping %r %r" % (topic, body))
             pass
 
     def handle_anitya_version_update(self, msg):
@@ -196,14 +181,15 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         Publishes to ``update.drop`` if there is no mapping to a package in
         Fedora.
         """
-        _log.info("Handling anitya msg %r" % msg.get("msg_id", None))
+        body, msg_id = msg._body, msg.id
+        _log.info("Handling anitya msg %r" % msg_id)
         # First, What is this thing called in our distro?
         # (we do this little inner.get(..) trick to handle legacy messages)
-        inner = msg["msg"].get("message", msg["msg"])
+        inner = body.get("message")
         if self.distro not in [p["distro"] for p in inner["packages"]]:
             _log.info(
                 "No %r mapping for %r.  Dropping."
-                % (self.distro, msg["msg"]["project"]["name"])
+                % (self.distro, body["message"]["project"]["name"])
             )
             self.publish("update.drop", msg=dict(trigger=msg, reason="anitya"))
             return
@@ -213,11 +199,10 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
         # https://github.com/fedora-infra/the-new-hotness/issues/33
         for package in inner["packages"]:
             if package["distro"] == self.distro:
-                inner = msg["msg"].get("message", msg["msg"])
                 pname = package["package_name"]
 
                 upstream = inner["upstream_version"]
-                self._handle_anitya_update(upstream, pname, msg)
+                self._handle_anitya_update(upstream, pname, body)
 
     def handle_anitya_map_new(self, msg):
         """
@@ -254,8 +239,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
             anitya.force_check(msg["msg"]["project"])
 
     def _handle_anitya_update(self, upstream, package, msg):
-        url = msg["msg"]["project"]["homepage"]
-        projectid = msg["msg"]["project"]["id"]
+        url = msg["project"]["homepage"]
+        projectid = msg["project"]["id"]
 
         # Is it something that we're being asked not to act on?
         is_monitored = self.is_monitored(package)
@@ -297,7 +282,8 @@ class BugzillaTicketFiler(fedmsg.consumers.FedmsgConsumer):
                 return
 
             self.publish(
-                "update.bug.file", msg=dict(trigger=msg, bug=dict(bug_id=bz.bug_id))
+                "update.bug.file",
+                msg=dict(trigger=msg, bug=dict(bug_id=bz.bug_id), package=package),
             )
             _log.info("Filed Bugzilla #%i" % bz.bug_id)
 

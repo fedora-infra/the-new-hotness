@@ -1,0 +1,11 @@
+[Unit]
+Description=the-new-hotness service
+After=network.target
+
+[Service]
+Environment="FEDORA_MESSAGING_CONF=/home/vagrant/config.toml"
+ExecStart=fedora-messaging consume
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

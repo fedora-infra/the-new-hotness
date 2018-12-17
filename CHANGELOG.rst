@@ -1,3 +1,11 @@
+master
+------
+
+Features
+^^^^^^^^
+
+* Convert to fedora-messaging (#211)
+
 0.10.1
 ------
 

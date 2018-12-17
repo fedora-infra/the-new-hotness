@@ -6,6 +6,10 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
  config.vm.box = "fedora/25-cloud-base"
 
+ # Forward traffic on the host to the development server on the guest
+ # RabbitMQ
+ config.vm.network "forwarded_port", guest: 15672, host: 15672
+
  # Vagrant can share the source directory using rsync, NFS, or SSHFS (with the vagrant-sshfs
  # plugin). By default it rsyncs the current working directory to /vagrant.
  #

@@ -2,6 +2,7 @@
 branch = True
 include =
     hotness/*
+    hotness_schema/hotness_schema/*
 
 [report]
 fail_under = 90
@@ -11,3 +12,4 @@ exclude_lines =
     if __name__ == .__main__.:
 omit =
     hotness/tests/*
+    hotness_schema/hotness_schema/tests/*
