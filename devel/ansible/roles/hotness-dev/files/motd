@@ -3,7 +3,7 @@ Welcome to The New Hotness development environment!
 
 To start development you need to do this first:
 
-* add your bugzilla credentials to ~/.fedmsg.d/hotness.py
+* add your bugzilla credentials or API key to ~/.fedmsg.d/hotness.py
 
 * acquire a valid Kerberos ticket by `kinit <fas-username>@FEDORAPROJECT.ORG`
 
