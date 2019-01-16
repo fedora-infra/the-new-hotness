@@ -60,10 +60,25 @@ class Bugzilla(object):
         url = self.config.get("url", default)
         self.username = self.config["user"]
         password = self.config["password"]
-        self.bugzilla = bugzilla.Bugzilla(url=url, cookiefile=None, tokenfile=None)
+        api_key = self.config["api_key"]
+        _log.info("Using BZ URL %s" % url)
+
+        if api_key:
+            self.bugzilla = bugzilla.Bugzilla(
+                url=url, api_key=api_key, cookiefile=None, tokenfile=None
+            )
+        elif self.username and password:
+            self.bugzilla = bugzilla.Bugzilla(
+                url=url,
+                user=self.username,
+                password=password,
+                cookiefile=None,
+                tokenfile=None,
+            )
+        else:
+            self.bugzilla = bugzilla.Bugzilla(url=url, cookiefile=None, tokenfile=None)
+
         self.bugzilla.bug_autorefresh = True
-        _log.info("Logging in to %s" % url)
-        self.bugzilla.login(self.username, password)
 
         self.base_query["product"] = self.config["product"]
         self.base_query["email1"] = self.config["user"]

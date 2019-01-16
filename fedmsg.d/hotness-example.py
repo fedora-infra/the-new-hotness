@@ -33,6 +33,7 @@ config = {
     "hotness.bugzilla": {
         # 'user': None,
         # 'password': None,
+        "api_key": None,
         "url": "https://partner-bugzilla.redhat.com",
         "product": "Fedora",
         "version": "rawhide",

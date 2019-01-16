@@ -34,6 +34,7 @@ config = {
         # NOTE: Set the user and password fields when you set up your dev environment
         "user": None,
         "password": None,
+        "api_key": None,
         "url": "https://partner-bugzilla.redhat.com",
         "product": "Fedora",
         "version": "rawhide",
