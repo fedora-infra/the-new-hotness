@@ -5,7 +5,7 @@ Features
 ^^^^^^^^
 
 * Update documentation (#195)
-* Ude bugzilla API key (#209)
+* Use bugzilla API key (#209)
 
 0.10.0
 ------
