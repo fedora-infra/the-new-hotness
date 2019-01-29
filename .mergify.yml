@@ -4,17 +4,8 @@ pull_request_rules:
       method: rebase
       rebase_fallback: null
       strict: true
-    conditions:
-    - label!=no-mergify
-    - approved-reviews-by=zlopez
-    name: default
-- actions:
-    merge:
-      method: rebase
-      rebase_fallback: null
-      strict: true
-    conditions:
-    - label!=no-mergify
-    - author=zlopez
-    - "#approved-reviews-by>=1"
-    name: default-zlopez
+  conditions:
+  - label!=no-mergify
+  - '#approved-reviews-by>=1'
+  - status-success=continuous-integration/jenkins/pr-merge
+  name: default
