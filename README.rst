@@ -7,6 +7,17 @@ notify packagers that they can update their packages).
 
 For additional information see `documentation <https://the-new-hotness.readthedocs.io/en/stable/>`_.
 
+Seeing it in action
+^^^^^^^^^^^^^^^^^^^
+
+To see recent messages from the-new-hotness:
+
+* Check Fedora's `datagrepper
+  <https://apps.fedoraproject.org/datagrepper/raw?category=hotness&delta=2592000>`_
+
+* Or join #fedora-fedmsg IRC channel on freenode and watch for ``hotness``
+  messages.
+
 Development
 ^^^^^^^^^^^
 
