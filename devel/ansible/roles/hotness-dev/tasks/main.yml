@@ -21,9 +21,6 @@
 - name: Install the-new-hotness development packages
   dnf:
     name: [
-      fedmsg,
-      fedmsg-hub,
-      fedmsg-relay,
       fedpkg,
       koji,
       rpm-python,
@@ -34,8 +31,6 @@
       python3-requests,
       python3-sh,
       python3-six,
-      python-fedmsg-meta-fedora-infrastructure,
-      python3-fedmsg,
       rpmdevtools,
       fedora-messaging,
       python3-fedora-messaging,

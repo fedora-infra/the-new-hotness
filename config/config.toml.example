@@ -33,19 +33,7 @@ certfile = "/my/client/cert.pem"
 [client_properties]
 app = "the-new-hotness"
 
-[exchanges.custom_exchange]
-type = "fanout"
-durable = false
-auto_delete = false
-arguments = {}
-
-[queues.anitya]
-durable = true
-auto_delete = false
-exclusive = false
-arguments = {}
-
-[queues.koji]
+[queues.the-new-hotness]
 durable = true
 auto_delete = false
 exclusive = false
