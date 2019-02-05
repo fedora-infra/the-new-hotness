@@ -264,7 +264,7 @@ class TestConsumer(HotnessTestCase):
             mock_log.info.call_args_list[0][0][0],
         )
 
-        mock_handle_update.assert_called_with("0.17.0", "pg-semver", message.body)
+        mock_handle_update.assert_called_with("0.17.0", "pg-semver", message)
 
     @create_message("anitya.project.map.new", "no_version")
     @mock.patch("hotness.consumers._log")

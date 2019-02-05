@@ -6,6 +6,8 @@ Development
 
 * Remove python 2 from tests (#216)
 
+* Fix schema for Fedora messaging (#224)
+
 
 0.11.1
 ------
