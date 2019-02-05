@@ -35,32 +35,11 @@ class UpdateDrop(message.Message):
             "reason": {"type": "string"},
             "trigger": {
                 "type": "object",
-                "properties": {
-                    "msg": {
-                        "type": "object",
-                        "properties": {
-                            "project": {
-                                "type": "object",
-                                "properties": {"name": {"type": "string"}},
-                                "required": ["name"],
-                            }
-                        },
-                        "required": ["project"],
-                    }
-                },
-                "required": ["msg"],
+                "properties": {"msg": {"type": "object"}, "topic": {"type": "string"}},
+                "required": ["msg", "topic"],
             },
         },
     }
-
-    def __str__(self):
-        """
-        Return a complete human-readable representation of the message.
-
-        Returns:
-            (str): Summary of the message.
-        """
-        return self.summary
 
     @property
     def summary(self):
@@ -72,39 +51,79 @@ class UpdateDrop(message.Message):
         """
         if self.reason == "anitya":
             return (
-                "the-new-hotness saw an update for '{}', ".format(self.project)
+                "the-new-hotness saw an update for '{}', ".format(
+                    ", ".join(self.packages)
+                )
                 + "but release-monitoring.org doesn't know what that project is called "
                 + "in Fedora land"
             )
         elif self.reason == "rawhide":
             return (
-                "the-new-hotness saw an update for '{}', ".format(self.project)
+                "the-new-hotness saw an update for '{}', ".format(
+                    ", ".join(self.packages)
+                )
                 + "but no rawhide version of the package could be found yet"
             )
         elif self.reason == "pkgdb":
             return (
-                "the-new-hotness saw an update for '{}', ".format(self.project)
+                "the-new-hotness saw an update for '{}', ".format(
+                    ", ".join(self.packages)
+                )
                 + "but pkgdb says the maintainers are not interested in bugs being filed"
             )
         elif self.reason == "bugzilla":
             return (
-                "the-new-hotness saw an update for '{}', ".format(self.project)
+                "the-new-hotness saw an update for '{}', ".format(
+                    ", ".join(self.packages)
+                )
                 + "but the bugzilla issue couldn't be updated"
             )
         else:
             return "the-new-hotness saw an update for '{}', ".format(
-                self.project
+                ", ".join(self.packages)
             ) + "but it got dropped for reason: '{}'".format(self.reason)
 
     @property
-    def project(self):
+    def packages(self):
         """
-        Return a name of the project.
+        List of packages affected by the action that generated this message.
+        In this case we only return list with one item.
 
         Returns:
-             (str): Name of the project.
+            list(str): A list of affected package names or empty list.
         """
-        return self.body["trigger"]["msg"]["project"]
+        if self.reason == "anitya":
+            original = self.body["trigger"]["msg"]
+
+            packages = []
+            if "packages" in original["message"]:
+                packages = original["message"]["packages"]
+            elif "packages" in original:
+                packages = original["packages"]
+
+            if packages:
+                return [
+                    set(
+                        [
+                            pkg["package_name"]
+                            for pkg in packages
+                            if pkg["distro"] == "Fedora"
+                        ]
+                    ).pop()
+                ]
+
+        if "package_listing" in self.body["trigger"]["msg"]:
+            original = self.body["trigger"]["msg"]
+            return [original["package_listing"]["package"]["name"]]
+
+        if "buildsys.build" in self.body["trigger"]["topic"]:
+            return [self.body["trigger"]["msg"]["name"]]
+
+        if "package" in self.body["trigger"]["msg"]:
+            original = self.body["trigger"]["msg"]
+            return [original["package"]["name"]]
+
+        return []
 
     @property
     def reason(self):
@@ -136,19 +155,14 @@ class UpdateBugFile(message.Message):
                 "required": ["bug_id"],
                 "properties": {"bug_id": {"type": "number"}},
             },
-            "trigger": {"type": "object"},
+            "trigger": {
+                "type": "object",
+                "properties": {"msg": {"type": "object"}, "topic": {"type": "string"}},
+                "required": ["msg", "topic"],
+            },
             "package": {"type": "string"},
         },
     }
-
-    def __str__(self):
-        """
-        Return a complete human-readable representation of the message.
-
-        Returns:
-            (str): Summary of the message.
-        """
-        return self.summary
 
     @property
     def summary(self):
@@ -158,14 +172,24 @@ class UpdateBugFile(message.Message):
         Returns:
             (str): Short description of the message.
         """
-        return "the-new-hotness filed a bug on '{}'".format(self.package)
+        return "the-new-hotness filed a bug on '{}'".format(", ".join(self.packages))
 
     @property
-    def package(self):
+    def packages(self):
         """
-        Return package name.
+        List of packages affected by the action that generated this message.
 
         Returns:
-            (str): Package name.
+            list(str): A list of affected package names.
         """
-        return self.body["package"]
+        original = self.body["trigger"]["msg"]
+        if self.body["trigger"]["topic"].endswith(".project.map.new"):
+            packages = [original["message"]["new"]]
+        else:
+            packages = [
+                pkg["package_name"]
+                for pkg in original["message"]["packages"]
+                if pkg["distro"] == "Fedora"
+            ]
+
+        return packages

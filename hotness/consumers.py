@@ -191,7 +191,8 @@ class BugzillaTicketFiler(object):
                 "No %r mapping for %r. Dropping."
                 % (self.distro, body["message"]["project"]["name"])
             )
-            self.publish("update.drop", msg=dict(trigger=body, reason="anitya"))
+            trigger = {"msg": body, "topic": msg.topic}
+            self.publish("update.drop", msg=dict(trigger=trigger, reason="anitya"))
             return
 
         # Sometimes, an upstream is mapped to multiple fedora packages
@@ -202,7 +203,7 @@ class BugzillaTicketFiler(object):
                 pname = package["package_name"]
 
                 upstream = inner["upstream_version"]
-                self._handle_anitya_update(upstream, pname, body)
+                self._handle_anitya_update(upstream, pname, msg)
 
     def handle_anitya_map_new(self, msg):
         """
@@ -233,13 +234,15 @@ class BugzillaTicketFiler(object):
         )
 
         if upstream:
-            self._handle_anitya_update(upstream, package, body)
+            self._handle_anitya_update(upstream, package, msg)
         else:
             _log.info("Forcing an anitya upstream check.")
             anitya = hotness.anitya.Anitya(self.anitya_url)
             anitya.force_check(body["project"])
 
     def _handle_anitya_update(self, upstream, package, msg):
+        msg_topic, msg = msg.topic, msg.body
+        trigger = {"msg": msg, "topic": msg_topic}
         url = msg["project"]["homepage"]
         projectid = msg["project"]["id"]
 
@@ -254,7 +257,7 @@ class BugzillaTicketFiler(object):
             # Unfortunately it's not in mdapi, we can't do much about it
             _log.warning("No koji version found for %r" % package)
             if is_monitored:
-                self.publish("update.drop", msg=dict(trigger=msg, reason="rawhide"))
+                self.publish("update.drop", msg=dict(trigger=trigger, reason="rawhide"))
             return
         js = r.json()
         version = js["version"]
@@ -271,7 +274,7 @@ class BugzillaTicketFiler(object):
 
             if not is_monitored:
                 _log.info("repo says not to monitor %r. Dropping." % package)
-                self.publish("update.drop", msg=dict(trigger=msg, reason="pkgdb"))
+                self.publish("update.drop", msg=dict(trigger=trigger, reason="pkgdb"))
                 return
 
             bz = self.bugzilla.handle(
@@ -279,12 +282,14 @@ class BugzillaTicketFiler(object):
             )
             if not bz:
                 _log.info("No RHBZ change detected (odd). Aborting.")
-                self.publish("update.drop", msg=dict(trigger=msg, reason="bugzilla"))
+                self.publish(
+                    "update.drop", msg=dict(trigger=trigger, reason="bugzilla")
+                )
                 return
 
             self.publish(
                 "update.bug.file",
-                msg=dict(trigger=msg, bug=dict(bug_id=bz.bug_id), package=package),
+                msg=dict(trigger=trigger, bug=dict(bug_id=bz.bug_id), package=package),
             )
             _log.info("Filed Bugzilla #%i" % bz.bug_id)
 
