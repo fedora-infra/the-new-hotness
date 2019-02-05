@@ -11,7 +11,7 @@ callback = "hotness.consumers:BugzillaTicketFiler"
 # Note the double brackets below.
 # To add another binding, add another [[bindings]] section.
 [[bindings]]
-queue = "anitya"
+queue = "the-new-hotness"
 exchange = "amq.topic"
 routing_keys = [
     "org.release-monitoring.prod.anitya.project.version.update",
@@ -19,7 +19,7 @@ routing_keys = [
 ]
 
 [[bindings]]
-queue = "koji"
+queue = "the-new-hotness"
 exchange = "amq.topic"
 routing_keys = [
     "org.fedoraproject.prod.buildsys.task.state.change",
