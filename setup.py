@@ -30,7 +30,7 @@ def get_requirements(requirements_file="requirements.txt"):
 setup(
     name="the-new-hotness",
     version=get_version(),
-    description="Consume anitya fedmsg messages to file bugzilla bugs",
+    description="Consume anitya fedora messaging messages to file bugzilla bugs",
     license="LGPLv2+",
     author="Ralph Bean",
     author_email="rbean@redhat.com",
@@ -38,9 +38,5 @@ setup(
     install_requires=get_requirements(),
     tests_require=get_requirements("dev-requirements.txt"),
     packages=find_packages(exclude=("hotness.tests", "hotness.tests.*")),
-    test_suite="hotness.tests",
-    entry_points="""
-    [moksha.consumer]
-    bug_filer = hotness.consumers:BugzillaTicketFiler
-    """,
+    test_suite="hotness.tests"
 )
