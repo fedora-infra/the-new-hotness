@@ -163,9 +163,9 @@ class UpdateBugFile(message.Message):
     @property
     def package(self):
         """
-        Return a reason for this drop.
+        Return package name.
 
         Returns:
-            (str): Reason for drop.
+            (str): Package name.
         """
         return self.body["package"]

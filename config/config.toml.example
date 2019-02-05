@@ -16,12 +16,6 @@ exchange = "amq.topic"
 routing_keys = [
     "org.release-monitoring.prod.anitya.project.version.update",
     "org.release-monitoring.prod.anitya.project.map.new",
-]
-
-[[bindings]]
-queue = "then-new-hotness"
-exchange = "amq.topic"
-routing_keys = [
     "org.fedoraproject.prod.buildsys.task.state.change",
 ]
 

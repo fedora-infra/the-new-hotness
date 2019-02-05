@@ -138,7 +138,7 @@ class BugzillaTicketFiler(object):
             fedmsg.publish(modname="hotness", topic=topic, msg=msg)
         else:
             try:
-                fm_publish(Message(topic=topic, body=msg))
+                fm_publish(Message(topic="hotness.{}".format(topic), body=msg))
             except PublishReturned as e:
                 _log.warning(
                     "Fedora messaging broker rejected message %s:%s", msg.id, e
