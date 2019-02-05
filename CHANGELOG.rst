@@ -1,3 +1,12 @@
+master
+------
+
+Development
+^^^^^^^^^^^
+
+* Remove python 2 from tests (#216)
+
+
 0.11.1
 ------
 
@@ -23,6 +32,7 @@ Features
 ^^^^^^^^
 
 * Update documentation (#195)
+
 * Use bugzilla API key (#209)
 
 
