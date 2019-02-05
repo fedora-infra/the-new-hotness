@@ -26,7 +26,7 @@ with open(os.path.join(here, "README.rst")) as fd:
 
 
 setup(
-    name="the-new-hotness_schema",
+    name="fedora_messaging_the_new_hotness_schema",
     version="1.0.0",
     description="JSON schema definitions for messages published by the-new-hotness",
     long_description=README,

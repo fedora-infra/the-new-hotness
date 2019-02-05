@@ -62,10 +62,10 @@
     dest: /home/{{ ansible_env.SUDO_USER }}/
 
 - name: Enable RabbitMQ server
-  command: systemctl enable rabbitmq-server
-
-- name: Start RabbitMQ server
-  command: systemctl start rabbitmq-server
+  systemd:
+    name: rabbitmq-server
+    state: started
+    enabled: yes
 
 - name: Create systemd user unit directory
   become_user: "{{ ansible_env.SUDO_USER }}"
@@ -73,7 +73,7 @@
     path: /home/{{ ansible_env.SUDO_USER }}/.config/systemd/user/
     state: directory
 
-- name: Install the hub service files for systemd
+- name: Install the systemd user units
   become_user: "{{ ansible_env.SUDO_USER }}"
   copy:
     src: "{{ item }}"
@@ -83,5 +83,6 @@
 
 - name: Reload the systemd daemon
   become_user: "{{ ansible_env.SUDO_USER }}"
-  command: systemctl --user daemon-reload
+  systemd:
+    daemon_reload: yes
 
