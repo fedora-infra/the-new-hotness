@@ -153,3 +153,31 @@ with ``fedora-messaging-replay.py``::
 There's a helpful script to retrieve message IDs. From the root of the repository::
 
     $ python devel/anitya_messages.py
+
+
+Release Guide
+=============
+
+If you are a maintainer and wish to make a release, follow these steps:
+
+1. Change the version in ``hotness.__init__.__version__``. This is used to set the
+   version in the documentation project and the setup.py file.
+
+2. (Optional) Update ``version`` in ``hotness_schema/setup.py`` script.
+
+3. Replace master section in ``CHANGELOG.rst`` by new version and add any missing entry.
+
+4. Commit your changes.
+
+5. Tag a release with ``git tag -s <version>``.
+
+6. Don't forget to ``git push --tags``.
+
+7. Build the Python packages with ``python setup.py sdist bdist_wheel``.
+
+8. Upload the packages with ``twine upload dist/<dists>``.
+
+9. (Optional) Repeat steps 7 and 8 in ``hotness_schema`` folder.
+
+.. note::
+    Optional steps are required only if you want to release a new version of message schema.
