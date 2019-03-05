@@ -1,3 +1,11 @@
+master
+------
+
+Bugfixes
+^^^^^^^^
+
+* Fix issue when 'buildsys.task.state.change' topic is received (#221)
+
 0.11.0
 ------
 

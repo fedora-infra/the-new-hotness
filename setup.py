@@ -38,5 +38,5 @@ setup(
     install_requires=get_requirements(),
     tests_require=get_requirements("dev-requirements.txt"),
     packages=find_packages(exclude=("hotness.tests", "hotness.tests.*")),
-    test_suite="hotness.tests"
+    test_suite="hotness.tests",
 )

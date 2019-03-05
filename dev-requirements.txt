@@ -3,3 +3,4 @@ sphinx
 pytest
 pytest-cov
 unittest2
+vcrpy
