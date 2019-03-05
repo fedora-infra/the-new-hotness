@@ -154,7 +154,7 @@ class BugzillaTicketFiler(object):
             msg (fedora_messaging.message.Message) The message we received
                 from the queue.
         """
-        topic, body, msg_id = msg.topic, msg._body, msg.id
+        topic, body, msg_id = msg.topic, msg.body, msg.id
         _log.debug("Received %r" % msg_id)
 
         if topic.endswith("anitya.project.version.update"):
@@ -181,17 +181,17 @@ class BugzillaTicketFiler(object):
         Publishes to ``update.drop`` if there is no mapping to a package in
         Fedora.
         """
-        body, msg_id = msg._body, msg.id
+        body, msg_id = msg.body, msg.id
         _log.info("Handling anitya msg %r" % msg_id)
         # First, What is this thing called in our distro?
         # (we do this little inner.get(..) trick to handle legacy messages)
         inner = body.get("message")
         if self.distro not in [p["distro"] for p in inner["packages"]]:
             _log.info(
-                "No %r mapping for %r.  Dropping."
+                "No %r mapping for %r. Dropping."
                 % (self.distro, body["message"]["project"]["name"])
             )
-            self.publish("update.drop", msg=dict(trigger=msg, reason="anitya"))
+            self.publish("update.drop", msg=dict(trigger=body, reason="anitya"))
             return
 
         # Sometimes, an upstream is mapped to multiple fedora packages
@@ -215,28 +215,29 @@ class BugzillaTicketFiler(object):
 
         Topic: 'org.release-monitoring.prod.anitya.project.map.new'
         """
-        message = msg["msg"]["message"]
+        body = msg.body
+        message = body["message"]
         if message["distro"] != self.distro:
             _log.info(
-                "New mapping on %s, not for %s.  Dropping."
+                "New mapping on %s, not for %s. Dropping."
                 % (message["distro"], self.distro)
             )
             return
 
         project = message["project"]
         package = message["new"]
-        upstream = msg["msg"]["project"]["version"]
+        upstream = body["project"]["version"]
 
         _log.info(
             "Newly mapped %r to %r bears version %r" % (project, package, upstream)
         )
 
         if upstream:
-            self._handle_anitya_update(upstream, package, msg)
+            self._handle_anitya_update(upstream, package, body)
         else:
             _log.info("Forcing an anitya upstream check.")
             anitya = hotness.anitya.Anitya(self.anitya_url)
-            anitya.force_check(msg["msg"]["project"])
+            anitya.force_check(body["project"])
 
     def _handle_anitya_update(self, upstream, package, msg):
         url = msg["project"]["homepage"]
@@ -269,7 +270,7 @@ class BugzillaTicketFiler(object):
             _log.info("OK, %s is newer than %s-%s" % (upstream, version, release))
 
             if not is_monitored:
-                _log.info("repo says not to monitor %r.  Dropping." % package)
+                _log.info("repo says not to monitor %r. Dropping." % package)
                 self.publish("update.drop", msg=dict(trigger=msg, reason="pkgdb"))
                 return
 
@@ -277,7 +278,7 @@ class BugzillaTicketFiler(object):
                 projectid, package, upstream, version, release, url
             )
             if not bz:
-                _log.info("No RHBZ change detected (odd).  Aborting.")
+                _log.info("No RHBZ change detected (odd). Aborting.")
                 self.publish("update.drop", msg=dict(trigger=msg, reason="bugzilla"))
                 return
 
@@ -288,7 +289,7 @@ class BugzillaTicketFiler(object):
             _log.info("Filed Bugzilla #%i" % bz.bug_id)
 
             if is_monitored == "nobuild":
-                _log.info("Monitor flag set to 'nobuild'.  " "Skipping scratch build.")
+                _log.info("Monitor flag set to 'nobuild'. Skipping scratch build.")
                 return
 
             try:
@@ -333,19 +334,20 @@ class BugzillaTicketFiler(object):
 
         Topic: 'org.fedoraproject.prod.buildsys.task.state.change'
         """
-        instance = msg["msg"]["instance"]
+        msg_id, body = msg.id, msg.body
+        instance = body["instance"]
 
         if instance != "primary":
             _log.debug("Ignoring secondary arch task...")
             return
 
-        method = msg["msg"]["method"]
+        method = body["method"]
 
         if method != "build":
             _log.debug("Ignoring non-build task...")
             return
 
-        task_id = msg["msg"]["info"]["id"]
+        task_id = body["info"]["id"]
         if task_id not in self.scratch_builds:
             _log.debug(
                 "Ignoring [%s] as it's not one of our %d outstanding "
@@ -353,7 +355,7 @@ class BugzillaTicketFiler(object):
             )
             return
 
-        _log.info("Handling koji scratch msg %r" % msg.get("msg_id"))
+        _log.info("Handling koji scratch msg %r" % msg_id)
 
         # see koji.TASK_STATES for all values
         done_states = {
@@ -361,14 +363,14 @@ class BugzillaTicketFiler(object):
             "FAILED": "failed",
             "CANCELED": "canceled",
         }
-        state = msg["msg"]["new"]
+        state = body["new"]
         if state not in done_states:
             return
 
         bugs = []
 
-        url = fedmsg.meta.msg2link(msg, **self.hub.config)
-        subtitle = fedmsg.meta.msg2subtitle(msg, **self.hub.config)
+        url = hotness.buildsys.link(msg)
+        subtitle = hotness.buildsys.subtitle(msg)
         text = "%s %s" % (subtitle, url)
 
         # Followup on bugs we filed
@@ -377,13 +379,13 @@ class BugzillaTicketFiler(object):
         # Also follow up on Package Review requests, but only if the package is
         # not already in Fedora (it would be a waste of time to query bugzilla
         # if the review is already approved and scm has been processed).
-        package_name = "-".join(msg["msg"]["srpm"].split("-")[:-2])
+        package_name = "-".join(body["srpm"].split("-")[:-2])
         if package_name and not self.in_dist_git(package_name):
             for bug in self.bugzilla.review_request_bugs(package_name):
                 bugs.append((bug, text))
 
         if not bugs:
-            _log.debug("No bugs to update for %r" % msg.get("msg_id"))
+            _log.debug("No bugs to update for %r" % msg_id)
             return
 
     def is_monitored(self, package):

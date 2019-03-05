@@ -31,6 +31,7 @@ import subprocess as sp
 import tempfile
 import threading
 import time
+import copy
 
 from six.moves.urllib.parse import urlparse
 import koji
@@ -41,6 +42,188 @@ from hotness import exceptions
 _log = logging.getLogger(__name__)
 
 _koji_session_lock = threading.RLock()
+
+
+def link(msg):
+    """
+    This function is copied from `fedmsg_meta_fedora_infrastructure`_. It is
+    temporary solution to fedmsg.meta.msg2link method. It should be removed when
+    koji will provide their own schema.
+
+    Args:
+        msg(`fedora_messaging.message`): Message to parse
+
+    Returns:
+        URL link to koji build
+
+    .. _fedmsg_meta_fedora_infrastructure:
+       https://github.com/fedora-infra/fedmsg_meta_fedora_infrastructure
+    """
+
+    instance = msg.body.get("instance", "primary")
+    if instance == "primary":
+        base = "http://koji.fedoraproject.org/koji"
+    elif instance == "ppc":
+        base = "http://ppc.koji.fedoraproject.org/koji"
+    elif instance == "s390":
+        base = "http://s390.koji.fedoraproject.org/koji"
+    elif instance == "arm":
+        base = "http://arm.koji.fedoraproject.org/koji"
+    else:
+        raise NotImplementedError("Unhandled instance")
+
+    # One last little switch-a-roo for stg
+    if ".stg." in msg.topic:
+        base = "http://koji.stg.fedoraproject.org/koji"
+
+    if "buildsys.tag" in msg.topic and "tag_id" in msg.body:
+        return base + "/taginfo?tagID=%i" % (msg.body["tag_id"])
+    elif "buildsys.untag" in msg.topic and "tag_id" in msg.body:
+        return base + "/taginfo?tagID=%i" % (msg.body["tag_id"])
+    elif "buildsys.repo.init" in msg.topic and "tag_id" in msg.body:
+        return base + "/taginfo?tagID=%i" % (msg.body["tag_id"])
+    elif "buildsys.repo.done" in msg.topic and "tag_id" in msg.body:
+        return base + "/taginfo?tagID=%i" % (msg.body["tag_id"])
+    elif "buildsys.build.state.change" in msg.topic:
+        return base + "/buildinfo?buildID=%i" % (msg.body["build_id"])
+    elif "buildsys.task.state.change" in msg.topic:
+        return base + "/taskinfo?taskID=%i" % (msg.body["id"])
+    elif "buildsys.package.list.change" in msg.topic:
+        return None
+    elif "buildsys.rpm.sign" in msg.topic:
+        if "info" in msg.body:
+            idx = msg.body["info"]["build_id"]
+        else:
+            idx = msg.body["rpm"]["build_id"]
+        return base + "/buildinfo?buildID=%i" % idx
+    else:
+        return base
+
+
+def subtitle(msg):
+    """
+    This function is copied from `fedmsg_meta_fedora_infrastructure`_. It is
+    temporary solution to fedmsg.meta.msg2subtitle method. It should be removed when
+    koji will provide their own schema.
+
+    Args:
+        msg(`fedora_messaging.message`): Message to parse
+
+    Returns:
+        Text related to koji build
+
+    .. _fedmsg_meta_fedora_infrastructure:
+       https://github.com/fedora-infra/fedmsg_meta_fedora_infrastructure
+    """
+    inst = msg.body.get("instance", "primary")
+    if inst == "primary":
+        inst = ""
+    else:
+        inst = " (%s)" % inst
+
+    if "buildsys.tag" in msg.topic:
+        tmpl = (
+            "{owner}'s {name}-{version}-{release} tagged " "into {tag} by {user}{inst}"
+        )
+        return tmpl.format(inst=inst, **msg.body)
+    elif "buildsys.untag" in msg.topic:
+        tmpl = (
+            "{owner}'s {name}-{version}-{release} untagged "
+            "from {tag} by {user}{inst}"
+        )
+        return tmpl.format(inst=inst, **msg.body)
+    elif "buildsys.repo.init" in msg.topic:
+        tmpl = "Repo initialized:  {tag}{inst}"
+        return tmpl.format(inst=inst, tag=msg.body.get("tag", "unknown"))
+    elif "buildsys.repo.done" in msg.topic:
+        tmpl = "Repo done:  {tag}{inst}"
+        return tmpl.format(inst=inst, tag=msg.body.get("tag", "unknown"))
+    elif "buildsys.package.list.change" in msg.topic:
+        tmpl = "Package list change for {package}:  '{tag}'{inst}"
+        return tmpl.format(inst=inst, **msg.body)
+    elif "buildsys.rpm.sign" in msg.topic:
+        tmpl = (
+            "Koji build "
+            "{name}-{version}-{release}.{arch}.rpm "
+            "signed with sigkey '{sigkey}'"
+        )
+        if "info" in msg.body:
+            kwargs = copy.copy(msg.body["info"])
+        else:
+            kwargs = copy.copy(msg.body["rpm"])
+            kwargs["sigkey"] = msg.body["sigkey"]
+        return tmpl.format(**kwargs)
+    elif "buildsys.build.state.change" in msg.topic:
+        templates = [
+            ("{owner}'s {name}-{version}-{release} " "started building{inst}"),
+            ("{owner}'s {name}-{version}-{release} " "completed{inst}"),
+            ("{owner}'s {name}-{version}-{release} " "was deleted{inst}"),
+            ("{owner}'s {name}-{version}-{release} " "failed to build{inst}"),
+            ("{owner}'s {name}-{version}-{release} " "was cancelled{inst}"),
+        ]
+        tmpl = templates[msg.body["new"]]
+
+        # If there was no owner of the build, chop off the prefix.
+        if not msg.body["owner"]:
+            tmpl = tmpl[len("{owner}'s ") :]
+
+        return tmpl.format(inst=inst, **msg.body)
+    elif "buildsys.task.state.change" in msg.topic:
+        templates = {
+            "OPEN": ("{owner}'s scratch build of {srpm}{target} started{inst}"),
+            "FAILED": ("{owner}'s scratch build of {srpm}{target} failed{inst}"),
+            "CLOSED": ("{owner}'s scratch build of {srpm}{target} completed{inst}"),
+            "CANCELED": (
+                "{owner}'s scratch build of {srpm}{target} " "was cancelled{inst}"
+            ),
+        }
+        target = ""
+        if msg.body.get("info", {}).get("request"):
+            targets = set()
+            for item in msg.body["info"]["request"]:
+                if not isinstance(item, (dict, list)) and not item.endswith(".rpm"):
+                    targets.add(item)
+            if targets:
+                target = " for %s" % (list_to_series(targets))
+        default = "{owner}'s scratch build of {srpm}{target} changed{inst}"
+        tmpl = templates.get(msg.body["new"], default)
+
+        # If there was no owner of the build, chop off the prefix.
+        if not msg.body["owner"]:
+            tmpl = tmpl[len("{owner}'s ") :]
+
+        return tmpl.format(inst=inst, target=target, **msg.body)
+
+
+def list_to_series(items, N=3, oxford_comma=True):
+    """ Convert a list of things into a comma-separated string.
+    >>> list_to_series(['a', 'b', 'c', 'd'])
+    'a, b, and 2 others'
+    >>> list_to_series(['a', 'b', 'c', 'd'], N=4, oxford_comma=False)
+    'a, b, c and d'
+
+    Help function for subtitle function.
+    """
+
+    if not items:
+        return "(nothing)"
+
+    # uniqify items + sort them to have predictable (==testable) ordering
+    items = list(sorted(set(items)))
+
+    if len(items) == 1:
+        return items[0]
+
+    if len(items) > N:
+        items[N - 1 :] = ["%i others" % (len(items) - N + 1)]
+
+    first = ", ".join(items[:-1])
+
+    conjunction = " and "
+    if oxford_comma and len(items) > 2:
+        conjunction = "," + conjunction
+
+    return first + conjunction + items[-1]
 
 
 class Koji(object):

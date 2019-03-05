@@ -1,0 +1,61 @@
+{
+  "distro": null,
+  "message": {
+    "agent": "anitya",
+    "odd_change": false,
+    "old_version": "0.52",
+    "packages": [
+      {
+        "distro": "Arch Linux AUR",
+        "package_name": "xbps"
+      },
+      {
+        "distro": "Alpine",
+        "package_name": "xbps"
+      }
+    ],
+    "project": {
+      "backend": "GitHub",
+      "created_on": 1490006007.0,
+      "ecosystem": "https://github.com/voidlinux/xbps",
+      "homepage": "https://github.com/void-linux/xbps",
+      "id": 13828,
+      "name": "xbps",
+      "regex": null,
+      "updated_on": 1539593811.0,
+      "version": "0.53",
+      "version_url": "void-linux/xbps",
+      "versions": [
+        "0.53",
+        "0.52",
+        "0.51.90",
+        "0.51"
+      ]
+    },
+    "upstream_version": "0.53",
+    "versions": [
+      "0.53",
+      "0.52",
+      "0.51.90",
+      "0.51"
+    ]
+  },
+  "project": {
+    "backend": "GitHub",
+    "created_on": 1490006007.0,
+    "ecosystem": "https://github.com/voidlinux/xbps",
+    "homepage": "https://github.com/void-linux/xbps",
+    "id": 13828,
+    "name": "xbps",
+    "regex": null,
+    "updated_on": 1539593811.0,
+    "version": "0.53",
+    "version_url": "void-linux/xbps",
+    "versions": [
+      "0.53",
+      "0.52",
+      "0.51.90",
+      "0.51"
+    ]
+  }
+}
