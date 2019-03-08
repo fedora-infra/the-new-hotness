@@ -1,10 +1,11 @@
-master
+0.11.1
 ------
 
 Bugfixes
 ^^^^^^^^
 
 * Fix issue when 'buildsys.task.state.change' topic is received (#221)
+
 
 0.11.0
 ------
@@ -14,6 +15,7 @@ Features
 
 * Convert to fedora-messaging (#211)
 
+
 0.10.1
 ------
 
@@ -22,6 +24,7 @@ Features
 
 * Update documentation (#195)
 * Use bugzilla API key (#209)
+
 
 0.10.0
 ------
