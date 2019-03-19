@@ -315,7 +315,7 @@ class Koji(object):
         """
 
         # Clone the package to a tempdir
-        tmp = tempfile.mkdtemp(prefix="thn-", dir="/var/tmp")
+        tmp = tempfile.mkdtemp(prefix="thn-")
         try:
             url = self.git_url.format(package=package)
             _log.info("Cloning %r to %r" % (url, tmp))
@@ -379,7 +379,7 @@ class Koji(object):
             filename = filename.strip()
 
             # Copy the patch out of this doomed dir so bz can find it
-            destination = os.path.join("/var/tmp", filename)
+            destination = os.path.join("/var/tmp", filename)  # nosec
             shutil.move(os.path.join(tmp, filename), destination)
             return task_id, destination, "[patch] " + comment
         finally:

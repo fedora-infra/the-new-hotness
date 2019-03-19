@@ -74,7 +74,7 @@ def get_html(url, callback=None, errback=None):
     if url.startswith("ftp://"):
         import urllib
 
-        req = urllib.urlopen(url)
+        req = urllib.urlopen(url)  # nosec
         data = req.read()
         if callback:
             try:

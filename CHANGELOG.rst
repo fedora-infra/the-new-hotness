@@ -1,3 +1,11 @@
+master
+------
+
+Development
+^^^^^^^^^^^
+
+* Add bandit to tox (#226)
+
 0.11.2
 ------
 
