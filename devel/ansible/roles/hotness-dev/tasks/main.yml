@@ -93,7 +93,26 @@
   with_items:
     - hotness.service
 
+#- name: Reload the systemd daemon
+#  become_user: "{{ ansible_env.SUDO_USER }}"
+#  systemd:
+#    daemon_reload: yes
+
 - name: Reload the systemd daemon
   become_user: "{{ ansible_env.SUDO_USER }}"
   command: systemctl --user daemon-reload
+
+- name: Configure git user.email for packit
+  become_user: "{{ ansible_env.SUDO_USER }}"
+  git_config:
+    name: user.email
+    scope: global
+    value: the-new-hotness@fedoraproject.org
+
+- name: Configure git user.name for packit
+  become_user: "{{ ansible_env.SUDO_USER }}"
+  git_config:
+    name: user.name
+    scope: global
+    value: the-new-hotness
 
