@@ -6,6 +6,12 @@ Development
 
 * Add bandit to tox (#226)
 
+Bugfixes
+^^^^^^^^
+
+* Fix hijacking bugzilla issue (#234)
+
+
 0.11.2
 ------
 

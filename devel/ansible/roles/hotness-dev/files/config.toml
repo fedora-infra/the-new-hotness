@@ -55,7 +55,7 @@ propagate = false
 handlers = ["console"]
 
 [log_config.root]
-level = "WARNING"
+level = "DEBUG"
 handlers = ["console"]
 
 # the-new-hotness consumer configuration
