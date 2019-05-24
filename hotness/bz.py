@@ -59,6 +59,7 @@ class Bugzilla(object):
         default = "https://partner-bugzilla.redhat.com"
         url = self.config.get("url", default)
         self.username = self.config["user"]
+        self.reporter = self.config.get("reporter", "Upstream Release Monitoring")
         password = self.config["password"]
         api_key = self.config["api_key"]
         _log.info("Using BZ URL %s" % url)
@@ -214,7 +215,12 @@ class Bugzilla(object):
         possible_statuses = list(
             set(self.bug_status_early + [self.config["bug_status"]])
         )
-        query = {"component": [package["name"]], "bug_status": possible_statuses}
+        possible_statuses.sort()
+        query = {
+            "component": package["name"],
+            "bug_status": possible_statuses,
+            "creator": self.reporter,
+        }
 
         query.update(self.base_query)
         bugs = self.bugzilla.query(query)
