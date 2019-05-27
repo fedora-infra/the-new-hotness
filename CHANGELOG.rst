@@ -1,3 +1,12 @@
+master
+------
+
+Bugfixes
+^^^^^^^^
+
+* Fix missing user in fedpkg (#237)
+
+
 0.11.3
 ------
 
