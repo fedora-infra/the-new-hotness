@@ -353,7 +353,7 @@ class Koji(object):
                 stderr=sp.STDOUT,
             )
 
-            srpm = os.path.join(tmp, output.strip().split()[-1])
+            srpm = os.path.join(tmp, output.decode("utf-8").strip().split()[-1])
             _log.debug("Got srpm %r" % srpm)
 
             session = self.session_maker()
@@ -376,7 +376,7 @@ class Koji(object):
             filename = sp.check_output(
                 ["git", "format-patch", "HEAD^"], cwd=tmp, stderr=sp.STDOUT
             )
-            filename = filename.strip()
+            filename = filename.decode("utf-8").strip()
 
             # Copy the patch out of this doomed dir so bz can find it
             destination = os.path.join("/var/tmp", filename)  # nosec

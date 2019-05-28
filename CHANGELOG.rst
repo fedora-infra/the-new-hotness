@@ -1,3 +1,12 @@
+master
+------
+
+Bugfixes
+^^^^^^^^
+
+* Expect binary string instead str when handling scratch build (#241)
+
+
 0.11.7
 ------
 
