@@ -1,3 +1,12 @@
+master
+------
+
+Bugfixes
+^^^^^^^^
+
+* Fix wrong parameter in fedpkg (#237)
+
+
 0.11.4
 ------
 
