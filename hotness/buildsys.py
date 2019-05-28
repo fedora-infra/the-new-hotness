@@ -247,7 +247,7 @@ class Koji(object):
             warn(msg, DeprecationWarning)
             self.email_user = [p.strip() for p in config["userstring"].rsplit("<", 1)]
             self.email_user[1] = "<" + self.email_user[1]
-        self.opts = config["opts"]
+        self.opts = dict(config["opts"])
         self.priority = config["priority"]
         self.target_tag = config["target_tag"]
 

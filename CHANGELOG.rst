@@ -1,3 +1,12 @@
+master
+------
+
+Bugfixes
+^^^^^^^^
+
+* Convert toml InlineTable to dict (#245)
+
+
 0.11.8
 ------
 
