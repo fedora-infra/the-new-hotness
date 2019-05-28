@@ -210,7 +210,7 @@ Downloading requests-2.12.4-tests.tar.gz
 """
         sources = buildsys.dist_git_sources("/my/repo")
         mock_check_output.assert_called_once_with(
-            ["fedpkg", "--user hotness", "sources"], cwd="/my/repo"
+            ["fedpkg", "--user", "hotness", "sources"], cwd="/my/repo"
         )
         self.assertEqual(
             [
@@ -229,7 +229,7 @@ Downloading requests-2.13.0.tar.gz
 """
         sources = buildsys.dist_git_sources("/my/repo")
         mock_check_output.assert_called_once_with(
-            ["fedpkg", "--user hotness", "sources"], cwd="/my/repo"
+            ["fedpkg", "--user", "hotness", "sources"], cwd="/my/repo"
         )
         self.assertEqual(["/my/repo/requests-2.13.0.tar.gz"], sources)
 

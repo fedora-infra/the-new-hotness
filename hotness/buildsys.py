@@ -446,7 +446,9 @@ def dist_git_sources(dist_git_path):
     # ####################################################################### 100.0%
     # Downloading requests-2.12.4-tests.tar.gz
     # ####################################################################### 100.0%
-    output = sp.check_output(["fedpkg", "--user hotness", "sources"], cwd=dist_git_path)
+    output = sp.check_output(
+        ["fedpkg", "--user", "hotness", "sources"], cwd=dist_git_path
+    )
     for line in output.splitlines():
         if line.startswith("Downloading"):
             files.append(os.path.join(dist_git_path, line.split()[-1]))
