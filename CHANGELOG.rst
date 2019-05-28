@@ -1,3 +1,12 @@
+master
+------
+
+Bugfixes
+^^^^^^^^
+
+* Expect binary string instead str (#241)
+
+
 0.11.6
 ------
 

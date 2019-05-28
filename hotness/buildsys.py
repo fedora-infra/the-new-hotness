@@ -475,7 +475,7 @@ def _validate_spec_urls(specfile_path):
     # ...
     output = sp.check_output(["spectool", "-l", specfile_path])
     bad_urls = []
-    for line in output.splitlines():
+    for line in output.decode("utf-8").splitlines():
         if line.startswith("Source"):
             # Parse to make sure it's a url
             url = line.split(":", 1)[1].strip()
@@ -518,7 +518,7 @@ def spec_sources(specfile_path, target_dir):
     files = []
     try:
         output = sp.check_output(["spectool", "-g", specfile_path], cwd=target_dir)
-        for line in output.splitlines():
+        for line in output.decode("utf-8").splitlines():
             if line.startswith("Getting"):
                 files.append(
                     os.path.realpath(os.path.join(target_dir, line.split()[-1]))
