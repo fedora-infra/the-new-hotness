@@ -1,3 +1,12 @@
+master
+------
+
+Bugfixes
+^^^^^^^^
+
+* Fix binary string error (#237)
+
+
 0.11.5
 ------
 

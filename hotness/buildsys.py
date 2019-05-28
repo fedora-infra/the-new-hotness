@@ -449,7 +449,7 @@ def dist_git_sources(dist_git_path):
     output = sp.check_output(
         ["fedpkg", "--user", "hotness", "sources"], cwd=dist_git_path
     )
-    for line in output.splitlines():
+    for line in output.decode("utf-8").splitlines():
         if line.startswith("Downloading"):
             files.append(os.path.join(dist_git_path, line.split()[-1]))
 

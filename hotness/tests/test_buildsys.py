@@ -202,7 +202,7 @@ class DistGitSourcesTests(unittest.TestCase):
     @mock.patch("hotness.buildsys.sp.check_output")
     def test_multiple_sources(self, mock_check_output):
         """Assert multiple source downloads output are parsed neatly"""
-        mock_check_output.return_value = """
+        mock_check_output.return_value = b"""
 Downloading requests-2.12.4.tar.gz
 ####################################################################### 100.0%
 Downloading requests-2.12.4-tests.tar.gz
@@ -223,7 +223,7 @@ Downloading requests-2.12.4-tests.tar.gz
     @mock.patch("hotness.buildsys.sp.check_output")
     def test_single_source(self, mock_check_output):
         """Assert single source downloads output are parsed neatly"""
-        mock_check_output.return_value = """
+        mock_check_output.return_value = b"""
 Downloading requests-2.13.0.tar.gz
 ####################################################################### 100.0%
 """
