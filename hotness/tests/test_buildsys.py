@@ -64,7 +64,7 @@ class SpecSourcesTests(unittest.TestCase):
     """Tests for the :func:`buildsys.spec_sources` function"""
 
     def test_multiple_sources(self, mock_validate, mock_check_output):
-        mock_check_output.return_value = """
+        mock_check_output.return_value = b"""
 Getting https://github.com/org/proj/archive/0.11.0/proj-0.11.0.tar.gz to ./proj-0.11.0.tar.gz
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
@@ -94,7 +94,7 @@ Getting https://example.com/fix-everything.patch to ./fix-everything.patch
         mock_validate.assert_called_with("/my/specfile.spec")
 
     def test_no_sources_spec(self, mock_validate, mock_check_output):
-        mock_check_output.return_value = ""
+        mock_check_output.return_value = b""
         sources = buildsys.spec_sources("/my/specfile.spec", "/tmp/dir/")
         self.assertEqual([], sources)
         mock_validate.assert_called_with("/my/specfile.spec")
@@ -239,7 +239,7 @@ class ValidateSpecUrlsTests(unittest.TestCase):
 
     @mock.patch("hotness.buildsys.sp.check_output")
     def test_valid_url(self, mock_check_output):
-        mock_check_output.return_value = """
+        mock_check_output.return_value = b"""
 Source0: https://github.com/kennethreitz/requests/archive/v2.13.0/requests-v2.13.0.tar.gz
 Patch0: python-requests-system-cert-bundle.patch
 """
@@ -250,7 +250,7 @@ Patch0: python-requests-system-cert-bundle.patch
 
     @mock.patch("hotness.buildsys.sp.check_output")
     def test_invalid_url(self, mock_check_output):
-        mock_check_output.return_value = """
+        mock_check_output.return_value = b"""
 Source0: requests-v2.13.0.tar.gz
 Patch0: python-requests-system-cert-bundle.patch
 """
@@ -265,7 +265,7 @@ Patch0: python-requests-system-cert-bundle.patch
 
     @mock.patch("hotness.buildsys.sp.check_output")
     def test_no_scheme(self, mock_check_output):
-        mock_check_output.return_value = """
+        mock_check_output.return_value = b"""
 Source0: example.com/requests-v2.13.0.tar.gz
 Patch0: python-requests-system-cert-bundle.patch
 """
@@ -280,7 +280,7 @@ Patch0: python-requests-system-cert-bundle.patch
 
     @mock.patch("hotness.buildsys.sp.check_output")
     def test_no_host(self, mock_check_output):
-        mock_check_output.return_value = """
+        mock_check_output.return_value = b"""
 Source0: https:///requests-v2.13.0.tar.gz
 Patch0: python-requests-system-cert-bundle.patch
 """
