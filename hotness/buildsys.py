@@ -541,7 +541,7 @@ def spec_sources(specfile_path, target_dir):
             # cURL uses 22 for 400+ HTTP errors; the final line contains the specific code
             msg = (
                 "An HTTP error occurred downloading the package's new Source URLs: "
-                + e.output.splitlines()[-1]
+                + e.output.decode().splitlines()[-1]
             )
         elif e.returncode == 60:
             msg = (
@@ -555,7 +555,7 @@ def spec_sources(specfile_path, target_dir):
             )
             _log.error(
                 "{cmd} failed (exit {code}): {msg}".format(
-                    cmd=e.cmd, code=e.returncode, msg=e.output
+                    cmd=e.cmd, code=e.returncode, msg=e.output.decode()
                 )
             )
         raise exceptions.DownloadException(msg)
