@@ -1,3 +1,12 @@
+master
+------
+
+Bugfixes
+^^^^^^^^
+
+* Fix crash when error happens during downloading sources (#247)
+
+
 0.11.9
 ------
 

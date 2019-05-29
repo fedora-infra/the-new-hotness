@@ -40,7 +40,7 @@ class KojiTests(unittest.TestCase):
             "krb_proxyuser": None,
             "git_url": None,
             "user_email": ["Jeremy", "<jeremy@example.com>"],
-            "opts": None,
+            "opts": {"scratch": True},
             "priority": None,
             "target_tag": None,
         }
@@ -128,7 +128,7 @@ Getting https://example.com/fix-everything.patch to ./fix-everything.patch
 
     def test_not_http_200(self, mock_validate, mock_check_output):
         mock_check_output.side_effect = subprocess.CalledProcessError(
-            22, "mock_cmd", output="404"
+            22, "mock_cmd", output=b"404"
         )
         with self.assertRaises(exceptions.DownloadException) as cm:
             buildsys.spec_sources("/my/specfile.spec", "/tmp/dir/")
@@ -145,7 +145,9 @@ Getting https://example.com/fix-everything.patch to ./fix-everything.patch
         mock_validate.assert_called_with("/my/specfile.spec")
 
     def test_unhandled_error(self, mock_validate, mock_check_output):
-        mock_check_output.side_effect = subprocess.CalledProcessError(42, "mock_cmd")
+        mock_check_output.side_effect = subprocess.CalledProcessError(
+            42, "mock_cmd", output=b""
+        )
         with self.assertRaises(exceptions.DownloadException) as cm:
             buildsys.spec_sources("/my/specfile.spec", "/tmp/dir/")
             self.assertTrue("An unexpected error occurred" in cm.exception.msg)
