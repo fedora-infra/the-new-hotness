@@ -180,7 +180,10 @@ class TestConsumer(HotnessTestCase):
 
     @create_message("anitya.project.version.update", "no_mapping")
     @mock.patch("hotness.consumers._log")
-    def test_handle_anitya_version_update_no_mapping(self, mock_log, message):
+    @mock.patch("hotness.consumers.BugzillaTicketFiler.publish")
+    def test_handle_anitya_version_update_no_mapping(
+        self, mock_publish, mock_log, message
+    ):
         """
         Assert that message is correctly handled, when no mapping is set.
         """
@@ -193,7 +196,10 @@ class TestConsumer(HotnessTestCase):
 
     @create_message("anitya.project.version.update", "no_fedora_mapping")
     @mock.patch("hotness.consumers._log")
-    def test_handle_anitya_version_update_no_fedora_mapping(self, mock_log, message):
+    @mock.patch("hotness.consumers.BugzillaTicketFiler.publish")
+    def test_handle_anitya_version_update_no_fedora_mapping(
+        self, mock_publish, mock_log, message
+    ):
         """
         Assert that message is correctly handled, when Fedora mapping is not set.
         """
@@ -231,8 +237,9 @@ class TestConsumer(HotnessTestCase):
     @mock.patch("hotness.consumers._log")
     @mock.patch("hotness.consumers.BugzillaTicketFiler.is_monitored", return_value=None)
     @mock.patch("hotness.helpers.cmp_upstream_repo", return_value=1)
+    @mock.patch("hotness.consumers.BugzillaTicketFiler.publish")
     def test_handle_anitya_version_update_fedora_mapping_newer_not_monitored(
-        self, mock_cmp_upstream_repo, mock_monitored, mock_log, message
+        self, mock_publish, mock_cmp_upstream_repo, mock_monitored, mock_log, message
     ):
         """
         Assert that message is correctly handled, when Fedora mapping is set,
