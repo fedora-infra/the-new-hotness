@@ -16,7 +16,6 @@ htmlcov/
 *_build/
 
 # Vagrant-related files
-Vagrantfile
 *.retry
 .cache
 .vagrant/
