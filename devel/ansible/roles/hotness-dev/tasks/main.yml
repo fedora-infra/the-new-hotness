@@ -83,6 +83,5 @@
 
 - name: Reload the systemd daemon
   become_user: "{{ ansible_env.SUDO_USER }}"
-  systemd:
-    daemon_reload: yes
+  command: systemctl --user daemon-reload
 
