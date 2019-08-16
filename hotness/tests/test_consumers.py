@@ -4,9 +4,11 @@ Unit tests for hotness.consumer
 from __future__ import unicode_literals, absolute_import
 
 import mock
+from xmlrpc.client import Fault
 
 from hotness import consumers
 from fedora_messaging.message import Message
+from fedora_messaging.exceptions import Nack
 
 from hotness.tests.test_base import create_message, HotnessTestCase
 
@@ -256,6 +258,20 @@ class TestConsumer(HotnessTestCase):
             "repo says not to monitor 'flatpak'. Dropping.",
             mock_log.info.call_args_list[3][0][0],
         )
+
+    @create_message("anitya.project.version.update", "fedora_mapping")
+    @mock.patch("hotness.consumers.BugzillaTicketFiler.publish")
+    @mock.patch("hotness.consumers.BugzillaTicketFiler.is_monitored", return_value=True)
+    @mock.patch("hotness.helpers.cmp_upstream_repo", return_value=1)
+    def test_handle_anitya_version_update_bugzilla_error(
+        self, mock_cmp_upstream_repo, mock_monitored, mock_publish, message
+    ):
+        """
+        Assert that Nack exception is thrown when bugzilla error happens.
+        """
+        with mock.patch.object(self.consumer, "bugzilla") as mock_bugzilla:
+            mock_bugzilla.handle = mock.Mock(side_effect=Fault(51, "Error"))
+            self.assertRaises(Nack, self.consumer.handle_anitya_version_update, message)
 
     @create_message("anitya.project.map.new", "version")
     @mock.patch("hotness.consumers._log")
