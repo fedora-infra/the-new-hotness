@@ -6,6 +6,11 @@ Bugfixes
 
 * Fix crash when error happens during downloading sources (#247)
 
+Development
+^^^^^^^^^^^
+
+* Fix deprecation warning when provisioning vagrant machine (#254)
+
 
 0.11.9
 ------
