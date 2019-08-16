@@ -25,12 +25,13 @@ import subprocess
 from requests.packages.urllib3.util import retry
 from fedora_messaging.config import conf
 from fedora_messaging.api import publish as fm_publish
-from fedora_messaging.exceptions import PublishReturned, ConnectionException
+from fedora_messaging.exceptions import PublishReturned, ConnectionException, Nack
 from fedora_messaging.message import Message
 
 import requests
 import yaml
 import fedmsg
+import xmlrpc
 
 from hotness import exceptions
 import hotness.anitya
@@ -277,9 +278,19 @@ class BugzillaTicketFiler(object):
                 self.publish("update.drop", msg=dict(trigger=trigger, reason="pkgdb"))
                 return
 
-            bz = self.bugzilla.handle(
-                projectid, package, upstream, version, release, url
-            )
+            bz = None
+
+            try:
+                bz = self.bugzilla.handle(
+                    projectid, package, upstream, version, release, url
+                )
+            # Raise Fedora messaging NACK exception when there is issue in bugzilla client
+            except xmlrpc.client.Fault as e:
+                _log.warn(
+                    "Encountered an error during searching for Bugzilla bug: {}", str(e)
+                )
+                raise Nack
+
             if not bz:
                 _log.info("No RHBZ change detected (odd). Aborting.")
                 self.publish(

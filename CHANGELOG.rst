@@ -5,6 +5,7 @@ Bugfixes
 ^^^^^^^^
 
 * Fix crash when error happens during downloading sources (#247)
+* Fix crash when python-bugzilla throws Fault (#255)
 
 
 0.11.9
