@@ -29,7 +29,6 @@ from fedora_messaging.exceptions import PublishReturned, ConnectionException, Na
 from fedora_messaging.message import Message
 
 import requests
-import yaml
 import fedmsg
 import xmlrpc
 
@@ -70,8 +69,6 @@ class BugzillaTicketFiler(object):
         )
         self.buildsys = hotness.buildsys.Koji(consumer=self, config=self.config["koji"])
 
-        default = "https://pagure.io/releng/fedora-scm-requests"
-        self.repo_url = self.config.get("repo_url", default)
         default = "https://pdc.fedoraproject.org"
         self.pdc_url = self.config.get("pdc_url", default)
         default = "https://src.fedoraproject.org"
@@ -419,7 +416,7 @@ class BugzillaTicketFiler(object):
             _log.info("Package %s is retired.  Ignoring monitoring." % package)
             return False
 
-        url = "{0}/raw/master/f/rpms/{1}".format(self.repo_url, package)
+        url = "{0}/_dg/anitya/rpms/{1}".format(self.dist_git_url, package)
         _log.debug("Checking %r to see if %s is monitored." % (url, package))
         r = self.requests_session.get(url, timeout=self.timeout)
 
@@ -428,7 +425,7 @@ class BugzillaTicketFiler(object):
             return False
 
         try:
-            data = yaml.safe_load(r.text)
+            data = r.json()
             string_value = data.get("monitoring", "no-monitoring")
             return_values = {
                 "monitoring": "nobuild",

@@ -74,7 +74,7 @@ class TestConsumer(HotnessTestCase):
         """ Ensure a `no-monitoring` flag in git yields False internally. """
         response = mock.MagicMock()
         response.status_code = 200
-        response.text = "monitoring: no-monitoring"
+        response.json.return_value = {"monitoring": "no-monitoring"}
         self.consumer.requests_session = mock.MagicMock()
         self.consumer.requests_session.get.return_value = response
 
@@ -90,7 +90,7 @@ class TestConsumer(HotnessTestCase):
         """ Ensure a `monitoring` flag in git yields 'nobuild' internally. """
         response = mock.MagicMock()
         response.status_code = 200
-        response.text = "monitoring: monitoring"
+        response.json.return_value = {"monitoring": "monitoring"}
         self.consumer.requests_session = mock.MagicMock()
         self.consumer.requests_session.get.return_value = response
 
@@ -108,7 +108,7 @@ class TestConsumer(HotnessTestCase):
         """
         response = mock.MagicMock()
         response.status_code = 200
-        response.text = "monitoring: monitoring-with-scratch"
+        response.json.return_value = {"monitoring": "monitoring-with-scratch"}
         self.consumer.requests_session = mock.MagicMock()
         self.consumer.requests_session.get.return_value = response
 
