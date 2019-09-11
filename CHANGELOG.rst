@@ -14,6 +14,8 @@ Development
 * Fix deprecation warning when provisioning vagrant machine (#254)
 * Change coverage threshold (#258)
 * Add diff-cover to tox (#258)
+* Retrieve the monitoring status from dist-git instead of fedora-scm-requests
+  (#256)
 
 
 0.11.9
