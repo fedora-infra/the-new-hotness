@@ -19,3 +19,9 @@ htmlcov/
 *.retry
 .cache
 .vagrant/
+
+# IDEA
+.idea/
+
+# Emacs projects
+.projectile
