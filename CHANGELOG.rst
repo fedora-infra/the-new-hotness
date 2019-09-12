@@ -12,6 +12,8 @@ Development
 ^^^^^^^^^^^
 
 * Fix deprecation warning when provisioning vagrant machine (#254)
+* Change coverage threshold (#258)
+* Add diff-cover to tox (#258)
 
 
 0.11.9
