@@ -287,7 +287,9 @@ class BugzillaTicketFiler(object):
             # Raise Fedora messaging NACK exception when there is issue in bugzilla client
             except xmlrpc.client.Fault as e:
                 _log.warn(
-                    "Encountered an error during searching for Bugzilla bug: {}", str(e)
+                    "Encountered an error during searching Bugzilla issue for '{0}': {1}".format(
+                        package, e.faultString
+                    )
                 )
                 raise Nack
 
