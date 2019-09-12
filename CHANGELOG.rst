@@ -4,6 +4,7 @@ master
 Bugfixes
 ^^^^^^^^
 
+* Fix string exception when handling python-bugzilla Fault (#257)
 * Fix crash when error happens during downloading sources (#247)
 * Fix crash when python-bugzilla throws Fault (#255)
 
