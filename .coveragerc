@@ -5,7 +5,7 @@ include =
     hotness_schema/hotness_schema/*
 
 [report]
-fail_under = 90
+fail_under = 50
 precision = 2
 exclude_lines =
     pragma: no cover
