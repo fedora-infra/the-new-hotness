@@ -1,3 +1,12 @@
+master
+------
+
+Development
+^^^^^^^^^^^
+
+* Fix docs building (#260)
+
+
 0.12.0
 ------
 
