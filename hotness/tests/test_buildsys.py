@@ -28,21 +28,31 @@ import mock
 from hotness import buildsys, exceptions
 
 
+class MockBug:
+    """ A class that pretends to be a bugzilla.bug.Bug.
+
+    It only contains the bug_id attribute, as that is the only one that Koji needs.
+    """
+
+    def __init__(self, bug_id: int) -> None:
+        self.bug_id = bug_id
+
+
 class KojiTests(unittest.TestCase):
     def setUp(self):
         self.config = {
             "server": None,
-            "weburl": None,
+            "weburl": "https://koji.my.org/koji",
             "krb_principal": None,
             "krb_keytab": None,
             "krb_ccache": None,
             "krb_sessionopts": None,
             "krb_proxyuser": None,
-            "git_url": None,
+            "git_url": "https://src.fedoraproject.org/cgit/rpms/{package}.git",
             "user_email": ["Jeremy", "<jeremy@example.com>"],
             "opts": {"scratch": True},
-            "priority": None,
-            "target_tag": None,
+            "priority": 33,
+            "target_tag": "Rawhide",
         }
 
     def test_initialization_userstring_str(self):
@@ -56,6 +66,143 @@ class KojiTests(unittest.TestCase):
         """Assert that a tuple for the 'user_email' config option works"""
         koji = buildsys.Koji(None, self.config)
         self.assertEqual(["Jeremy", "<jeremy@example.com>"], koji.email_user)
+
+    @mock.patch("hotness.buildsys.sp.check_output")
+    @mock.patch("hotness.buildsys.dist_git_sources")
+    @mock.patch("hotness.buildsys.spec_sources")
+    @mock.patch("hotness.buildsys.tempfile.mkdtemp")
+    @mock.patch("hotness.buildsys.shutil.move")
+    @mock.patch("hotness.buildsys.shutil.rmtree")
+    def test_handle(
+        self,
+        mock_rmtree,
+        mock_move,
+        mock_mkdtemp,
+        mock_spec_sources,
+        mock_dist_git_sources,
+        mock_check_output,
+    ):
+        bug_id = 424242
+        task_id = 212121
+        git_url = "https://src.fedoraproject.org/cgit/rpms/bear.git"
+        git_patch_fname = "0001-fix-important-bug.patch"
+        tmp = "/var/tmp/thn-123456"
+        comment = "Update to 2.4.2 (#{:d})".format(bug_id)
+        kwargs = {"stderr": subprocess.STDOUT}
+        tmp_dir_kwargs = {"cwd": tmp, **kwargs}
+
+        mock_mkdtemp.return_value = tmp
+
+        check_output_retval = mock.Mock()
+        check_output_retval.decode = mock.Mock(return_value=git_patch_fname)
+        mock_check_output.return_value = check_output_retval
+
+        koji = buildsys.Koji(None, self.config)
+        session = mock.Mock()
+        koji.session_maker = mock.Mock(return_value=session)
+        koji.scratch_build = mock.Mock(return_value=task_id)
+
+        got_task_id, patch, attachment = koji.handle(
+            "bear", "2.4.2", None, MockBug(bug_id)
+        )
+        self.assertEqual(task_id, got_task_id)
+        self.assertEqual(attachment, "[patch] {:s}".format(comment))
+        self.assertEqual(patch, "/var/tmp/" + git_patch_fname)
+
+        mock_mkdtemp.assert_called_once()
+        mock_rmtree.assert_called_once_with(tmp, ignore_errors=True)
+        mock_move.assert_called_once_with(
+            tmp + "/" + git_patch_fname, "/var/tmp/" + git_patch_fname
+        )
+
+        # cannot check all calls in one go as calls to `.decode` & `.strip()`
+        # are recorded too
+        mock_check_output.assert_has_calls(
+            [
+                mock.call(["git", "clone", git_url, tmp], **kwargs),
+                mock.call(
+                    [
+                        "/usr/bin/rpmdev-bumpspec",
+                        "--new",
+                        "2.4.2",
+                        "-c",
+                        comment,
+                        "-u",
+                        "Jeremy <jeremy@example.com>",
+                        tmp + "/bear.spec",
+                    ],
+                    **kwargs
+                ),
+                mock.call(
+                    [
+                        "rpmbuild",
+                        "-D",
+                        "_sourcedir .",
+                        "-D",
+                        "_topdir .",
+                        "-bs",
+                        tmp + "/bear.spec",
+                    ],
+                    **tmp_dir_kwargs
+                ),
+            ]
+        )
+        mock_check_output.assert_has_calls(
+            [
+                mock.call(["git", "config", "user.name", "Jeremy"], **tmp_dir_kwargs),
+                mock.call(
+                    ["git", "config", "user.email", "<jeremy@example.com>"],
+                    **tmp_dir_kwargs
+                ),
+                mock.call(["git", "commit", "-a", "-m", comment], **tmp_dir_kwargs),
+                mock.call(["git", "format-patch", "HEAD^"], **tmp_dir_kwargs),
+            ]
+        )
+
+    @mock.patch("hotness.buildsys.random.choice")
+    @mock.patch("hotness.buildsys.time.time")
+    def test_upload_srpm(self, mock_time_time, mock_random_choice):
+        mock_random_choice.return_value = "a"
+        mock_time_time.return_value = 42.21
+        session = mock.Mock()
+        session.uploadWrapper = mock.Mock()
+
+        koji = buildsys.Koji(None, self.config)
+        dest = koji.upload_srpm(session, "foo")
+
+        self.assertEqual(dest, "cli-build/42.21.aaaaaaaa/foo")
+        session.uploadWrapper.assert_called_once_with("foo", "cli-build/42.21.aaaaaaaa")
+
+    def test_scratch_build(self):
+        session = mock.Mock()
+        session.build = mock.Mock(return_value=21)
+        dest = "cli-build/42.21.aaaaaaaa/foo"
+
+        koji = buildsys.Koji(None, self.config)
+        koji.upload_srpm = mock.Mock(return_value=dest)
+        task_id = koji.scratch_build(session, "foo", "/path/to/foos/sources")
+
+        self.assertEqual(task_id, 21)
+        session.build.assert_called_once_with(
+            dest, "Rawhide", {"scratch": True}, priority=33
+        )
+        koji.upload_srpm.assert_called_once_with(session, "/path/to/foos/sources")
+
+
+class ListToSeriesTests(unittest.TestCase):
+    def test_no_items(self):
+        self.assertEqual(buildsys.list_to_series(None), "(nothing)")
+
+    def test_four_items(self):
+        self.assertEqual(
+            buildsys.list_to_series(["a", "b", "c", "d"]), "a, b, and 2 others"
+        )
+
+    def test_no_oxford_comma(self):
+        self.assertEqual(
+            buildsys.list_to_series(["a", "b", "c", "d"], N=4, oxford_comma=False),
+            "a, b, c and d",
+        )
 
 
 @mock.patch("hotness.buildsys.sp.check_output")
