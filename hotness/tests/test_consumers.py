@@ -55,7 +55,7 @@ class TestConsumer(HotnessTestCase):
         package = "python-sqlite2"
         expected = True
         actual = self.consumer.is_retired(package)
-        self.assertEquals(expected, actual)
+        self.assertEqual(expected, actual)
 
     def test_is_retired_negative(self):
         """ Ensure that nethack never dies. """
@@ -68,7 +68,7 @@ class TestConsumer(HotnessTestCase):
         package = "nethack"
         expected = False
         actual = self.consumer.is_retired(package)
-        self.assertEquals(expected, actual)
+        self.assertEqual(expected, actual)
 
     def test_is_monitored_negative(self):
         """ Ensure a `no-monitoring` flag in git yields False internally. """
@@ -84,7 +84,7 @@ class TestConsumer(HotnessTestCase):
         package = "php-pecl-timecop"
         expected = False
         actual = self.consumer.is_monitored(package)
-        self.assertEquals(expected, actual)
+        self.assertEqual(expected, actual)
 
     def test_is_monitored_nobuild(self):
         """ Ensure a `monitoring` flag in git yields 'nobuild' internally. """
@@ -100,7 +100,7 @@ class TestConsumer(HotnessTestCase):
         package = "ocaml-cudf"
         expected = "nobuild"
         actual = self.consumer.is_monitored(package)
-        self.assertEquals(expected, actual)
+        self.assertEqual(expected, actual)
 
     def test_is_monitored_positive(self):
         """ Ensure a `monitoring-with-scratch` flag in git yields True
@@ -118,7 +118,7 @@ class TestConsumer(HotnessTestCase):
         package = "xmlrunner"
         expected = True
         actual = self.consumer.is_monitored(package)
-        self.assertEquals(expected, actual)
+        self.assertEqual(expected, actual)
 
     def test_is_in_dist_git(self):
         """ Check that HTTP/200 from dist-git returns True in our helper. """
@@ -130,7 +130,7 @@ class TestConsumer(HotnessTestCase):
         package = "python-requests"
         expected = True
         actual = self.consumer.in_dist_git(package)
-        self.assertEquals(expected, actual)
+        self.assertEqual(expected, actual)
 
     def test_is_not_in_dist_git(self):
         """ Check that HTTP/404 from dist-git returns False in our helper. """
@@ -142,7 +142,7 @@ class TestConsumer(HotnessTestCase):
         package = "not-a-real-package"
         expected = False
         actual = self.consumer.in_dist_git(package)
-        self.assertEquals(expected, actual)
+        self.assertEqual(expected, actual)
 
     @mock.patch("hotness.consumers.BugzillaTicketFiler.handle_anitya_version_update")
     def test_call_anitya_update(self, mock_method):

@@ -31,6 +31,7 @@ import subprocess as sp
 import tempfile
 import threading
 import time
+import typing
 import copy
 
 from six.moves.urllib.parse import urlparse
@@ -299,23 +300,26 @@ class Koji(object):
         )
         return task_id
 
-    def handle(self, package, upstream, version, rhbz):
+    def handle(
+        self, package: str, upstream: str, version: str, rhbz
+    ) -> typing.Tuple[int, str, str]:
         """ Main API entry point.
 
-        Bumps the version on a package and requests a scratch build.
+        Bumps the version of a package and requests a scratch build.
 
         Args:
             package (str): The package name.
             upstream (str): The new upstream version.
             version (str): Unused, exists for API compatibility at the moment.
-            rhbz (?): The bugzilla object with a ``bug_id`` attribute.
+            rhbz (bugzilla.bug.Bug): The bugzilla Bug object with a ``bug_id`` attribute.
 
         Returns:
             tuple: A tuple of (koji task ID, patch path, BZ attachment name).
         """
 
         # Clone the package to a tempdir
-        tmp = tempfile.mkdtemp(prefix="thn-", dir="/var/tmp")
+        # and stop bandit from complaining about a hardcoded temporary directory
+        tmp = tempfile.mkdtemp(prefix="thn-", dir="/var/tmp")  # nosec
         try:
             url = self.git_url.format(package=package)
             _log.info("Cloning %r to %r" % (url, tmp))
