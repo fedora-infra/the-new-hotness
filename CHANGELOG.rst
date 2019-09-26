@@ -5,6 +5,7 @@ Development
 ^^^^^^^^^^^
 
 * Fix docs building (#260)
+* Mock rpm-py-installer for ReadTheDocs (#263)
 
 
 0.12.0
