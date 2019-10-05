@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_packages
+
+import os
 import re
+
+from setuptools import find_packages, setup
+
+
+ON_READ_THE_DOCS = os.environ.get("READTHEDOCS") == "True"
 
 
 def get_version():
@@ -23,8 +29,22 @@ def get_requirements(requirements_file="requirements.txt"):
     :return type: list
     """
 
-    lines = open(requirements_file).readlines()
-    return [line.rstrip().split("#")[0] for line in lines if not line.startswith("#")]
+    if ON_READ_THE_DOCS:
+        # These packages are not needed to build on Read the Docs
+        ignored_packages = {"koji"}
+    else:
+        ignored_packages = {}
+
+    lines = [
+        line.rstrip().split("#")[0]
+        for line in open(requirements_file).readlines()
+    ]
+    return [
+        line
+        for line in lines
+        if not line.startswith("#")
+        if line not in ignored_packages
+    ]
 
 
 setup(
