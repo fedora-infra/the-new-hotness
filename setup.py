@@ -36,8 +36,7 @@ def get_requirements(requirements_file="requirements.txt"):
         ignored_packages = {}
 
     lines = [
-        line.rstrip().split("#")[0]
-        for line in open(requirements_file).readlines()
+        line.rstrip().split("#")[0] for line in open(requirements_file).readlines()
     ]
     return [
         line
