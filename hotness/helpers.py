@@ -18,6 +18,7 @@
 """
 
 import fnmatch
+import functools
 import re
 import pprint as pprint_module
 
@@ -134,7 +135,7 @@ def rpm_cmp(v1, v2):
 
 
 def rpm_max(list):
-    list.sort(cmp=rpm_cmp)
+    list.sort(key=functools.cmp_to_key(rpm_cmp))
     return list[-1]
 
 
@@ -165,20 +166,23 @@ def upstream_cmp(v1, v2):
         return diff
 
     if rc1 and rc2:
-        # both are rc, higher rc is newer
-        diff = (rc1.lower() > rc2.lower()) - (rc1.lower() > rc2.lower())
-        if diff != 0:
-            # rc > pre > beta > alpha
-            return diff
-        if rcn1 and rcn2:
-            # both have rc number
-            return (int(rcn1) > int(rcn2)) - (int(rcn1) > int(rcn2))
-        if rcn1:
-            # only first has rc number, then it is newer
+        # rc > pre > beta > alpha
+        if rc1.lower() > rc2.lower():
             return 1
-        if rcn2:
-            # only second has rc number, then it is newer
+        elif rc1.lower() < rc2.lower():
             return -1
+
+        # both are same rc, higher rc is newer
+        if rcn1 and rcn2:
+            if int(rcn1) > int(rcn2):
+                return 1
+            elif int(rcn1) < int(rcn2):
+                return -1
+        elif rcn1:
+            return 1
+        elif rcn2:
+            return -1
+
         # both rc numbers are missing or same
         return 0
 
@@ -206,16 +210,9 @@ def split_rc(version):
         return (version, "", "")
 
     rc_str = match.group(3)
-    if rc_str:
-        v = match.group(1)
-        rc_num = match.group(4)
-        return (v, rc_str, rc_num)
-    else:
-        # if version contains a dash, but no release candidate string is found,
-        # v != version, therefore use version here
-        # Example version: 1.8.23-20100128-r1100
-        # Then: v=1.8.23, but rc_str=""
-        return (version, "", "")
+    v = match.group(1)
+    rc_num = match.group(4)
+    return (v, rc_str, rc_num)
 
 
 def get_rc(release):
@@ -230,7 +227,7 @@ def get_rc(release):
 
 
 def upstream_max(list):
-    list.sort(cmp=upstream_cmp)
+    list.sort(key=functools.cmp_to_key(upstream_cmp))
     return list[-1]
 
 
