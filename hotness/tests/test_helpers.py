@@ -3,6 +3,7 @@ Unit tests for hotness.helpers
 """
 from __future__ import unicode_literals, absolute_import
 
+import re
 import unittest
 
 from hotness import helpers
@@ -112,3 +113,50 @@ class TestHelpers(unittest.TestCase):
     def test_filter_dict(self):
         test_dict = {"a": 1, "b": 2, "c": 3, "d": 4}
         self.assertEqual(helpers.filter_dict(test_dict, ["b", "d"]), {"b": 2, "d": 4})
+
+    def test_match_interval(self):
+        # Taken directly from helpers
+        rc_upstream_regex = re.compile(
+            r"(.*?)\.?(-?(rc|pre|beta|alpha|dev)([0-9]*))", re.I
+        )
+
+        cases = [
+            ("1.0.0.rc1", ("1.0.0", "rc1", "rc", "1")),
+            ("2.3.pre4", ("2.3", "pre4", "pre", "4")),
+            ("4.56.beta7", ("4.56", "beta7", "beta", "7")),
+            ("7.8.90-alpha1", ("7.8.90", "-alpha1", "alpha", "1")),
+            ("23.4-dev5", ("23.4", "-dev5", "dev", "5")),
+            ("1.0.0", None),
+            ("1.8.23-20100128-r1100", None),
+        ]
+        # Build a test text block
+        case_text = []
+        result_tuples = []
+        for case_line, result in cases:
+            case_text.append(case_line)
+
+            if result:
+                result_tuples.append(result)
+
+        test_text = "\n".join(
+            ["outside", "BEGIN MARKER"] + case_text + ["END MARKER", "outside"]
+        )
+
+        test_result = list(
+            helpers.match_interval(
+                test_text, rc_upstream_regex, "BEGIN MARKER", "END MARKER"
+            )
+        )
+
+        self.assertEqual(test_result, result_tuples)
+
+        # Test again with no end marker for coverage reasons
+        test_text = "\n".join(["outside", "BEGIN MARKER"] + case_text)
+
+        test_result = list(
+            helpers.match_interval(
+                test_text, rc_upstream_regex, "BEGIN MARKER", "END MARKER"
+            )
+        )
+
+        self.assertEqual(test_result, result_tuples)
