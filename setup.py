@@ -58,4 +58,5 @@ setup(
     tests_require=get_requirements("dev-requirements.txt"),
     packages=find_packages(exclude=("hotness.tests", "hotness.tests.*")),
     test_suite="hotness.tests",
+    python_requires=">=3.6",
 )
