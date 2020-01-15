@@ -146,31 +146,8 @@ class Bugzilla(object):
             self.bugzilla.attachfile(bug.bug_id, filename, description, **kwargs)
             _log.info("Attached file to bug: %s" % bug.weburl)
 
-    def attach_log(self, filename, description, bug):
-        self._attach_file(filename, description, bug, content_type="text/plain")
-
     def attach_patch(self, filename, description, bug):
         self._attach_file(filename, description, bug, is_patch=True)
-
-    def ftbfs_bugs(self, name):
-        """ Return all FTBFS bugs we find for a package """
-        short_desc_pattern = "%s: FTBFS in rawhide" % name
-        query = {
-            "component": name,
-            "bug_status": self.bug_status_open,
-            "short_desc": short_desc_pattern,
-            "short_desc_type": "substring",
-            "product": self.config["product"],
-            "query_format": "advanced",
-        }
-        bugs = self.bugzilla.query(query)
-        bugs = bugs or []
-        for bug in bugs:
-            # The short_desc_pattern contains a space at the end, which is
-            # currently not recognized by bugzilla. Therefore this test is
-            # required:
-            if bug.short_desc.startswith(short_desc_pattern):
-                yield bug
 
     def review_request_bugs(self, name):
         """ Return the review request bugs for a package. """

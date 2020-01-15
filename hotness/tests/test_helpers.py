@@ -3,8 +3,8 @@ Unit tests for hotness.helpers
 """
 from __future__ import unicode_literals, absolute_import
 
-import re
 import unittest
+import re
 
 from unittest.mock import Mock, call, patch
 from hotness import helpers
