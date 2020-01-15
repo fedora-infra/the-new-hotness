@@ -5,6 +5,7 @@ Development
 ^^^^^^^^^^^
 
 * Fix docs building (#264)
+* Remove unused functions (#270)
 
 
 0.12.0

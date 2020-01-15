@@ -1,7 +1,4 @@
-import copy
 import logging
-
-import bs4
 
 from fedora.client import AuthError
 from fedora.client import OpenIdBaseClient
@@ -72,16 +69,6 @@ class AnityaAuthException(AnityaException, AuthError):
     pass
 
 
-def _parse_service_form(response):
-    parsed = bs4.BeautifulSoup(response.text, "lxml")
-    inputs = {}
-    for child in parsed.form.find_all(name="input"):
-        if child.attrs["type"] == "submit":
-            continue
-        inputs[child.attrs["name"]] = child.attrs["value"]
-    return (parsed.form.attrs["action"], inputs)
-
-
 def determine_backend(project_name, project_homepage):
     """
     Determine the Anitya backend to use for a given project name and homepage.
@@ -141,54 +128,6 @@ class Anitya(OpenIdBaseClient):
         response = self._session.get(self.base_url)
         return "logout" in response.text
 
-    def search_by_homepage(self, name, homepage):
-        url = "{0}/api/projects/?homepage={1}".format(self.base_url, homepage)
-        _log.info("Looking for %r via %r" % (name, url))
-        return self.send_request(url, verb="GET")
-
-    def get_project_by_package(self, name):
-        url = "{0}/api/project/Fedora/{1}".format(self.base_url, name)
-        _log.info("Looking for %r via %r" % (name, url))
-        data = self.send_request(url, verb="GET")
-        if "error" in data:
-            _log.warn(data.error)
-            return None
-        else:
-            return data
-
-    def update_url(self, project, homepage):
-        if not self.is_logged_in:
-            raise AnityaException("Could not add anitya project.  " "Not logged in.")
-        idx = project["id"]
-        url = self.base_url + "/project/%i/edit" % idx
-        response = self._session.get(url)
-        if not response.status_code == 200:
-            code = response.status_code
-            raise AnityaException("Couldn't get form to get " "csrf token %r" % code)
-        soup = bs4.BeautifulSoup(response.text, "lxml")
-
-        data = copy.copy(project)
-        data["homepage"] = homepage
-        data["csrf_token"] = soup.find(id="csrf_token").attrs["value"]
-        response = self._session.post(url, data=data)
-
-        if not response.status_code == 200:
-            del data["csrf_token"]
-            raise AnityaException(
-                "Bad status code from anitya when "
-                "updating project: %r.  Sent %r" % (response.status_code, data)
-            )
-        elif "Could not" in response.text:
-            soup = bs4.BeautifulSoup(response.text, "lxml")
-            err = "Unknown error updating project in anitya"
-            # This is the css class on the error flash messages from anitya
-            tags = soup.find_all(attrs={"class": "list-group-item-danger"})
-            if tags:
-                err = " ".join(tags[0].stripped_strings)
-            raise AnityaException(err)
-
-        _log.info("Successfully updated anitya url for %r" % data["name"])
-
     def force_check(self, project):
         """ Force anitya to check for a new upstream release. """
         idx = project["id"]
@@ -202,94 +141,3 @@ class Anitya(OpenIdBaseClient):
                 "Check yielded upstream version %s for %s"
                 % (data["version"], data["name"])
             )
-
-    def map_new_package(self, name, project):
-        if not self.is_logged_in:
-            raise AnityaException("Could not add anitya project.  " "Not logged in.")
-
-        idx = project["id"]
-        url = self.base_url + "/project/%i/map" % idx
-        response = self._session.get(url)
-        if not response.status_code == 200:
-            code = response.status_code
-            raise AnityaException("Couldn't get form to get " "csrf token %r" % code)
-
-        soup = bs4.BeautifulSoup(response.text, "lxml")
-        csrf_token = soup.find(id="csrf_token").attrs["value"]
-        data = dict(distro="Fedora", package_name=name, csrf_token=csrf_token)
-        response = self._session.post(url, data=data)
-
-        if not response.status_code == 200:
-            # Hide this from stuff we republish to the bus
-            del data["csrf_token"]
-            raise AnityaException(
-                "Bad status code from anitya when "
-                "mapping package: %r.  Sent %r" % (response.status_code, data)
-            )
-        elif "Could not" in response.text:
-            soup = bs4.BeautifulSoup(response.text, "lxml")
-            err = "Unknown error mapping package in anitya"
-            # This is the css class on the error flash messages from anitya
-            tags = soup.find_all(attrs={"class": "list-group-item-danger"})
-            if tags:
-                err = " ".join(tags[0].stripped_strings)
-            raise AnityaException(err)
-
-        _log.info("Successfully mapped %r in anitya" % name)
-
-    def add_new_project(self, name, homepage):
-        if not self.is_logged_in:
-            raise AnityaException("Could not add anitya project.  " "Not logged in.")
-
-        data = dict(
-            name=name,
-            homepage=homepage,
-            distro="Fedora",
-            package_name=name,
-            backend=determine_backend(name, homepage),
-        )
-
-        # It's not always the case that these need removed, but often
-        # enough...
-        for prefix in prefixes:
-            if data["name"].startswith(prefix):
-                data["name"] = data["name"][len(prefix) :]
-
-        # For these, we can get a pretty good guess at the upstream name
-        for guess in easy_guesses:
-            if data["backend"] == guess:
-                data["name"] = data["homepage"].strip("/").split("/")[-1]
-                break
-
-        if data["backend"] == "github" and "github.com" in data["homepage"]:
-            data["version_url"] = data["homepage"]
-
-        url = self.base_url + "/project/new"
-        response = self._session.get(url)
-
-        if not response.status_code == 200:
-            code = response.status_code
-            raise AnityaException("Couldn't get form to get csrf " "token %r" % code)
-
-        soup = bs4.BeautifulSoup(response.text, "lxml")
-        data["csrf_token"] = soup.find(id="csrf_token").attrs["value"]
-
-        response = self._session.post(url, data=data)
-
-        if not response.status_code == 200:
-            # Hide this from stuff we republish to the bus
-            del data["csrf_token"]
-            raise AnityaException(
-                "Bad status code from anitya when "
-                "adding project: %r.  Sent %r" % (response.status_code, data)
-            )
-        elif "Could not" in response.text:
-            soup = bs4.BeautifulSoup(response.text, "lxml")
-            err = "Unknown error adding project to anitya"
-            # This is the css class on the error flash messages from anitya
-            tags = soup.find_all(attrs={"class": "list-group-item-danger"})
-            if tags:
-                err = " ".join(tags[0].stripped_strings)
-            raise AnityaException(err)
-
-        _log.info("Successfully added %r to anitya" % data["name"])
