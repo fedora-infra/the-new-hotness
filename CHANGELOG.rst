@@ -11,6 +11,7 @@ Development
 
 * Fix docs building (#264)
 * Change coverage threshold to be less strict (#273)
+* Remove python 3.5 support (#272)
 
 
 0.12.0
