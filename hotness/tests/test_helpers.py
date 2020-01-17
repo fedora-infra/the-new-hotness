@@ -6,10 +6,73 @@ from __future__ import unicode_literals, absolute_import
 import re
 import unittest
 
+from unittest.mock import patch
 from hotness import helpers
 
 
 class TestHelpers(unittest.TestCase):
+    def test_expand_subdirs_no_match(self):
+        # Test no glob match
+        self.assertEqual(
+            helpers.expand_subdirs("https://example.com"), "https://example.com"
+        )
+
+    def test_expand_subdirs_no_directory_listing(self):
+        # Test no directory listing
+        with patch.object(helpers, "get_html") as mock_get_html:
+            mock_get_html.return_value = None
+
+            self.assertEqual(
+                helpers.expand_subdirs("https://example.com/*/"),
+                "https://example.com/*/",
+            )
+
+    def test_expand_subdirs_hrefs(self):
+        # Test with no subdirs
+        root_hrefs = ['<a href="./">.</a>', '<a href="../">..</a>']
+
+        with patch.object(helpers, "get_html") as mock_get_html:
+            mock_get_html.return_value = " ".join(root_hrefs)
+
+            self.assertEqual(
+                helpers.expand_subdirs("https://example.com/*/"),
+                "https://example.com/*/",
+            )
+
+        # Test with href subdirs
+        package_hrefs = [
+            '<a href="./">.</a>',
+            '<a href="../">..</a>',
+            '<a href="package-1.0.0/">package-1.0.0</a>',
+            '<a href="package-2.0.0/">package-2.0.0</a>',
+        ]
+
+        with patch.object(helpers, "get_html") as mock_get_html:
+            mock_get_html.return_value = " ".join(root_hrefs + package_hrefs)
+
+            self.assertEqual(
+                helpers.expand_subdirs("https://example.com/*/"),
+                "https://example.com/package-2.0.0/",
+            )
+
+    def test_expand_subdirs_ftp(self):
+        # Test with ftp subdirs
+        # Derived from ftp://gcc.gnu.org/pub/gcc/
+        package_ftp_paths = [
+            "drwxrwsr-x   8 ftp      ftp          4096 Feb  5  2015 .",
+            "drwxrwsr-x  56 ftp      ftp          4096 Oct  1 20:11 ..",
+            "drwxrwsr-x   4 ftp      ftp          4096 Feb 12  2017 package-1.0.0",
+            "drwxrwsr-x   4 ftp      ftp          4096 Feb 12  2017 package-2.0.0",
+        ]
+
+        with patch.object(helpers, "get_html") as mock_get_html:
+            mock_get_html.return_value = "\r\n".join(package_ftp_paths)
+
+            self.assertEqual(
+                helpers.expand_subdirs("ftp://example.com/*/"),
+                "ftp://example.com/package-2.0.0/",
+            )
+
     def test_rpm_cmp(self):
         cases = [
             ("rc1", "pre1", 1),
