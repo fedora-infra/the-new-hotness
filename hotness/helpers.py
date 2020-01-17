@@ -128,23 +128,21 @@ def expand_subdirs(url, glob_char="*"):
     # everything after the slash after glob_match
     url_suffix = url[glob_match.end() :]
 
-    if url_prefix != "":
-        dir_listing = get_html(url_prefix)
-        if not dir_listing:
-            return url
-        subdirs = []
-        regex = url.startswith("ftp://") and __text_regex or __html_regex
-        for match in regex.finditer(dir_listing):
-            subdir = match.group(1)
-            if subdir not in (".", "..") and fnmatch.fnmatch(subdir, glob_str):
-                subdirs.append(subdir)
-        if not subdirs:
-            return url
-        latest = upstream_max(subdirs)
+    dir_listing = get_html(url_prefix)
+    if not dir_listing:
+        return url
+    subdirs = []
+    regex = url.startswith("ftp://") and __text_regex or __html_regex
+    for match in regex.finditer(dir_listing):
+        subdir = match.group(1)
+        if subdir not in (".", "..") and fnmatch.fnmatch(subdir, glob_str):
+            subdirs.append(subdir)
+    if not subdirs:
+        return url
+    latest = upstream_max(subdirs)
 
-        url = "%s%s/%s" % (url_prefix, latest, url_suffix)
-        return expand_subdirs(url, glob_char)
-    return url
+    url = "%s%s/%s" % (url_prefix, latest, url_suffix)
+    return expand_subdirs(url, glob_char)
 
 
 def get_html(url, callback=None, errback=None):
