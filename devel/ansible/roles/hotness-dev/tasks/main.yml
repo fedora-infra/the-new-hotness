@@ -116,3 +116,9 @@
     scope: global
     value: the-new-hotness
 
+- name: Update Kerberos configuration
+  blockinfile:
+    path: /etc/krb5.conf
+    block: |
+      [realms]
+      FEDORAPROJECT.ORG = { kdc = https://id.fedoraproject.org/KdcProxy }

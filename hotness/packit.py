@@ -35,12 +35,14 @@ _log = logging.getLogger(__name__)
 
 class Packit:
     """
-    This class is a wrapper above `packit` module. It handles creation of pull request to dist-git repository.
+    This class is a wrapper above `packit` module. It handles creation of pull request
+    to dist-git repository.
 
     Attributes:
         config (`Config`): Packit configuration
         dist_git_url (str): Dist git URL
-        changelog_template (str): Changelog template to use when creating changelog entry
+        changelog_template (str): Changelog template to use when creating
+            changelog entry
         pr_template (str): Pull request message template
     """
 
@@ -53,13 +55,20 @@ class Packit:
         """
         self.config = Config()
         self.config.fas_user = config["fas_user"]
-        self.config._pagure_user_token = config["pagure_user_token"]
-        self.config._pagure_fork_token = config["pagure_fork_token"]
 
         self.dist_git_url = config["dist_git_url"]
 
         self.changelog_template = config["changelog_template"]
         self.pr_template = config["pull_request_template"]
+        raw_packit_config = {
+            "authentication": {
+                "pagure": {
+                    "token": config["pagure_user_token"],
+                    "instance_url": self.dist_git_url,
+                }
+            }
+        }
+        self.config.load_authentication(raw_packit_config)
 
     def create_pull_request(self, package: str, version: str) -> None:
         """
@@ -72,7 +81,6 @@ class Packit:
         package_config = PackageConfig(
             downstream_package_name=package, dist_git_base_url=self.dist_git_url
         )
-        package_config.downstream_project_url = package_config.dist_git_package_url
 
         dist_git = DistGit(self.config, package_config)
 
@@ -81,11 +89,10 @@ class Packit:
 
         _log.info(
             "Creating pull request for '{}' in dist-git repository '{}'".format(
-                package, dist_git.dist_git_url
+                package, package_config.dist_git_package_url
             )
         )
 
-        dist_git.checkout_branch(branch)
         dist_git.update_branch(branch)
         self.bump_spec(version, dist_git.specfile_path)
 

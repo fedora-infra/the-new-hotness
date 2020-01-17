@@ -25,8 +25,7 @@ from hotness.tests.test_base import HotnessTestCase
 
 config = {
     "fas_user": "zlopez",
-    "pagure_user_token": "LD7DLW5U3CIF8MHAD51QPNT934XM44WMKNTT2UMH6JXV34259WOV9BEEV4V2PWGY",
-    "pagure_fork_token": "LD7DLW5U3CIF8MHAD51QPNT934XM44WMKNTT2UMH6JXV34259WOV9BEEV4V2PWGY",
+    "pagure_user_token": "B3GAL4JY32KEHMI7AJN7D53IH7Z4T1RBPD0XZ7MNBXI1T686S1OAH1IO2Q1PZP5B",
     "dist_git_url": "https://src.stg.fedoraproject.org/",
     "changelog_template": "Update to {version}",
     "pull_request_template": "This pull request was automatically"
@@ -50,4 +49,4 @@ class TestPackit(HotnessTestCase):
         Assert that pull request is created for existing package.
         If this test passes than everything is done.
         """
-        self.packit.create_pull_request("0ad", "0.0.24")
+        self.packit.create_pull_request("python-dockerpty", "0.0.24")
