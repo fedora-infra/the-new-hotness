@@ -1,10 +1,16 @@
 master
 ------
 
+Bugfixes
+^^^^^^^^
+
+* Use fallback rpm comparison when rpm module is unavailable (#273)
+
 Development
 ^^^^^^^^^^^
 
 * Fix docs building (#264)
+* Change coverage threshold to be less strict (#273)
 
 
 0.12.0
