@@ -9,3 +9,4 @@ fedora-messaging
 bs4
 fedmsg
 python-fedora
+pycurl

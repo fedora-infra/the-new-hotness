@@ -4,6 +4,8 @@
   dnf:
     name: [
       git,
+      libcurl-devel,
+      openssl-devel,
       ngrep,
       nmap-ncat,
       python3-rpdb,

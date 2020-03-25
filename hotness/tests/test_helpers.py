@@ -6,7 +6,7 @@ from __future__ import unicode_literals, absolute_import
 import re
 import unittest
 
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 from hotness import helpers
 
 
@@ -223,3 +223,83 @@ class TestHelpers(unittest.TestCase):
         )
 
         self.assertEqual(test_result, result_tuples)
+
+    def test_secure_download(self):
+        import pycurl
+        import io
+
+        # Required mocks
+        mock_curl_instance = Mock()
+        mock_stringio_instance = Mock()
+
+        mock_stringio_instance.getvalue.return_value = "mock StringIO value"
+
+        # Expected pycurl setopt calls
+        expected_setopt_calls = [
+            call(pycurl.URL, b"https://example.com/file.extension"),
+            call(pycurl.SSL_VERIFYPEER, 1),
+            call(pycurl.SSL_VERIFYHOST, 2),
+            call(pycurl.CAINFO, "/etc/certs/cabundle.pem"),
+            call(pycurl.WRITEFUNCTION, mock_stringio_instance.write),
+            call(pycurl.FOLLOWLOCATION, 1),
+            call(pycurl.MAXREDIRS, 10),
+        ]
+
+        with patch.object(pycurl, "Curl") as mock_curl_constructor:
+            with patch.object(io, "StringIO") as mock_stringio_constructor:
+                mock_curl_constructor.return_value = mock_curl_instance
+                mock_stringio_constructor.return_value = mock_stringio_instance
+
+                secure_download_result = helpers.secure_download(
+                    "https://example.com/file.extension", "/etc/certs/cabundle.pem"
+                )
+
+        # Check curl calls
+        mock_curl_instance.setopt.assert_has_calls(expected_setopt_calls)
+        mock_curl_instance.perform.assert_called_once_with()
+        mock_curl_instance.close.assert_called_once_with()
+
+        # Check StringIO call
+        mock_stringio_instance.getvalue.assert_called_once_with()
+
+        self.assertEqual(secure_download_result, "mock StringIO value")
+
+    def test_secure_download_no_cainfo(self):
+        import pycurl
+        import io
+
+        # Required mocks
+        mock_curl_instance = Mock()
+        mock_stringio_instance = Mock()
+
+        mock_stringio_instance.getvalue.return_value = "mock StringIO value"
+
+        mock_stringio_instance.getvalue.return_value = "mock StringIO value"
+
+        expected_setopt_calls = [
+            call(pycurl.URL, b"https://example.com/file.extension"),
+            call(pycurl.SSL_VERIFYPEER, 1),
+            call(pycurl.SSL_VERIFYHOST, 2),
+            call(pycurl.WRITEFUNCTION, mock_stringio_instance.write),
+            call(pycurl.FOLLOWLOCATION, 1),
+            call(pycurl.MAXREDIRS, 10),
+        ]
+
+        with patch.object(pycurl, "Curl") as mock_curl_constructor:
+            with patch.object(io, "StringIO") as mock_stringio_constructor:
+                mock_curl_constructor.return_value = mock_curl_instance
+                mock_stringio_constructor.return_value = mock_stringio_instance
+
+                secure_download_result = helpers.secure_download(
+                    "https://example.com/file.extension"
+                )
+
+        # Check curl calls
+        mock_curl_instance.setopt.assert_has_calls(expected_setopt_calls)
+        mock_curl_instance.perform.assert_called_once_with()
+        mock_curl_instance.close.assert_called_once_with()
+
+        # Check StringIO call
+        mock_stringio_instance.getvalue.assert_called_once_with()
+
+        self.assertEqual(secure_download_result, "mock StringIO value")
