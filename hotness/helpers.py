@@ -325,7 +325,7 @@ def filter_dict(d, key_list):
 
 def secure_download(url, cainfo=""):
     import pycurl
-    import StringIO
+    import io
 
     c = pycurl.Curl()
     c.setopt(pycurl.URL, url.encode("ascii"))
@@ -343,7 +343,7 @@ def secure_download(url, cainfo=""):
     if cainfo:
         c.setopt(pycurl.CAINFO, cainfo)
 
-    res = StringIO.StringIO()
+    res = io.StringIO()
 
     c.setopt(pycurl.WRITEFUNCTION, res.write)
 
