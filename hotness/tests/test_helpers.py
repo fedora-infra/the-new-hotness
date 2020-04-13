@@ -73,6 +73,159 @@ class TestHelpers(unittest.TestCase):
                 "ftp://example.com/package-2.0.0/",
             )
 
+    def test_get_html_ftp(self):
+        import urllib
+
+        # Test ftp
+        mock_ftp_request = Mock()
+        mock_ftp_request.read.return_value = "mock FTP read value"
+
+        with patch.object(urllib.request, "urlopen") as mock_urlopen:
+            mock_urlopen.return_value = mock_ftp_request
+
+            get_html_result = helpers.get_html("ftp://example.com/file.extension")
+
+            self.assertEqual(get_html_result, "mock FTP read value")
+
+            # Test ftp with callback list
+            mock_get_html_callback = Mock()
+
+            get_html_result = helpers.get_html(
+                "ftp://example.com/file.extension", callback=[mock_get_html_callback]
+            )
+
+            self.assertEqual(get_html_result, "mock FTP read value")
+            mock_get_html_callback.assert_called_once_with("mock FTP read value")
+
+            # Test ftp with single callback
+            mock_get_html_callback = Mock()
+
+            get_html_result = helpers.get_html(
+                "ftp://example.com/file.extension", callback=mock_get_html_callback
+            )
+
+            self.assertEqual(get_html_result, "mock FTP read value")
+            mock_get_html_callback.assert_called_once_with("mock FTP read value")
+
+    def test_get_html_http_callbacks_list(self):
+        import twisted.web.client
+
+        # Test http with callbacks
+        with patch.object(twisted.web.client, "getPage") as mock_twisted_client_getpage:
+            mock_get_html_callback = Mock()
+
+            # Test with callback list
+            mock_twisted_async_request = Mock()
+            mock_twisted_client_getpage.return_value = mock_twisted_async_request
+
+            helpers.get_html(
+                "https://example.com/file.extension", callback=[mock_get_html_callback]
+            )
+
+            mock_twisted_async_request.addCallback.assert_called_once_with(
+                mock_get_html_callback
+            )
+
+    def test_get_html_http_callbacks_single(self):
+        import twisted.web.client
+
+        # Test http with callbacks
+        with patch.object(twisted.web.client, "getPage") as mock_twisted_client_getpage:
+            mock_get_html_callback = Mock()
+
+            # Test with single callback
+            mock_twisted_async_request = Mock()
+            mock_twisted_client_getpage.return_value = mock_twisted_async_request
+
+            helpers.get_html(
+                "https://example.com/file.extension", callback=mock_get_html_callback
+            )
+
+            mock_twisted_async_request.addCallback.assert_called_once_with(
+                mock_get_html_callback
+            )
+
+    def test_get_html_http_errbacks_list(self):
+        import twisted.web.client
+
+        # Test http with callbacks
+        with patch.object(twisted.web.client, "getPage") as mock_twisted_client_getpage:
+            mock_get_html_errback = Mock()
+
+            # Test with errback list
+            mock_twisted_async_request = Mock()
+            mock_twisted_client_getpage.return_value = mock_twisted_async_request
+
+            helpers.get_html(
+                "https://example.com/file.extension",
+                callback=Mock(),
+                errback=[mock_get_html_errback],
+            )
+
+            mock_twisted_async_request.addErrback.assert_called_once_with(
+                mock_get_html_errback
+            )
+
+    def test_get_html_http_errbacks_single(self):
+        import twisted.web.client
+
+        # Test http with callbacks
+        with patch.object(twisted.web.client, "getPage") as mock_twisted_client_getpage:
+            mock_get_html_errback = Mock()
+
+            # Test with single errback
+            mock_twisted_async_request = Mock()
+            mock_twisted_client_getpage.return_value = mock_twisted_async_request
+
+            helpers.get_html(
+                "https://example.com/file.extension",
+                callback=Mock(),
+                errback=mock_get_html_errback,
+            )
+
+            mock_twisted_async_request.addErrback.assert_called_once_with(
+                mock_get_html_errback
+            )
+
+    def test_get_html_http_no_callbacks(self):
+        import pycurl
+        import io
+
+        # Test http with no callbacks
+        mock_curl_instance = Mock()
+        mock_stringio_instance = Mock()
+
+        mock_stringio_instance.getvalue.return_value = "mock StringIO value"
+
+        # Expected pycurl setopt calls
+        expected_setopt_calls = [
+            call(pycurl.URL, b"https://example.com/file.extension"),
+            call(pycurl.WRITEFUNCTION, mock_stringio_instance.write),
+            call(pycurl.FOLLOWLOCATION, 1),
+            call(pycurl.MAXREDIRS, 10),
+            call(
+                pycurl.USERAGENT,
+                "Fedora Upstream Release Monitoring "
+                "(https://fedoraproject.org/wiki/Upstream_release_monitoring)",
+            ),
+            call(pycurl.CONNECTTIMEOUT, 10),
+            call(pycurl.TIMEOUT, 30),
+        ]
+
+        with patch.object(pycurl, "Curl") as mock_curl_constructor:
+            with patch.object(io, "StringIO") as mock_stringio_constructor:
+                mock_curl_constructor.return_value = mock_curl_instance
+                mock_stringio_constructor.return_value = mock_stringio_instance
+
+                get_html_result = helpers.get_html("https://example.com/file.extension")
+
+        # Check curl calls
+        mock_curl_instance.setopt.assert_has_calls(expected_setopt_calls)
+        mock_curl_instance.perform.assert_called_once_with()
+        mock_curl_instance.close.assert_called_once_with()
+
+        self.assertEqual(get_html_result, "mock StringIO value")
+
     def test_rpm_cmp(self):
         cases = [
             ("rc1", "pre1", 1),
