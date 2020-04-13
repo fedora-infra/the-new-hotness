@@ -149,7 +149,7 @@ def get_html(url, callback=None, errback=None):
     if url.startswith("ftp://"):
         import urllib
 
-        req = urllib.urlopen(url)  # nosec
+        req = urllib.request.urlopen(url)  # nosec
         data = req.read()
         if callback:
             try:
@@ -176,10 +176,10 @@ def get_html(url, callback=None, errback=None):
                 except TypeError:
                     df.addErrback(errback)
         else:
-            import StringIO
+            import io
             import pycurl
 
-            res = StringIO.StringIO()
+            res = io.StringIO()
 
             c = pycurl.Curl()
             c.setopt(pycurl.URL, url.encode("ascii"))
