@@ -53,13 +53,7 @@ class Packit:
         Params:
             config: Dictionary containing configuration section for packit
         """
-        self.config = Config()
-        self.config.fas_user = config["fas_user"]
-
         self.dist_git_url = config["dist_git_url"]
-
-        self.changelog_template = config["changelog_template"]
-        self.pr_template = config["pull_request_template"]
         raw_packit_config = {
             "authentication": {
                 "pagure": {
@@ -68,7 +62,11 @@ class Packit:
                 }
             }
         }
-        self.config.load_authentication(raw_packit_config)
+
+        self.config = Config(fas_user=config["fas_user"], **raw_packit_config)
+
+        self.changelog_template = config["changelog_template"]
+        self.pr_template = config["pull_request_template"]
 
     def create_pull_request(self, package: str, version: str) -> None:
         """
@@ -111,7 +109,9 @@ class Packit:
             version: New version
             specfile_path: Path to specfile
         """
-        _log.debug("Update specfile '{}' to version '{}'".format(specfile_path, version))
+        _log.debug(
+            "Update specfile '{}' to version '{}'".format(specfile_path, version)
+        )
         changelog_entry = self.changelog_template.format(version=version)
         cmd = ["rpmdev-bumpspec"]
         if version:
