@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2017 Red Hat, Inc.
+# Copyright (C) 2017-2020 Red Hat, Inc.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,32 +17,46 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """Unit tests for :mod:`hotness.anitya`."""
 
-import unittest
+from unittest import mock
 
 from hotness import anitya
+from hotness.tests.test_base import HotnessTestCase
 
 
-class DetermineBackendTests(unittest.TestCase):
-    """Unit tests for :meth:`hotness.anitya.Anitya.determine_backend`."""
+class ForceCheckTests(HotnessTestCase):
+    """
+    Test class for testing `force_check` method in `Anitya` class.
+    """
 
-    def test_no_backend_found(self):
-        self.assertRaises(
-            anitya.AnityaException,
-            anitya.determine_backend,
-            "nonsense-package-name",
-            "http://example.com/home",
+    def setUp(self):
+        super(ForceCheckTests, self).setUp()
+        self.anitya = anitya.Anitya()
+
+    @mock.patch("hotness.anitya._log")
+    def test_force_check_error(self, mock_log):
+        """
+        Assert that warning is in log when error is encountered during force check.
+        """
+
+        project = {"id": 0}
+
+        self.anitya.force_check(project)
+
+        self.assertIn(
+            "Anitya error: 'No such project'", mock_log.warning.call_args_list[0][0][0]
         )
 
-    def test_backend_ruby_prefix(self):
-        """Assert packages with the ``rubygem-`` prefix receive the Rubygems backend."""
-        backend = anitya.determine_backend(
-            "rubygem-myproject", "http://example.com/home"
-        )
-        self.assertEqual("Rubygems", backend)
+    @mock.patch("hotness.anitya._log")
+    def test_force_check_success(self, mock_log):
+        """
+        Assert that info is in log when force check is successful.
+        """
 
-    def test_backend_ruby_homepage(self):
-        """Assert packages with a ``rubygems.org`` homepage receive the Rubygems backend."""
-        backend = anitya.determine_backend(
-            "ishouldhaveaprefix-project", "http://rubygems.org/home"
+        project = {"id": 55612}
+
+        self.anitya.force_check(project)
+
+        self.assertIn(
+            "Check yielded upstream version 0.0.2 for 007",
+            mock_log.info.call_args_list[0][0][0],
         )
-        self.assertEqual("Rubygems", backend)

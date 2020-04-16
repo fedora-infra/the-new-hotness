@@ -1,0 +1,59 @@
+interactions:
+- request:
+    body: id=55612
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '8'
+      Content-Type:
+      - application/x-www-form-urlencoded
+      User-Agent:
+      - python-requests/2.23.0
+    method: POST
+    uri: https://release-monitoring.org//api/version/get
+  response:
+    body:
+      string: '{"backend":"PyPI","created_on":1576289570.0,"ecosystem":"pypi","homepage":"https://pypi.org/project/007/0.0.1","id":55612,"name":"007","packages":[],"regex":null,"updated_on":1587040934.0,"version":"0.0.2","version_url":null,"versions":["0.0.2","0.0.1"]}
+
+        '
+    headers:
+      AppTime:
+      - D=275154
+      Connection:
+      - Keep-Alive
+      Content-Length:
+      - '255'
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 16 Apr 2020 12:42:14 GMT
+      Keep-Alive:
+      - timeout=15, max=500
+      Referrer-Policy:
+      - same-origin
+      Server:
+      - Apache/2.4.41 (Fedora) mod_wsgi/4.6.4 Python/3.7
+      Set-Cookie:
+      - c7f2af7958ac7bdd3fe2e687de986bfb=cd3be83c2d999bb3349334bf070251ca; path=/;
+        HttpOnly; Secure
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      X-Content-Type-Options:
+      - nosniff
+      X-Fedora-ProxyServer:
+      - proxy01.phx2.fedoraproject.org
+      X-Fedora-RequestID:
+      - XphSpm-HDmynG8zaXe8ghAAAAtc
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Xss-Protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+version: 1
