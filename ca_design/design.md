@@ -158,3 +158,6 @@ Module init file.
 
 #### cache.py
 Class representing cache used by various external systems.
+
+### config.py
+This class implements centralized app configuration.
