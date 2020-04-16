@@ -13,6 +13,7 @@ Development
 * Change coverage threshold to be less strict (#273)
 * Remove python 3.5 support (#272)
 * Remove unused functions (#280)
+* Clean and raise coverage for Anitya module (#281)
 
 
 0.12.0

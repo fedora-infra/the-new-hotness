@@ -1,6 +1,22 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2020 Red Hat, Inc.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import logging
 
-from fedora.client import AuthError
 from fedora.client import OpenIdBaseClient
 
 
@@ -8,103 +24,6 @@ ANITYA_URL = "https://release-monitoring.org/"
 
 
 _log = logging.getLogger(__name__)
-
-
-backends = {
-    "ftp.debian.org": "Debian project",
-    "drupal.org": "Drupal7",
-    "freecode.com": "Freshmeat",
-    "github.com": "GitHub",
-    "download.gnome.org": "GNOME",
-    "ftp.gnu.org": "GNU project",
-    "code.google.com": "Google code",
-    "hackage.haskell.org": "Hackage",
-    "launchpad.net": "launchpad",
-    "npmjs.org": "npmjs",
-    "npmjs.com": "npmjs",
-    "packagist.org": "Packagist",
-    "pear.php.net": "PEAR",
-    "pecl.php.net": "PECL",
-    "pypi.python.org": "PyPI",
-    "pypi.org": "PyPI",
-    "rubygems.org": "Rubygems",
-    "sourceforge.net": "Sourceforge",
-}
-
-prefixes = {
-    "drupal7-": None,
-    "drupal6-": None,
-    "ghc-": None,
-    "nodejs-": None,
-    "php-pear-": None,
-    "php-pecl-": None,
-    "php-": None,
-    "python-": None,
-    "rubygem-": "Rubygems",
-}
-
-easy_guesses = [
-    "Debian project",
-    "Drupal7",
-    "Freshmeat",
-    "GitHub",
-    "GNOME",
-    "GNU project",
-    "Google code",
-    "Hackage",
-    "launchpad",
-    "npmjs",
-    "PEAR",
-    "PECL",
-    "PyPI",
-    "Rubygems",
-]
-
-
-class AnityaException(Exception):
-    pass
-
-
-class AnityaAuthException(AnityaException, AuthError):
-    pass
-
-
-def determine_backend(project_name, project_homepage):
-    """
-    Determine the Anitya backend to use for a given project name and homepage.
-
-    This is not a 100% accurate process. If the ``project_name`` has a prefix with
-    a backend associated with it in :data:`prefixes`, that is preferred. Otherwise,
-    the homepage is checked to see if the host is mapped to known backend.
-
-    Args:
-        project_name (str): The project's name, possibly containing the RPM prefix
-            (e.g. ``python-`` for Python packages).
-        project_homepage (str): The project's homepage URL.
-
-    Returns:
-        str: The backend name to use with Anitya.
-
-    Raises:
-        AnityaException: When the backend could not be determined.
-    """
-    for prefix, backend in prefixes.items():
-        if project_name.startswith(prefix) and backend is not None:
-            return backend
-
-    for target, backend in backends.items():
-        if target in project_homepage:
-            return backend
-
-    err = (
-        "the-new-hotness was unable to automatically determine the Anitya backend "
-        "to use with the {name} ({homepage}) project. Please search {anitya_url} "
-        "for this project. If it already exists, ensure there is a distribution "
-        "mapping for Fedora. If it does not already exist, please create the "
-        "project manually. Doing so enables us to automatically notify package "
-        "maintainers when new versions are released."
-    ).format(name=project_name, homepage=project_homepage, anitya_url=ANITYA_URL)
-    raise AnityaException(err)
 
 
 class Anitya(OpenIdBaseClient):
@@ -122,11 +41,6 @@ class Anitya(OpenIdBaseClient):
             timeout=120,
             retry_backoff_factor=0.3,
         )
-
-    @property
-    def is_logged_in(self):
-        response = self._session.get(self.base_url)
-        return "logout" in response.text
 
     def force_check(self, project):
         """ Force anitya to check for a new upstream release. """
