@@ -6,22 +6,12 @@ from __future__ import unicode_literals, absolute_import
 import mock
 from xmlrpc.client import Fault
 
-from hotness import consumers
 from fedora_messaging.message import Message
 from fedora_messaging.exceptions import Nack
 
-from hotness.tests.test_base import create_message, HotnessTestCase
+from hotness import consumers
 
-mock_config = {
-    "consumer_config": {
-        "bugzilla": {},
-        "koji": {},
-        "mdapi_url": "https://apps.fedoraproject.org/mdapi",
-        "cache": {"backend": "dogpile.cache.null"},
-        "request_retries": 0,
-        "legacy_messaging": False,
-    }
-}
+from hotness.tests.test_base import create_message, HotnessTestCase
 
 
 class TestConsumer(HotnessTestCase):
@@ -36,8 +26,7 @@ class TestConsumer(HotnessTestCase):
         self.koji = mock.patch("hotness.buildsys.Koji")
         self.koji.__enter__()
 
-        with mock.patch.dict("fedora_messaging.config.conf", mock_config):
-            self.consumer = consumers.BugzillaTicketFiler()
+        self.consumer = consumers.BugzillaTicketFiler()
 
     def tearDown(self):
         super(TestConsumer, self).tearDown()

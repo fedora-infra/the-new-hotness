@@ -15,6 +15,11 @@ Development
 * Remove unused functions (#280)
 * Clean and raise coverage for Anitya module (#281)
 
+Features
+^^^^^^^^
+
+* Refactor config to use centralized defaults (#186)
+
 
 0.12.0
 ------
