@@ -23,7 +23,6 @@ import logging
 import subprocess
 
 from requests.packages.urllib3.util import retry
-from fedora_messaging.config import conf
 from fedora_messaging.api import publish as fm_publish
 from fedora_messaging.exceptions import PublishReturned, ConnectionException, Nack
 from fedora_messaging.message import Message
@@ -33,6 +32,7 @@ import fedmsg
 import xmlrpc
 
 from hotness import exceptions
+from hotness.config import config as hotness_config
 import hotness.anitya
 import hotness.buildsys
 import hotness.bz
@@ -60,47 +60,39 @@ class BugzillaTicketFiler(object):
     """
 
     def __init__(self):
-
-        # This is just convenient.
-        self.config = conf["consumer_config"]
-
         self.bugzilla = hotness.bz.Bugzilla(
-            consumer=self, config=self.config["bugzilla"]
+            consumer=self, config=hotness_config["BUGZILLA"]
         )
-        self.buildsys = hotness.buildsys.Koji(consumer=self, config=self.config["koji"])
+        self.buildsys = hotness.buildsys.Koji(
+            consumer=self, config=hotness_config["KOJI"]
+        )
 
-        default = "https://pdc.fedoraproject.org"
-        self.pdc_url = self.config.get("pdc_url", default)
-        default = "https://src.fedoraproject.org"
-        self.dist_git_url = self.config.get("dist_git_url", default)
+        self.pdc_url = hotness_config["PDC_URL"]
+        self.dist_git_url = hotness_config["DIST_GIT_URL"]
 
-        anitya_config = self.config.get("anitya", {})
-        default = "https://release-monitoring.org"
-        self.anitya_url = anitya_config.get("url", default)
-        self.anitya_username = anitya_config.get("username", default)
-        self.anitya_password = anitya_config.get("password", default)
+        self.anitya_url = hotness_config["ANITYA"]["url"]
 
         # Also, set up our global cache object.
         _log.info("Configuring cache.")
         with hotness.cache.cache_lock:
             if not hotness.cache.cache.is_configured:
-                hotness.cache.cache.configure(**self.config["cache"])
+                hotness.cache.cache.configure(**hotness_config["CACHE"])
 
-        self.mdapi_url = self.config.get("mdapi_url")
+        self.mdapi_url = hotness_config["MDAPI_URL"]
         _log.info("Using hotness.mdapi_url=%r" % self.mdapi_url)
-        self.repoid = self.config.get("repoid", "rawhide")
+        self.repoid = hotness_config["REPOID"]
         _log.info("Using hotness.repoid=%r" % self.repoid)
-        self.distro = self.config.get("distro", "Fedora")
+        self.distro = hotness_config["DISTRO"]
         _log.info("Using hotness.distro=%r" % self.distro)
 
         # Retrieve the requests configuration; by default requests time out
         # after 15 seconds and are retried up to 3 times.
         self.requests_session = requests.Session()
         self.timeout = (
-            self.config.get("connect_timeout", 15),
-            self.config.get("read_timeout", 15),
+            hotness_config["CONNECT_TIMEOUT"],
+            hotness_config["READ_TIMEOUT"],
         )
-        retries = self.config.get("hotness.requests_retries", 3)
+        retries = hotness_config["REQUESTS_RETRIES"]
         retry_conf = retry.Retry(
             total=retries, connect=retries, read=retries, backoff_factor=1
         )
