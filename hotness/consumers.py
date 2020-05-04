@@ -26,6 +26,7 @@ from requests.packages.urllib3.util import retry
 from fedora_messaging.api import publish as fm_publish
 from fedora_messaging.exceptions import PublishReturned, ConnectionException, Nack
 from fedora_messaging.message import Message
+from anitya_schema.project_messages import ProjectMapCreated, ProjectVersionUpdated
 
 import requests
 import fedmsg
@@ -148,9 +149,11 @@ class BugzillaTicketFiler(object):
         _log.debug("Received %r" % msg_id)
 
         if topic.endswith("anitya.project.version.update"):
-            self.handle_anitya_version_update(msg)
+            message = ProjectVersionUpdated(topic=msg.topic, body=msg.body)
+            self.handle_anitya_version_update(message)
         elif topic.endswith("anitya.project.map.new"):
-            self.handle_anitya_map_new(msg)
+            message = ProjectMapCreated(topic=msg.topic, body=msg.body)
+            self.handle_anitya_map_new(message)
         elif topic.endswith("buildsys.task.state.change"):
             self.handle_buildsys_scratch(msg)
         else:
@@ -171,28 +174,23 @@ class BugzillaTicketFiler(object):
         Publishes to ``update.drop`` if there is no mapping to a package in
         Fedora.
         """
-        body, msg_id = msg.body, msg.id
-        _log.info("Handling anitya msg %r" % msg_id)
-        # First, What is this thing called in our distro?
-        # (we do this little inner.get(..) trick to handle legacy messages)
-        inner = body.get("message")
-        if self.distro not in [p["distro"] for p in inner["packages"]]:
+        _log.info("Handling anitya msg %r" % msg.id)
+        if self.distro not in msg.distros:
             _log.info(
-                "No %r mapping for %r. Dropping."
-                % (self.distro, body["message"]["project"]["name"])
+                "No %r mapping for %r. Dropping." % (self.distro, msg.project_name)
             )
-            trigger = {"msg": body, "topic": msg.topic}
+            trigger = {"msg": msg.body, "topic": msg.topic}
             self.publish("update.drop", msg=dict(trigger=trigger, reason="anitya"))
             return
 
         # Sometimes, an upstream is mapped to multiple fedora packages
         # File a bug on each one...
         # https://github.com/fedora-infra/the-new-hotness/issues/33
-        for package in inner["packages"]:
+        for package in msg.mappings:
             if package["distro"] == self.distro:
                 pname = package["package_name"]
 
-                upstream = inner["upstream_version"]
+                upstream = msg.project_version
                 self._handle_anitya_update(upstream, pname, msg)
 
     def handle_anitya_map_new(self, msg):
@@ -206,18 +204,15 @@ class BugzillaTicketFiler(object):
 
         Topic: 'org.release-monitoring.prod.anitya.project.map.new'
         """
-        body = msg.body
-        message = body["message"]
-        if message["distro"] != self.distro:
+        if msg.distro != self.distro:
             _log.info(
-                "New mapping on %s, not for %s. Dropping."
-                % (message["distro"], self.distro)
+                "New mapping on %s, not for %s. Dropping." % (msg.distro, self.distro)
             )
             return
 
-        project = message["project"]
-        package = message["new"]
-        upstream = body["project"]["version"]
+        project = msg.project_name
+        package = msg.package_name
+        upstream = msg.project_version
 
         _log.info(
             "Newly mapped %r to %r bears version %r" % (project, package, upstream)
@@ -228,13 +223,12 @@ class BugzillaTicketFiler(object):
         else:
             _log.info("Forcing an anitya upstream check.")
             anitya = hotness.anitya.Anitya(self.anitya_url)
-            anitya.force_check(body["project"])
+            anitya.force_check(msg.project_id)
 
     def _handle_anitya_update(self, upstream, package, msg):
-        msg_topic, msg = msg.topic, msg.body
-        trigger = {"msg": msg, "topic": msg_topic}
-        url = msg["project"]["homepage"]
-        projectid = msg["project"]["id"]
+        trigger = {"msg": msg.body, "topic": msg.topic}
+        url = msg.project_homepage
+        projectid = msg.project_id
 
         # Is it something that we're being asked not to act on?
         is_monitored = self.is_monitored(package)
