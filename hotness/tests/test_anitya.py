@@ -37,10 +37,7 @@ class ForceCheckTests(HotnessTestCase):
         """
         Assert that warning is in log when error is encountered during force check.
         """
-
-        project = {"id": 0}
-
-        self.anitya.force_check(project)
+        self.anitya.force_check(0)
 
         self.assertIn(
             "Anitya error: 'No such project'", mock_log.warning.call_args_list[0][0][0]
@@ -51,10 +48,7 @@ class ForceCheckTests(HotnessTestCase):
         """
         Assert that info is in log when force check is successful.
         """
-
-        project = {"id": 55612}
-
-        self.anitya.force_check(project)
+        self.anitya.force_check(55612)
 
         self.assertIn(
             "Check yielded upstream version 0.0.2 for 007",

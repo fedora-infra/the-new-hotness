@@ -16,6 +16,7 @@ Development
 * Remove unused functions (#280)
 * Clean and raise coverage for Anitya module (#281)
 * Change links to update policy (#291)
+* Use Anitya schema for fedora-messaging (#248)
 
 Features
 ^^^^^^^^

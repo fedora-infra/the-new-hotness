@@ -42,11 +42,10 @@ class Anitya(OpenIdBaseClient):
             retry_backoff_factor=0.3,
         )
 
-    def force_check(self, project):
+    def force_check(self, project_id):
         """ Force anitya to check for a new upstream release. """
-        idx = project["id"]
         url = "%s/api/version/get" % self.base_url
-        data = self.send_request(url, verb="POST", data=dict(id=idx))
+        data = self.send_request(url, verb="POST", data=dict(id=project_id))
 
         if "error" in data:
             _log.warning("Anitya error: %r" % data["error"])

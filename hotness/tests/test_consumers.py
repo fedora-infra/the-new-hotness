@@ -8,6 +8,7 @@ from xmlrpc.client import Fault
 
 from fedora_messaging.message import Message
 from fedora_messaging.exceptions import Nack
+from anitya_schema.project_messages import ProjectVersionUpdated, ProjectMapCreated
 
 from hotness import consumers
 
@@ -133,23 +134,25 @@ class TestConsumer(HotnessTestCase):
         actual = self.consumer.in_dist_git(package)
         self.assertEqual(expected, actual)
 
+    @create_message("anitya.project.version.update", "no_mapping")
     @mock.patch("hotness.consumers.BugzillaTicketFiler.handle_anitya_version_update")
-    def test_call_anitya_update(self, mock_method):
+    def test_call_anitya_update(self, mock_method, message):
         """ Assert that `__call__` calls correct method based on message topic. """
-        message = Message(topic="anitya.project.version.update")
+        exp_message = ProjectVersionUpdated(topic=message.topic, body=message.body)
 
         self.consumer.__call__(message)
 
-        mock_method.assert_called_with(message)
+        mock_method.assert_called_with(exp_message)
 
+    @create_message("anitya.project.map.new", "no_version")
     @mock.patch("hotness.consumers.BugzillaTicketFiler.handle_anitya_map_new")
-    def test_call_anitya_map(self, mock_method):
+    def test_call_anitya_map(self, mock_method, message):
         """ Assert that `__call__` calls correct method based on message topic. """
-        message = Message(topic="anitya.project.map.new")
+        exp_message = ProjectMapCreated(topic=message.topic, body=message.body)
 
         self.consumer.__call__(message)
 
-        mock_method.assert_called_with(message)
+        mock_method.assert_called_with(exp_message)
 
     @mock.patch("hotness.consumers.BugzillaTicketFiler.handle_buildsys_scratch")
     def test_call_buildsys(self, mock_method):
@@ -178,7 +181,8 @@ class TestConsumer(HotnessTestCase):
         """
         Assert that message is correctly handled, when no mapping is set.
         """
-        self.consumer.handle_anitya_version_update(message)
+        update_message = ProjectVersionUpdated(topic=message.topic, body=message.body)
+        self.consumer.handle_anitya_version_update(update_message)
 
         self.assertIn(
             "No 'Fedora' mapping for 'pg-semver'. Dropping.",
@@ -194,7 +198,8 @@ class TestConsumer(HotnessTestCase):
         """
         Assert that message is correctly handled, when Fedora mapping is not set.
         """
-        self.consumer.handle_anitya_version_update(message)
+        update_message = ProjectVersionUpdated(topic=message.topic, body=message.body)
+        self.consumer.handle_anitya_version_update(update_message)
 
         self.assertIn(
             "No 'Fedora' mapping for 'xbps'. Dropping.",
@@ -214,7 +219,8 @@ class TestConsumer(HotnessTestCase):
         Assert that message is correctly handled, when Fedora mapping is set,
         but the version is older.
         """
-        self.consumer.handle_anitya_version_update(message)
+        update_message = ProjectVersionUpdated(topic=message.topic, body=message.body)
+        self.consumer.handle_anitya_version_update(update_message)
 
         self.assertIn(
             "Comparing upstream 1.0.4 against repo 1.2.3-2.fc30",
@@ -236,7 +242,8 @@ class TestConsumer(HotnessTestCase):
         Assert that message is correctly handled, when Fedora mapping is set,
         but the version is newer.
         """
-        self.consumer.handle_anitya_version_update(message)
+        update_message = ProjectVersionUpdated(topic=message.topic, body=message.body)
+        self.consumer.handle_anitya_version_update(update_message)
 
         self.assertIn(
             "Comparing upstream 1.0.4 against repo 1.2.3-2.fc30",
@@ -258,9 +265,13 @@ class TestConsumer(HotnessTestCase):
         """
         Assert that Nack exception is thrown when bugzilla error happens.
         """
+        update_message = ProjectVersionUpdated(topic=message.topic, body=message.body)
+
         with mock.patch.object(self.consumer, "bugzilla") as mock_bugzilla:
             mock_bugzilla.handle = mock.Mock(side_effect=Fault(51, "Error"))
-            self.assertRaises(Nack, self.consumer.handle_anitya_version_update, message)
+            self.assertRaises(
+                Nack, self.consumer.handle_anitya_version_update, update_message
+            )
 
     @create_message("anitya.project.map.new", "version")
     @mock.patch("hotness.consumers._log")
@@ -269,14 +280,15 @@ class TestConsumer(HotnessTestCase):
         """
         Assert that message is correctly handled, when new mapping is added.
         """
-        self.consumer.handle_anitya_map_new(message)
+        new_map_message = ProjectMapCreated(topic=message.topic, body=message.body)
+        self.consumer.handle_anitya_map_new(new_map_message)
 
         self.assertIn(
             "Newly mapped 'pg-semver' to 'pg-semver' bears version '0.17.0'",
             mock_log.info.call_args_list[0][0][0],
         )
 
-        mock_handle_update.assert_called_with("0.17.0", "pg-semver", message)
+        mock_handle_update.assert_called_with("0.17.0", "pg-semver", new_map_message)
 
     @create_message("anitya.project.map.new", "no_version")
     @mock.patch("hotness.consumers._log")
@@ -286,7 +298,8 @@ class TestConsumer(HotnessTestCase):
         Assert that message is correctly handled, when new mapping is added without
         version.
         """
-        self.consumer.handle_anitya_map_new(message)
+        new_map_message = ProjectMapCreated(topic=message.topic, body=message.body)
+        self.consumer.handle_anitya_map_new(new_map_message)
 
         self.assertIn(
             "Newly mapped 'gdtools' to 'R-gdtools' bears version None",
@@ -306,7 +319,8 @@ class TestConsumer(HotnessTestCase):
         Assert that message is correctly handled, when new mapping is added for other
         distribution than Fedora.
         """
-        self.consumer.handle_anitya_map_new(message)
+        new_map_message = ProjectMapCreated(topic=message.topic, body=message.body)
+        self.consumer.handle_anitya_map_new(new_map_message)
 
         self.assertIn(
             "New mapping on Arch, not for Fedora. Dropping",
