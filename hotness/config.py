@@ -21,6 +21,7 @@
 This module is responsible for loading application configuration.
 """
 import logging
+import copy
 
 from fedora_messaging.config import conf
 
@@ -30,40 +31,41 @@ _log = logging.getLogger(__name__)
 # A dictionary of application defaults
 DEFAULTS = dict(
     # PDC URL
-    PDC_URL="https://pdc.fedoraproject.org",
+    pdc_url="https://pdc.fedoraproject.org",
     # dist-git URL
-    DIST_GIT_URL="https://src.fedoraproject.org",
+    dist_git_url="https://src.fedoraproject.org",
     # mdapi URL
-    MDAPI_URL="https://apps.fedoraproject.org/mdapi",
+    mdapi_url="https://apps.fedoraproject.org/mdapi",
     # Repository id
-    REPOID="rawhide",
+    repoid="rawhide",
     # Distribution
-    DISTRO="Fedora",
+    distro="Fedora",
     # The time in seconds the-new-hotness should wait for a socket to connect
     # before giving up.
-    CONNECT_TIMEOUT=15,
+    connect_timeout=15,
     # The time in seconds the-new-hotness should wait for a read from a socket
     # before giving up.
-    READ_TIMEOUT=15,
+    read_timeout=15,
     # The number of times the-new-hotness should retry a network request
     # that failed for any reason (e.g. read timeout, DNS error, etc)
-    REQUESTS_RETRIES=3,
+    requests_retries=3,
     # If true, publish fedmsg messages instead of fedora-messaging messages
-    LEGACY_MESSAGING=False,
+    legacy_messaging=False,
     # Bugzilla configuration
-    BUGZILLA={
-        "enabled": True,
-        "url": "https://partner-bugzilla.redhat.com",
-        "user": None,
-        "password": None,
-        "api_key": "",
-        "product": "Fedora",
-        "version": "rawhide",
-        "keywords": "FutureFeature, Triaged",
-        "bug_status": "NEW",
-        "explanation_url": "https://fedoraproject.org/wiki/upstream_release_monitoring",
-        "short_desc_template": "%(name)s-%(latest_upstream)s is available",
-        "description_template": """
+    bugzilla=dict(
+        enabled=True,
+        url="https://partner-bugzilla.redhat.com",
+        user=None,
+        password=None,
+        api_key="",
+        product="Fedora",
+        version="rawhide",
+        keywords="FutureFeature, Triaged",
+        bug_status="NEW",
+        explanation_url="https://fedoraproject.org/wiki/upstream_release_monitoring",
+        reporter="Upstream Release Monitoring",
+        short_desc_template="%(name)s-%(latest_upstream)s is available",
+        description_template="""
 Latest upstream release: %(latest_upstream)s
 
 Current version/release in %(repo_name)s: %(repo_version)s-%(repo_release)s
@@ -89,42 +91,70 @@ More information about the service that created this bug can be found at:
 
 Based on the information from anitya: https://release-monitoring.org/project/%(projectid)s/
 """,
-    },
+    ),
     # Koji configuration
-    KOJI={
-        "server": "https://koji.fedoraproject.org/kojihub",
-        "weburl": "https://koji.fedoraproject.org/koji",
+    koji=dict(
+        server="https://koji.fedoraproject.org/kojihub",
+        weburl="https://koji.fedoraproject.org/koji",
         # Kerberos configuration to authenticate with Koji. In development
         # environments, use `kinit <fas-name>@FEDORAPROJECT.ORG` to get a
         # Kerberos ticket and use the default settings below.
-        "krb_principal": "",
-        "krb_keytab": "",
-        "krb_ccache": "",
-        "krb_proxyuser": "",
-        "krb_sessionopts": {"timeout": 3600, "krb_rdns": False},
-        "git_url": "https://src.fedoraproject.org/cgit/rpms/{package}.git",
-        "user_email": [
+        krb_principal="",
+        krb_keytab="",
+        krb_ccache="",
+        krb_proxyuser="",
+        krb_sessionopts=dict(timeout=3600, krb_rdns=False),
+        git_url="https://src.fedoraproject.org/cgit/rpms/{package}.git",
+        user_email=[
             "Upstream Monitor",
             "<upstream-release-monitoring@fedoraproject.org>",
         ],
-        "opts": {"scratch": True},
-        "priority": 30,
-        "target_tag": "rawhide",
+        opts=dict(scratch=True),
+        priority=30,
+        target_tag="rawhide",
         # These are errors that we won't scream about.
-        "passable_errors": [
+        passable_errors=[
             # This is the packager's problem, not ours.
             "unclosed macro or bad line continuation"
         ],
-    },
+    ),
     # Anitya configuration
-    ANITYA={"url": "https://release-monitoring.org"},
+    anitya=dict(url="https://release-monitoring.org"),
     # Cache configuration
-    CACHE={
-        "backend": "dogpile.cache.dbm",
-        "expiration_time": 300,
-        "arguments": {"filename": "/var/tmp/the-new-hotness-cache.dbm"},  # nosec
-    },
+    cache=dict(
+        backend="dogpile.cache.dbm",
+        expiration_time=300,
+        arguments=dict(filename="/var/tmp/the-new-hotness-cache.dbm"),  # nosec
+    ),
 )
+
+
+def _load_dict(config_dict: dict, defaults: dict) -> dict:
+    """
+    Recursively update the defaults config with config_dict values.
+
+    Params:
+        config_dict: Configuration dictionary
+        defaults: Default configuration dictionary
+
+    Returns:
+        Updated configuration dictionary.
+    """
+    for key in config_dict:
+        try:
+            if isinstance(defaults[key.lower()], dict):
+                defaults[key.lower()] = _load_dict(
+                    config_dict[key], defaults[key.lower()]
+                )
+            else:
+                defaults[key.lower()] = config_dict[key]
+        except KeyError as e:
+            _log.warning(
+                "Unrecognized option in configuration file: {}. Skipping.".format(e)
+            )
+            continue
+
+    return defaults
 
 
 def load(config_dict: dict) -> dict:
@@ -137,27 +167,17 @@ def load(config_dict: dict) -> dict:
     Returns:
         Merged configuration dictionary.
     """
-    config = DEFAULTS.copy()
+    config = copy.deepcopy(DEFAULTS)
 
     consumer_config = config_dict["consumer_config"]
 
     _log.info("Loading the-new-hotness configuration")
-    for key in consumer_config:
-        try:
-            if config[key.upper()] is dict:
-                config[key.upper()].update(consumer_config[key])
-            else:
-                config[key.upper()] = consumer_config[key]
-        except KeyError as e:
-            _log.warning(
-                "Unrecognized option in configuration file: {}. Skipping.".format(e)
-            )
-            continue
+    config = _load_dict(consumer_config, config)
 
     if (
-        config["BUGZILLA"]["user"] == DEFAULTS["BUGZILLA"]["user"]
-        and config["BUGZILLA"]["password"] == DEFAULTS["BUGZILLA"]["password"]
-        and config["BUGZILLA"]["api_key"] == DEFAULTS["BUGZILLA"]["api_key"]
+        config["bugzilla"]["user"] == DEFAULTS["bugzilla"]["user"]
+        and config["bugzilla"]["password"] == DEFAULTS["bugzilla"]["password"]
+        and config["bugzilla"]["api_key"] == DEFAULTS["bugzilla"]["api_key"]
     ):
         _log.warning(
             "No authentication method configured for bugzilla."

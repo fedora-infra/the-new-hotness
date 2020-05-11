@@ -26,6 +26,7 @@ class TestBugzilla(unittest.TestCase):
             "product": "product",
             "version": "version",
             "bug_status": "status",
+            "reporter": "Upstream release monitoring",
             "short_desc_template": "short_desc_template",
             "description_template": "description_template",
         }
@@ -44,6 +45,7 @@ class TestBugzilla(unittest.TestCase):
             "product": "product",
             "version": "version",
             "bug_status": "status",
+            "reporter": "Upstream release monitoring",
             "short_desc_template": "short_desc_template",
             "description_template": "description_template",
         }
@@ -69,6 +71,7 @@ class TestBugzilla(unittest.TestCase):
             "product": "product",
             "version": "version",
             "bug_status": "status",
+            "reporter": "Upstream release monitoring",
             "short_desc_template": "short_desc_template",
             "description_template": "description_template",
         }
@@ -94,7 +97,7 @@ class TestBugzilla(unittest.TestCase):
             "emailtype1": "exact",
             "component": "test",
             "bug_status": ["ASSIGNED", "NEW", "status"],
-            "creator": "Upstream Release Monitoring",
+            "creator": "Upstream release monitoring",
             "product": "product",
             "email1": None,
         }

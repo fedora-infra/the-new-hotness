@@ -56,10 +56,9 @@ class Bugzilla(object):
     def __init__(self, consumer, config):
         self.consumer = consumer
         self.config = config
-        default = "https://partner-bugzilla.redhat.com"
-        url = self.config.get("url", default)
+        url = self.config["url"]
         self.username = self.config["user"]
-        self.reporter = self.config.get("reporter", "Upstream Release Monitoring")
+        self.reporter = self.config["reporter"]
         password = self.config["password"]
         api_key = self.config["api_key"]
         _log.info("Using BZ URL %s" % url)

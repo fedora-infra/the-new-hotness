@@ -230,7 +230,6 @@ def list_to_series(items, N=3, oxford_comma=True):
 class Koji(object):
     def __init__(self, consumer, config):
         self.consumer = consumer
-        self.config = config
         self.server = config["server"]
         self.weburl = config["weburl"]
 
