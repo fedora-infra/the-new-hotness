@@ -61,38 +61,38 @@ class BugzillaTicketFiler(object):
 
     def __init__(self):
         self.bugzilla = hotness.bz.Bugzilla(
-            consumer=self, config=hotness_config["BUGZILLA"]
+            consumer=self, config=hotness_config["bugzilla"]
         )
         self.buildsys = hotness.buildsys.Koji(
-            consumer=self, config=hotness_config["KOJI"]
+            consumer=self, config=hotness_config["koji"]
         )
 
-        self.pdc_url = hotness_config["PDC_URL"]
-        self.dist_git_url = hotness_config["DIST_GIT_URL"]
+        self.pdc_url = hotness_config["pdc_url"]
+        self.dist_git_url = hotness_config["dist_git_url"]
 
-        self.anitya_url = hotness_config["ANITYA"]["url"]
+        self.anitya_url = hotness_config["anitya"]["url"]
 
         # Also, set up our global cache object.
         _log.info("Configuring cache.")
         with hotness.cache.cache_lock:
             if not hotness.cache.cache.is_configured:
-                hotness.cache.cache.configure(**hotness_config["CACHE"])
+                hotness.cache.cache.configure(**hotness_config["cache"])
 
-        self.mdapi_url = hotness_config["MDAPI_URL"]
+        self.mdapi_url = hotness_config["mdapi_url"]
         _log.info("Using hotness.mdapi_url=%r" % self.mdapi_url)
-        self.repoid = hotness_config["REPOID"]
+        self.repoid = hotness_config["repoid"]
         _log.info("Using hotness.repoid=%r" % self.repoid)
-        self.distro = hotness_config["DISTRO"]
+        self.distro = hotness_config["distro"]
         _log.info("Using hotness.distro=%r" % self.distro)
 
         # Retrieve the requests configuration; by default requests time out
         # after 15 seconds and are retried up to 3 times.
         self.requests_session = requests.Session()
         self.timeout = (
-            hotness_config["CONNECT_TIMEOUT"],
-            hotness_config["READ_TIMEOUT"],
+            hotness_config["connect_timeout"],
+            hotness_config["read_timeout"],
         )
-        retries = hotness_config["REQUESTS_RETRIES"]
+        retries = hotness_config["requests_retries"]
         retry_conf = retry.Retry(
             total=retries, connect=retries, read=retries, backoff_factor=1
         )

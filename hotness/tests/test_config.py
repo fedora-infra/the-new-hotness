@@ -46,6 +46,7 @@ full_config = {
             "keywords": "",
             "bug_status": "",
             "explanation_url": "https://fedoraproject.org/wiki/upstream_release_monitoring_test",
+            "reporter": "",
             "short_desc_template": "",
             "description_template": "",
         },
@@ -56,25 +57,27 @@ full_config = {
             "krb_keytab": "krb_keytab",
             "krb_ccache": "krb_ccache",
             "krb_proxyuser": "krb_proxyuser",
-            "krb_sessionopts": {},
+            "krb_sessionopts": {"timeout": 600, "krb_rdns": True},
             "git_url": "https://src.stg.fedoraproject.org/cgit/rpms/{package}.git",
             "user_email": [],
-            "opts": {},
+            "opts": {"scratch": False},
             "priority": 60,
             "target_tag": "",
             "passable_errors": [],
         },
         "anitya": {"url": "https://release-monitoring.org/test"},
-        "cache": {"backend": "", "expiration_time": 0, "arguments": {}},
+        "cache": {"backend": "", "expiration_time": 0, "arguments": {"filename": ""}},
     }
 }
 
 empty_config = {"consumer_config": {}}
 
+empty_dict_config = {"consumer_config": {"bugzilla": {}}}
+
 bad_config = {"consumer_config": {"example_key": "value"}}
 
 
-class LoadTests(unittest.TestCase):
+class TestLoad(unittest.TestCase):
     """
     Class for testing the `hotness.config.load` function.
     """
@@ -86,14 +89,20 @@ class LoadTests(unittest.TestCase):
         Assert that config will be changed when correct dictionary is provided.
         """
         config = hotness_config.load(full_config)
-        for key in full_config["consumer_config"]:
-            self.assertEqual(config[key.upper()], full_config["consumer_config"][key])
+        self.assertEqual(config, full_config["consumer_config"])
 
     def test_load_empty_config(self):
         """
         Assert that default values will be used when empty dictionary is provided.
         """
         config = hotness_config.load(empty_config)
+        self.assertEqual(config, hotness_config.DEFAULTS)
+
+    def test_load_empty_inner_dict(self):
+        """
+        Assert that default values will be used when empty inner dictionary is provided.
+        """
+        config = hotness_config.load(empty_dict_config)
         self.assertEqual(config, hotness_config.DEFAULTS)
 
     def test_load_bad_config(self):
