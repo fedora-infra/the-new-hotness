@@ -14,6 +14,7 @@ Development
 * Remove python 3.5 support (#272)
 * Remove unused functions (#280)
 * Clean and raise coverage for Anitya module (#281)
+* Change links to update policy (#291)
 
 Features
 ^^^^^^^^

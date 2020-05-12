@@ -97,7 +97,7 @@ URL: %(url)s
 
 Please consult the package updates policy before you
 issue an update to a stable branch:
-https://fedoraproject.org/wiki/Updates_Policy
+https://docs.fedoraproject.org/en-US/fesco/Updates_Policy
 
 
 More information about the service that created this bug can be found at:
