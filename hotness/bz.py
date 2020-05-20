@@ -25,6 +25,8 @@ import logging
 import bugzilla
 import os
 
+from requests.exceptions import HTTPError
+
 
 _log = logging.getLogger(__name__)
 
@@ -136,7 +138,14 @@ class Bugzilla(object):
     def follow_up(self, text, bug):
         update = {"comment": {"body": text, "is_private": False}, "ids": [bug.bug_id]}
         _log.debug("Following up on bug %r with %r" % (bug.bug_id, update))
-        self.bugzilla._proxy.Bug.update(update)
+        try:
+            self.bugzilla._proxy.Bug.update(update)
+        except HTTPError as e:
+            _log.error(
+                "Can't follow up on bug {}, HTTP error encountered: {}".format(
+                    bug.bug_id, str(e)
+                )
+            )
         _log.info("Followed up on bug: %s" % bug.weburl)
 
     def _attach_file(self, filename, description, bug, **kwargs):

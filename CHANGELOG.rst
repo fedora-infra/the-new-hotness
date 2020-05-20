@@ -6,6 +6,7 @@ Bugfixes
 
 * Use fallback rpm comparison when rpm module is unavailable (#273)
 * Configuration load crash on empty section (#290)
+* Crash on proxy error (#269)
 
 Development
 ^^^^^^^^^^^
