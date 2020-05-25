@@ -1,28 +1,28 @@
-master
+0.13.0
 ------
 
 Bugfixes
 ^^^^^^^^
 
-* Use fallback rpm comparison when rpm module is unavailable (#273)
-* Configuration load crash on empty section (#290)
-* Crash on proxy error (#269)
+* Use fallback rpm comparison when rpm module is unavailable (`#273 <https://github.com/fedora-infra/the-new-hotness/pull/273>`_)
+* Configuration load crash on empty section (`#290 <https://github.com/fedora-infra/the-new-hotness/pull/290>`_)
+* Crash on proxy error (`#269 <https://github.com/fedora-infra/the-new-hotness/issues/269>`_)
 
 Development
 ^^^^^^^^^^^
 
-* Fix docs building (#264)
-* Change coverage threshold to be less strict (#273)
-* Remove python 3.5 support (#272)
-* Remove unused functions (#280)
-* Clean and raise coverage for Anitya module (#281)
-* Change links to update policy (#291)
-* Use Anitya schema for fedora-messaging (#248)
+* Fix docs building (`#264 <https://github.com/fedora-infra/the-new-hotness/issues/264>`_)
+* Change coverage threshold to be less strict (`#273 <https://github.com/fedora-infra/the-new-hotness/pull/273>`_)
+* Remove python 3.5 support (`#272 <https://github.com/fedora-infra/the-new-hotness/pull/272>`_)
+* Remove unused functions (`#280 <https://github.com/fedora-infra/the-new-hotness/pull/280>`_)
+* Clean and raise coverage for Anitya module (`#281 <https://github.com/fedora-infra/the-new-hotness/pull/281>`_)
+* Change links to update policy (`#291 <https://github.com/fedora-infra/the-new-hotness/pull/291>`_)
+* Use Anitya schema for fedora-messaging (`#248 <https://github.com/fedora-infra/the-new-hotness/issues/248>`_)
 
 Features
 ^^^^^^^^
 
-* Refactor config to use centralized defaults (#186)
+* Refactor config to use centralized defaults (`#186 <https://github.com/fedora-infra/the-new-hotness/issues/186>`_)
 
 
 0.12.0
