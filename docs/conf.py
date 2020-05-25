@@ -356,4 +356,4 @@ texinfo_documents = [
 
 
 # -- Mock required libraries depending on C modules ------------------------------
-autodoc_mock_imports = ["koji"]
+autodoc_mock_imports = ["koji", "pycurl"]
