@@ -31,9 +31,9 @@ def get_requirements(requirements_file="requirements.txt"):
 
     if ON_READ_THE_DOCS:
         # These packages are not needed to build on Read the Docs
-        ignored_packages = {"koji", "pycurl"}
+        ignored_packages = ["koji", "pycurl"]
     else:
-        ignored_packages = {}
+        ignored_packages = []
 
     lines = [
         line.rstrip().split("#")[0] for line in open(requirements_file).readlines()
