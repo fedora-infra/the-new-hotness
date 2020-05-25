@@ -1,3 +1,12 @@
+master
+------
+
+Development
+^^^^^^^^^^^
+
+* Fix docs building (`#293 <https://github.com/fedora-infra/the-new-hotness/pull/293>`_)
+
+
 0.13.0
 ------
 
