@@ -5,6 +5,7 @@ Development
 ^^^^^^^^^^^
 
 * Fix docs building (`#293 <https://github.com/fedora-infra/the-new-hotness/pull/293>`_)
+* Update vagrant environment to F32 (`#296 <https://github.com/fedora-infra/the-new-hotness/pull/296>`_)
 
 
 0.13.0

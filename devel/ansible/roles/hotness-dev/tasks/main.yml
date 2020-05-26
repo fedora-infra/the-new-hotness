@@ -25,7 +25,6 @@
     name: [
       fedpkg,
       koji,
-      rpm-python,
       python3-bugzilla,
       python3-dogpile-cache,
       python3-flake8,
