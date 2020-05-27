@@ -28,7 +28,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
  config.vm.provision "shell", inline: "sudo dnf upgrade -y"
 
  # bootstrap and run with ansible
- config.vm.provision "shell", inline: "sudo dnf -y install python3-dnf"
  config.vm.provision "ansible" do |ansible|
      ansible.playbook = "devel/ansible/vagrant-playbook.yml"
      ansible.raw_arguments = ["-e", "ansible_python_interpreter=/usr/bin/python3"]

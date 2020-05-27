@@ -4,38 +4,49 @@
   dnf:
     name: [
       git,
-      libcurl-devel,
-      openssl-devel,
       ngrep,
       nmap-ncat,
       python3-rpdb,
+      tox,
       tmux,
       tree,
-      vim-enhanced,
-      tox,
-      rpm-devel,
-      gcc,
-      krb5-devel,
-      python3-black
+      vim-enhanced
     ]
     state: present
 
 - name: Install the-new-hotness development packages
   dnf:
     name: [
+      # Packages needed for running test in tox
+      krb5-devel,
+      libcurl-devel,
+      gcc,
+      openssl-devel,
+      # Packages needed for the-new-hotness development
+      python3-black,
+      python3-flake8,
+      python3-sphinx,
+      rabbitmq-server
+    ]
+    state: present
+
+- name: Install the-new-hotness dependencies packaged in Fedora
+  dnf:
+    name: [
+      # Tools that the-new-hotness is using when working with the packages
+      git,
       fedpkg,
-      koji,
+      rpmdevtools,
+      # Python dependencies
+      fedora-messaging,
       python3-bugzilla,
       python3-dogpile-cache,
-      python3-flake8,
-      python3-mock,
+      python3-fedora,
+      python3-fedmsg,
+      python3-koji,
+      python3-pycurl,
       python3-requests,
-      python3-sh,
-      python3-six,
-      rpmdevtools,
-      fedora-messaging,
-      python3-fedora-messaging,
-      rabbitmq-server
+      python3-six
     ]
     state: present
 
