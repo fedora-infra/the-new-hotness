@@ -38,12 +38,16 @@ def get_requirements(requirements_file="requirements.txt"):
     lines = [
         line.rstrip().split("#")[0] for line in open(requirements_file).readlines()
     ]
-    return [
-        line
-        for line in lines
-        if not line.startswith("#")
-        if line not in ignored_packages
-    ]
+
+    packages = []
+    for line in lines:
+        if line.startswith("#"):
+            continue
+        if any(line.startswith(package) for package in ignored_packages):
+            continue
+        packages.append(line)
+
+    return packages
 
 
 setup(
