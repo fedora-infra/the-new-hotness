@@ -154,6 +154,32 @@ There's a helpful script to retrieve message IDs. From the root of the repositor
 
     $ python devel/anitya_messages.py
 
+Release testing guide
+=====================
+
+Before releasing a new version it is good to try deployment in `staging environment <https://os.stg.fedoraproject.org>`_.
+To deploy the release candidate to staging follow these steps:
+
+1. Clone the-new-hotness repository::
+
+    $ git clone git@github.com:fedora-infra/the-new-hotness.git
+
+2. Checkout the staging branch::
+
+    $ git checkout staging
+
+3. Rebase the current staging branch to master::
+
+    $ git rebase master
+
+4. Push the changes back to staging branch::
+
+    $ git push origin staging
+
+The new staging branch will be automatically deployed in the `staging environment <https://os.stg.fedoraproject.org>`_.
+
+.. note::
+    This guide assumes that you have write permissions for the-new-hotness repository.
 
 Release Guide
 =============
@@ -178,6 +204,20 @@ If you are a maintainer and wish to make a release, follow these steps:
 8. Upload the packages with ``twine upload dist/<dists>``.
 
 9. (Optional) Repeat steps 7 and 8 in ``hotness_schema`` folder.
+
+10. Create new release on `GitHub releases <https://github.com/fedora-infra/the-new-hotness/releases>`_.
+
+11. Deploy the new version in staging::
+
+     $ git checkout staging
+     $ git rebase master
+     $ git push origin staging
+
+12. When successfully tested in staging deploy to production::
+
+     $ git checkout production
+     $ git rebase staging
+     $ git push origin production
 
 .. note::
     Optional steps are required only if you want to release a new version of message schema.
