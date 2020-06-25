@@ -46,7 +46,6 @@ Next, clone the repository and configure your Vagrantfile::
 
     $ git clone https://github.com/fedora-infra/the-new-hotness.git
     $ cd the-new-hotness
-    $ cp Vagrantfile.example Vagrantfile
     $ vagrant up
     $ vagrant ssh
 
@@ -154,6 +153,39 @@ There's a helpful script to retrieve message IDs. From the root of the repositor
 
     $ python devel/anitya_messages.py
 
+Release notes
+=============
+
+To add entries to the release notes, create a file in the ``news`` directory
+with the ``source.type`` name format, where ``type`` is one of:
+
+* ``feature``: for new features
+* ``bug``: for bug fixes
+* ``api``: for API changes
+* ``dev``: for development-related changes
+* ``author``: for contributor names
+* ``other``: for other changes
+
+And where the ``source`` part of the filename is:
+
+* ``42`` when the change is described in issue ``42``
+* ``PR42`` when the change has been implemented in pull request ``42``, and
+  there is no associated issue
+* ``username`` for contributors (``author`` extention). It should be the
+  username part of their commit's email address.
+  
+For example:
+
+If this PR is solving bug 714 the file inside ``news`` should be called ``714.bug``
+and the content of the file would be:
+
+``Javascript error on add project page``
+
+Matching the issue title.
+
+The text inside the file will be used as entry text.
+A preview of the release notes can be generated with ``towncrier --draft``.
+
 Release testing guide
 =====================
 
@@ -184,6 +216,12 @@ The new staging branch will be automatically deployed in the `staging environmen
 Release Guide
 =============
 
+To do the release you need following python packages installed::
+
+    wheel
+    twine
+    towncrier
+
 If you are a maintainer and wish to make a release, follow these steps:
 
 1. Change the version in ``hotness.__init__.__version__``. This is used to set the
@@ -191,29 +229,43 @@ If you are a maintainer and wish to make a release, follow these steps:
 
 2. (Optional) Update ``version`` in ``hotness_schema/setup.py`` script.
 
-3. Replace master section in ``CHANGELOG.rst`` by new version and add any missing entry.
+3. Get authors of commits by ``python get-authors.py``.
 
-4. Commit your changes.
+.. note::
+   This script must be executed in ``news`` folder, because it
+   creates files in current working directory.
 
-5. Tag a release with ``git tag -s <version>``.
+4. Generate the changelog by running ``towncrier``.
 
-6. Don't forget to ``git push --tags``.
+.. note::
+    If you added any news fragment in the previous step, you might see ``towncrier``
+    complaining about removing them, because they are not committed in git.
+    Just ignore this and remove all of them manually; release notes will be generated
+    anyway.
 
-7. Build the Python packages with ``python setup.py sdist bdist_wheel``.
+5. Remove every remaining news fragment from ``news`` folder.
 
-8. Upload the packages with ``twine upload dist/<dists>``.
+6. Commit your changes with message *the-new-hotness <version>*.
 
-9. (Optional) Repeat steps 7 and 8 in ``hotness_schema`` folder.
+7. Tag a release with ``git tag -s <version>``.
 
-10. Create new release on `GitHub releases <https://github.com/fedora-infra/the-new-hotness/releases>`_.
+8. Don't forget to ``git push --tags``.
 
-11. Deploy the new version in staging::
+9. Build the Python packages with ``python setup.py sdist bdist_wheel``.
+
+10. Upload the packages with ``twine upload dist/<dists>``.
+
+11. (Optional) Repeat steps 7 and 8 in ``hotness_schema`` folder.
+
+12. Create new release on `GitHub releases <https://github.com/fedora-infra/the-new-hotness/releases>`_.
+
+13. Deploy the new version in staging::
 
      $ git checkout staging
      $ git rebase master
      $ git push origin staging
 
-12. When successfully tested in staging deploy to production::
+14. When successfully tested in staging deploy to production::
 
      $ git checkout production
      $ git rebase staging
