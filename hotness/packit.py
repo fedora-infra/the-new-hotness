@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of the-new-hotness project.
-# Copyright (C) 2019  Red Hat, Inc.
+# Copyright (C) 2020  Red Hat, Inc.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -92,7 +92,7 @@ class Packit:
         )
 
         dist_git.update_branch(branch)
-        self.bump_spec(version, dist_git.specfile_path)
+        self.bump_spec(version, dist_git.absolute_specfile_path)
 
         title = self.changelog_template.format(version=version)
         dist_git.commit(title, "", prefix="[the-new-hotness]")
@@ -119,6 +119,6 @@ class Packit:
             cmd += ["--new", version]
         if changelog_entry:
             cmd += ["--comment", changelog_entry]
-        cmd.append(specfile_path)
+        cmd.append(str(specfile_path))
 
         run_command(cmd)
