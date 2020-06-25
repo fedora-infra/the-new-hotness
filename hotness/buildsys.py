@@ -553,8 +553,8 @@ def spec_sources(specfile_path, target_dir):
             )
         else:
             msg = (
-                u"An unexpected error occurred while downloading the new package sources; "
-                u"please report this as a bug on the-new-hotness issue tracker."
+                "An unexpected error occurred while downloading the new package sources; "
+                "please report this as a bug on the-new-hotness issue tracker."
             )
             _log.error(
                 "{cmd} failed (exit {code}): {msg}".format(

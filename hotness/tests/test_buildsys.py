@@ -131,7 +131,7 @@ class KojiTests(unittest.TestCase):
                         "Jeremy <jeremy@example.com>",
                         tmp + "/bear.spec",
                     ],
-                    **kwargs
+                    **kwargs,
                 ),
                 mock.call(
                     [
@@ -143,7 +143,7 @@ class KojiTests(unittest.TestCase):
                         "-bs",
                         tmp + "/bear.spec",
                     ],
-                    **tmp_dir_kwargs
+                    **tmp_dir_kwargs,
                 ),
             ]
         )
@@ -152,7 +152,7 @@ class KojiTests(unittest.TestCase):
                 mock.call(["git", "config", "user.name", "Jeremy"], **tmp_dir_kwargs),
                 mock.call(
                     ["git", "config", "user.email", "<jeremy@example.com>"],
-                    **tmp_dir_kwargs
+                    **tmp_dir_kwargs,
                 ),
                 mock.call(["git", "commit", "-a", "-m", comment], **tmp_dir_kwargs),
                 mock.call(["git", "format-patch", "HEAD^"], **tmp_dir_kwargs),
