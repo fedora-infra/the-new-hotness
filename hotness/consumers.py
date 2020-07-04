@@ -118,7 +118,7 @@ class BugzillaTicketFiler(object):
 
     def publish(self, topic, msg):
         """
-        Publish a feora-messaging message to the specified topic.
+        Publish a fedora-messaging message to the specified topic.
 
         Args:
             topic (str): Topic to publish to
