@@ -34,7 +34,6 @@ import time
 import typing
 import copy
 
-from six.moves.urllib.parse import urlparse
 import koji
 
 from hotness import exceptions
@@ -343,12 +342,16 @@ class Koji(object):
 
             # We compare the old sources to the new ones to make sure we download
             # new sources from bumping the specfile version. Some packages don't
-            # use macros in the source URL(s) or even worse, don't set the source
-            # to a URL. We want to detect these and notify the packager on the bug
-            # we filed about the new version.
+            # use macros in the source URL(s). We want to detect these and notify
+            # the packager on the bug we filed about the new version.
             old_sources = dist_git_sources(tmp)
             new_sources = spec_sources(specfile, tmp)
-            compare_sources(old_sources, new_sources)
+            try:
+                compare_sources(old_sources, new_sources)
+            except exceptions.HotnessException as e:
+                # since identical source files between releases are very common,
+                # we will just notify packager and continue.
+                self.consumer.bugzilla.follow_up(str(e), rhbz)
 
             output = sp.check_output(
                 ["rpmbuild", "-D", "_sourcedir .", "-D", "_topdir .", "-bs", specfile],
@@ -417,9 +420,10 @@ def compare_sources(old_sources, new_sources):
     if old_checksums.intersection(new_checksums):
         msg = (
             "One or more of the new sources for this package are identical to "
-            "the old sources. It's likely this package does not use the version "
-            "macro in its Source URLs. If possible, please update the specfile "
-            "to include the version macro in the Source URLs"
+            "the old sources. This is most likely caused either by identical source files "
+            "between releases, for example service files, or the specfile does not use "
+            "version macro in its source URLs. If this is the second case, then please "
+            "update the specfile to use version macro in its source URLs.\n"
         )
         raise exceptions.SpecUrlException(msg)
 
@@ -459,42 +463,6 @@ def dist_git_sources(dist_git_path):
     return files
 
 
-def _validate_spec_urls(specfile_path):
-    """
-    Validate a specfile's Source URLs.
-
-    Args:
-        specfile_path (str): The path to the specfile to parse and validate.
-
-    Raises:
-        exceptions.SpecUrlException: If the specfile contains Source URLs that
-            are invalid.
-    """
-    # The output of spectool -l <spec> is in the format:
-    # Source0: some-string-we-want-to-be-a-url.tar.gz
-    # Source1: some-string-we-want-to-be-a-url.tar.gz
-    # ...
-    # Patch0: patch-we-expect-to-be-in-dist-git.patch
-    # ...
-    output = sp.check_output(["spectool", "-l", specfile_path])
-    bad_urls = []
-    for line in output.decode("utf-8").splitlines():
-        if line.startswith("Source"):
-            # Parse to make sure it's a url
-            url = line.split(":", 1)[1].strip()
-            parsed_url = urlparse(url)
-            if not parsed_url.scheme or not parsed_url.netloc:
-                bad_urls.append(url)
-    if bad_urls:
-        msg = (
-            "The following Sources of the specfile are not valid URLs "
-            "so we cannot automatically build the new version for you.  "
-            "Please use URLs in your Source declarations if possible.\n\n"
-            "- " + "\n- ".join(bad_urls)
-        )
-        raise exceptions.SpecUrlException(msg)
-
-
 def spec_sources(specfile_path, target_dir):
     """
     Retrieve a specfile's sources and store them in the given target directory.
@@ -511,13 +479,10 @@ def spec_sources(specfile_path, target_dir):
         list: A list of absolute paths to source files downloaded
 
     Raises:
-        exceptions.SpecUrlException: If the specfile contains Source URLs that
-            are invalid.
         exceptions.DownloadException: If a networking-related error occurs while
             downloading the specfile sources. This includes hostname resolution,
             non-200 HTTP status codes, SSL errors, etc.
     """
-    _validate_spec_urls(specfile_path)
     files = []
     try:
         output = sp.check_output(["spectool", "-g", specfile_path], cwd=target_dir)
