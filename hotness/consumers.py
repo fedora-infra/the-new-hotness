@@ -125,7 +125,7 @@ class BugzillaTicketFiler(object):
             msg (dict): Message to be send
         """
         _log.info("publishing topic %r" % topic)
-        if self.config["legacy_messaging"]:
+        if hotness_config["legacy_messaging"]:
             fedmsg.publish(modname="hotness", topic=topic, msg=msg)
         else:
             try:
