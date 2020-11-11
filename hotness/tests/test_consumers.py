@@ -93,7 +93,7 @@ class TestConsumer(HotnessTestCase):
         self.assertEqual(expected, actual)
 
     def test_is_monitored_positive(self):
-        """ Ensure a `monitoring-with-scratch` flag in git yields True
+        """Ensure a `monitoring-with-scratch` flag in git yields True
         internally.
         """
         response = mock.MagicMock()

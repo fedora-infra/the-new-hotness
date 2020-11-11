@@ -29,7 +29,7 @@ from hotness import buildsys, exceptions
 
 
 class MockBug:
-    """ A class that pretends to be a bugzilla.bug.Bug.
+    """A class that pretends to be a bugzilla.bug.Bug.
 
     It only contains the bug_id attribute, as that is the only one that Koji needs.
     """

@@ -108,18 +108,28 @@ class TestBugzilla(unittest.TestCase):
 
         mock_query.assert_called_once_with(exp)
 
+    @mock.patch("bugzilla.Bugzilla")
     @mock.patch("hotness.bz._log")
-    def test_follow_up_HTTPError(self, mock_log):
+    def test_follow_up_HTTPError(self, mock_log, mock_bugzilla):
         """
         Assert that HTTPError is handled gracefully when occurs in follow up.
         """
         mock_bug = mock.MagicMock()
         mock_bug.bug_id = 0
-        self.bugzilla.bugzilla._proxy = mock.PropertyMock()
-        self.bugzilla.bugzilla._proxy.Bug.update.side_effect = HTTPError
+        self.bugzilla.bugzilla = mock_bugzilla
+        mock_bugzilla._proxy.Bug.update.side_effect = HTTPError
 
         self.bugzilla.follow_up("text", mock_bug)
 
+        mock_bugzilla._proxy.Bug.update.assert_called_with(
+            {
+                "comment": {
+                    "body": "text",
+                    "is_private": False,
+                },
+                "ids": [0],
+            }
+        )
         self.assertIn(
             "Can't follow up on bug 0, HTTP error encountered: ",
             mock_log.error.call_args_list[0][0][0],

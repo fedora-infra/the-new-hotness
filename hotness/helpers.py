@@ -110,11 +110,11 @@ __text_regex = re.compile(r"^d.+\s(\S+)\s*$", re.I | re.M)
 
 
 def expand_subdirs(url, glob_char="*"):
-    """ Expand dirs containing glob_char in the given URL with the latest
-        Example URL: http://www.example.com/foo/*/
+    """Expand dirs containing glob_char in the given URL with the latest
+    Example URL: http://www.example.com/foo/*/
 
-        The globbing char can be bundled with other characters enclosed within
-        the same slashes in the URL like "/rel*/".
+    The globbing char can be bundled with other characters enclosed within
+    the same slashes in the URL like "/rel*/".
     """
     glob_pattern = "/([^/]*%s[^/]*)/" % re.escape(glob_char)
     glob_match = re.search(glob_pattern, url)
@@ -214,7 +214,7 @@ def rpm_max(list):
 
 
 def upstream_cmp(v1, v2):
-    """ Compare two upstream versions
+    """Compare two upstream versions
 
     :Parameters:
         v1 : str
@@ -276,7 +276,7 @@ __rc_release_regex = re.compile(r"0\.[0-9]+\.(rc|pre|beta|alpha|dev)([0-9]*)", r
 
 
 def split_rc(version):
-    """ Split (upstream) version into version and release candidate string +
+    """Split (upstream) version into version and release candidate string +
     release candidate number if possible
     """
     match = __rc_upstream_regex.match(version)
@@ -290,8 +290,7 @@ def split_rc(version):
 
 
 def get_rc(release):
-    """ Get the rc value of a package's release
-    """
+    """Get the rc value of a package's release"""
     match = __rc_release_regex.match(release)
 
     if match:
@@ -318,8 +317,7 @@ def cmp_upstream_repo(upstream_v, repo_vr):
 
 
 def filter_dict(d, key_list):
-    """ return a dict that only contains keys that are in key_list
-    """
+    """return a dict that only contains keys that are in key_list"""
     return dict([v for v in d.items() if v[0] in key_list])
 
 
@@ -360,7 +358,7 @@ def secure_download(url, cainfo=""):
 
 
 def match_interval(text, regex, begin_marker, end_marker):
-    """ returns a list of match.groups() for all lines after a line
+    """returns a list of match.groups() for all lines after a line
     like begin_marker and before a line like end_marker
     """
 
