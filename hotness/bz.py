@@ -95,7 +95,7 @@ class Bugzilla(object):
         self.description_template = self.config["description_template"]
 
     def handle(self, projectid, package, upstream, version, release, url):
-        """ Main API entry point.  Push updates to bugzilla.
+        """Main API entry point.  Push updates to bugzilla.
 
         We could be in one of three states:
 

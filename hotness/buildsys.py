@@ -196,7 +196,7 @@ def subtitle(msg):
 
 
 def list_to_series(items, N=3, oxford_comma=True):
-    """ Convert a list of things into a comma-separated string.
+    """Convert a list of things into a comma-separated string.
     >>> list_to_series(['a', 'b', 'c', 'd'])
     'a, b, and 2 others'
     >>> list_to_series(['a', 'b', 'c', 'd'], N=4, oxford_comma=False)
@@ -269,7 +269,7 @@ class Koji(object):
 
     @staticmethod
     def _unique_path(prefix):
-        """ Create a unique path fragment.
+        """Create a unique path fragment.
 
         This is a copy and paste from /usr/bin/koji.
         """
@@ -301,7 +301,7 @@ class Koji(object):
     def handle(
         self, package: str, upstream: str, version: str, rhbz
     ) -> typing.Tuple[int, str, str]:
-        """ Main API entry point.
+        """Main API entry point.
 
         Bumps the version of a package and requests a scratch build.
 

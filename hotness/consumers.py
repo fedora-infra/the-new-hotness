@@ -390,7 +390,7 @@ class BugzillaTicketFiler(object):
             return
 
     def is_monitored(self, package):
-        """ Returns True if a package is marked as 'monitored' in git.
+        """Returns True if a package is marked as 'monitored' in git.
 
         This is a thin wrapper around a requests.get call and could raise any
         exceptions raised by that function.
@@ -424,7 +424,7 @@ class BugzillaTicketFiler(object):
             return False
 
     def is_retired(self, package):
-        """ Returns True if a package is marked as 'retired' in PDC.
+        """Returns True if a package is marked as 'retired' in PDC.
 
         This is a thin wrapper around a requests.get call and could raise any
         exceptions raised by that function.
@@ -444,7 +444,7 @@ class BugzillaTicketFiler(object):
 
     @hotness.cache.cache.cache_on_arguments()
     def in_dist_git(self, package):
-        """ Returns True if a package is in the Fedora dist-git.
+        """Returns True if a package is in the Fedora dist-git.
 
         This is a thin wrapper around a requests.head call and could raise any
         exceptions raised by that function.
