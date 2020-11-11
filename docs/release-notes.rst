@@ -4,6 +4,33 @@ Release notes
 
 .. towncrier release notes start
 
+0.13.2 (2020-11-11)
+===================
+
+Bug Fixes
+---------
+
+* Errors while downloading sources
+  (`#302 <https://github.com/fedora-infra/the-mew-hotness/issues/302>`_)
+
+
+Development Changes
+-------------------
+
+* Add towncrier
+  (`#288 <https://github.com/fedora-infra/the-mew-hotness/issues/288>`_)
+
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release:
+
+* Darshna Das
+* Michal Konečný
+* Tomas Korbar
+
+
 0.13.1
 ======
 
