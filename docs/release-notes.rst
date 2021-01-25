@@ -4,6 +4,24 @@ Release notes
 
 .. towncrier release notes start
 
+0.13.3 (2021-01-25)
+===================
+
+Bug Fixes
+---------
+
+* Crash with the new API in Anitya
+  (`#316 <https://github.com/fedora-infra/the-mew-hotness/issues/316>`_)
+
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release:
+
+* Michal Konečný
+
+
 0.13.2 (2020-11-11)
 ===================
 
