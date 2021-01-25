@@ -223,7 +223,7 @@ class BugzillaTicketFiler(object):
         else:
             _log.info("Forcing an anitya upstream check.")
             anitya = hotness.anitya.Anitya(self.anitya_url)
-            anitya.force_check(msg.project_id)
+            anitya.force_check(msg.project_id, msg.project_name)
 
     def _handle_anitya_update(self, upstream, package, msg):
         trigger = {"msg": msg.body, "topic": msg.topic}
