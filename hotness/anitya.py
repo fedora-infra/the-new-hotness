@@ -42,7 +42,7 @@ class Anitya(OpenIdBaseClient):
             retry_backoff_factor=0.3,
         )
 
-    def force_check(self, project_id):
+    def force_check(self, project_id, project_name):
         """ Force anitya to check for a new upstream release. """
         url = "%s/api/version/get" % self.base_url
         data = self.send_request(url, verb="POST", data=dict(id=project_id))
@@ -51,6 +51,6 @@ class Anitya(OpenIdBaseClient):
             _log.warning("Anitya error: %r" % data["error"])
         else:
             _log.info(
-                "Check yielded upstream version %s for %s"
-                % (data["version"], data["name"])
+                "Check yielded upstream versions '%s' for %s"
+                % (", ".join(data["versions"]), project_name)
             )
