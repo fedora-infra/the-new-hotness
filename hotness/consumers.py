@@ -430,7 +430,7 @@ class BugzillaTicketFiler(object):
         exceptions raised by that function.
         """
         url = "{0}/rest_api/v1/component-branches/".format(self.pdc_url)
-        params = dict(name="master", global_component=package, type="rpm", active=True)
+        params = dict(name="rawhide", global_component=package, type="rpm", active=True)
         _log.debug("Checking %r to see if %s is retired, %r" % (url, package, params))
         r = self.requests_session.get(url, params=params, timeout=self.timeout)
 
@@ -438,7 +438,7 @@ class BugzillaTicketFiler(object):
             _log.warning("URL %s returned code %s", r.url, r.status_code)
             return True
 
-        # If there are zero active master branches for this package, then it is
+        # If there are zero active rawhide branches for this package, then it is
         # retired.
         return r.json()["count"] == 0
 
