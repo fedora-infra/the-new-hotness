@@ -12,6 +12,7 @@ fedmsg.d/hotness.py
 coverage.xml
 htmlcov/
 .venv/
+build/
 
 # Docs
 *_build/

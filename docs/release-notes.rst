@@ -4,6 +4,24 @@ Release notes
 
 .. towncrier release notes start
 
+0.13.4 (2021-02-04)
+===================
+
+Bug Fixes
+---------
+
+* handle master -> rawhide branch change
+  (`#318 <https://github.com/fedora-infra/the-mew-hotness/issues/318>`_)
+
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release:
+
+* Michal Konečný
+
+
 0.13.3 (2021-01-25)
 ===================
 
