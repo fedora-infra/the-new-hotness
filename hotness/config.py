@@ -49,8 +49,6 @@ DEFAULTS = dict(
     # The number of times the-new-hotness should retry a network request
     # that failed for any reason (e.g. read timeout, DNS error, etc)
     requests_retries=3,
-    # If true, publish fedmsg messages instead of fedora-messaging messages
-    legacy_messaging=False,
     # Bugzilla configuration
     bugzilla=dict(
         enabled=True,
@@ -112,19 +110,6 @@ Based on the information from anitya: https://release-monitoring.org/project/%(p
         opts=dict(scratch=True),
         priority=30,
         target_tag="rawhide",
-        # These are errors that we won't scream about.
-        passable_errors=[
-            # This is the packager's problem, not ours.
-            "unclosed macro or bad line continuation"
-        ],
-    ),
-    # Anitya configuration
-    anitya=dict(url="https://release-monitoring.org"),
-    # Cache configuration
-    cache=dict(
-        backend="dogpile.cache.dbm",
-        expiration_time=300,
-        arguments=dict(filename="/var/tmp/the-new-hotness-cache.dbm"),  # nosec
     ),
 )
 

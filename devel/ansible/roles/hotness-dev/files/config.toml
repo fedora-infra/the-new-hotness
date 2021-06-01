@@ -6,7 +6,7 @@ amqp_url = "amqp://"
 
 publish_exchange = "amq.topic"
 
-callback = "hotness.consumers:BugzillaTicketFiler"
+callback = "hotness.hotness_consumer:HotnessConsumer"
 
 # Note the double brackets below.
 # To add another binding, add another [[bindings]] section.
@@ -15,7 +15,6 @@ queue = "the-new-hotness"
 exchange = "amq.topic"
 routing_keys = [
     "org.release-monitoring.prod.anitya.project.version.update",
-    "org.release-monitoring.prod.anitya.project.map.new",
     "org.fedoraproject.prod.buildsys.task.state.change",
 ]
 
