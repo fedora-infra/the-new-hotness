@@ -33,6 +33,12 @@ This class will notify the user and does any error handling related to notifier.
 #### submit_patch_use_case.py
 This class will submit patch using provided patcher. In current situation this will be bugzilla, in future this could be packit. 
 
+#### insert_data_use_case.py
+This class will insert data to database using the provided database. 
+
+#### retrieve_data_use_case.py
+This class will retrieve data from database using the provided database. 
+
 ### validators 
 Directory containing every external system wrapper that is called to check something. In this layer I will only describe the abstract class, which will be inherited by other systems.
 
@@ -69,20 +75,43 @@ Module init file.
 #### patcher.py
 Abstract class that needs to be inherited by any external system that is called to submit patch. This will define methods that will be called by `submit_patch_use_case` class.
 
+### databases
+Directory containing external systems used to store data.
+
+#### __init__.py
+Module init file.
+
+#### database.py
+Abstract class that needs to be inherited by any external system that is called to store/load some persistent data. This will define methods that will be called by `insert_data_use_case` and `retrieve_data_use_case` class.
+
 ### request_objects
 This directory contains every request object which is passed to use cases.
 
 #### __init__.py
 Module init file.
 
-#### package_request_object.py
-Request passed to `package_check_use_case` and `package_scratch_build_use_case`. This request object contains package object.
+#### request.py
+Parent class for requests, needs to be inherited by every request object. It defines methods for error management and `__bool__` method,
+which returns `True` if all request attributes are valid and `False` if there is any error. This allows for easy verification if request is valid.
+Every use case should validate the request before starting working with it.
 
-#### notify_request_object.py
+#### package_request.py
+Request passed to `package_check_use_case`. This request object contains package object.
+
+#### build_request.py
+Request passed to `package_scratch_build_use_case`. This request object contains package object and additional options required for specific builder.
+
+#### notify_request.py
 Request passed to `notify_user_use_case`. This request object is inherited from `package_request_object` and provides message (String) as additional attribute.
 
-#### submit_patch_request_object.py
+#### submit_patch_request.py
 Request passed to `submit_patch_use_case`. This request object is inherited from `package_request_object` and provides path to file (String) and description as additional attributes.
+
+#### insert_data_request.py
+Request passed to `insert_data_use_case`. This request object contains key/value pair that will be saved to database.
+
+#### retrieve_data_request.py
+Request passed to `retrieve_data_use_case`. This request object retrieves value for specific key from database.
 
 ### response_objects
 This directory contains every response object which could be returned by use cases.
@@ -105,6 +134,15 @@ This directory contains any specific exception that could be thrown by any wrapp
 #### __init__.py
 Module init file.
 
+#### builder_exception.py
+This exception should be thrown when builder encounter error that is related to external builder.
+
+#### notifier_exception.py
+This exception should be thrown when notifier encounter error that is related to external notifier.
+
+#### download_exception.py
+This exception should be thrown when builder can't download the sources for package.
+
 #### html_exception.py
 This exception should be thrown when HTML request is unsuccessful and returns anything else than 200.
 
@@ -121,7 +159,7 @@ Class that is checking if the package is newer or not than the package currently
 Class that is checking if the package is retired or not in Fedora using PDC API. Inherits from `validator.py`. 
 
 #### pagure.py
-Class that is checking if the package exists in Fedora and retrieves the notification settings from Pagure. Inherits from `validator.py`. Exists check is only done once and than saved in the cache using `cache.py`. 
+Class that retrieves the notification settings from Pagure. Inherits from `validator.py`. 
 
 ### builders
 Directory containing any builder.
@@ -135,11 +173,23 @@ Directory containing external systems used to notify users.
 #### bugzilla.py
 This class contains every method that is needed to create/update issue in bugzilla. Inherits from `notifier.py`.
 
+#### fedora_messaging.py
+This class is wrapper above Fedora messaging publisher. Inherits from `notifier.py`.
+
 ### patchers
 Directory containing external systems used to submit patch created by the-new-hotness.
 
 #### bugzilla.py
 This class contains every method that is needed to attach patch to existing issue in bugzilla. Inherits from `patcher.py`.
+
+### databases
+Directory containing external systems acting like a database for the-new-hotness.
+
+#### cache.py
+This class contains cache for storing key/value entries. Inherits from `database.py`.
+
+#### redis.py
+This class contains every method that is needed to insert, retrieve data from Redis database. Inherits from `database.py`.
 
 ### common
 This directory contains classes that are shared between various external systems.
@@ -149,15 +199,6 @@ Module init file.
 
 #### rpm.py
 This class contains various method for working with rpm packages.
-
-### storage
-This directory contains classes representing storage.
-
-#### __init__.py
-Module init file.
-
-#### cache.py
-Class representing cache used by various external systems.
 
 ### config.py
 This class implements centralized app configuration.

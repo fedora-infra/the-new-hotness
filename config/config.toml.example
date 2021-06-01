@@ -6,7 +6,7 @@ amqp_url = "amqp://"
 
 publish_exchange = "amq.topic"
 
-callback = "hotness.consumers:BugzillaTicketFiler"
+callback = "hotness.hotness_consumer:HotnessConsumer"
 
 # Note the double brackets below.
 # To add another binding, add another [[bindings]] section.
@@ -15,7 +15,6 @@ queue = "the-new-hotness"
 exchange = "amq.topic"
 routing_keys = [
     "org.release-monitoring.prod.anitya.project.version.update",
-    "org.release-monitoring.prod.anitya.project.map.new",
     "org.fedoraproject.prod.buildsys.task.state.change",
 ]
 
@@ -60,7 +59,6 @@ handlers = ["console"]
 
 # the-new-hotness consumer configuration
 [consumer_config]
-pkgdb_url = "https://admin.fedoraproject.org/pkgdb/api"
 mdapi_url = "https://apps.fedoraproject.org/mdapi"
 # The time in seconds the-new-hotness should wait for a socket to connect
 # before giving up.
@@ -71,8 +69,6 @@ read_timeout = 15
 # The number of times the-new-hotness should retry a network request that
 # that failed for any reason (e.g. read timeout, DNS error, etc)
 requests_retries = 3
-# If true, publish fedmsg messages instead of fedora-messaging messages
-legacy_messaging = false
 
 [consumer_config.bugzilla]
 enabled = true
@@ -133,18 +129,3 @@ user_email = [
 opts = {scratch = true}
 priority = 30
 target_tag = "rawhide"
-# These are errors that we won't scream about.
-passable_errors = [
-    # This is the packager's problem, not ours.
-    "unclosed macro or bad line continuation"
-]
-
-[consumer_config.anitya]
-url = "https://release-monitoring.org"
-#username = '....'
-#password = '....'
-
-[consumer_config.cache]
-backend = "dogpile.cache.dbm"
-expiration_time = 300
-arguments = {filename = "/var/tmp/the-new-hotness-cache.dbm"}

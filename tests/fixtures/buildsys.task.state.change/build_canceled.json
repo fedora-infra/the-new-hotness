@@ -1,0 +1,36 @@
+{
+  "info": {
+    "parent": null,
+    "completion_time": null,
+    "start_time": 1551892298.0,
+    "request": [
+      "../vol/prod/packages/globus-callout/4.0/1.fc29/src/globus-callout-4.0-1.fc29.src.rpm",
+      "f29",
+      {
+        "scratch": true,
+        "arch_override": "x86_64"
+      }
+    ],
+    "waiting": null,
+    "awaited": null,
+    "id": 90100954,
+    "priority": 50,
+    "channel_id": 1,
+    "state": 1,
+    "create_time": 1551892297.0,
+    "owner": 3199,
+    "host_id": 368,
+    "method": "build",
+    "label": null,
+    "arch": "noarch",
+    "children": []
+  },
+  "old": "FREE",
+  "attribute": "state",
+  "id": 90100954,
+  "instance": "primary",
+  "owner": "koschei",
+  "new": "CANCELED",
+  "srpm": "globus-callout-4.0-1.fc29.src.rpm",
+  "method": "build"
+}
