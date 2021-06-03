@@ -58,5 +58,5 @@ class SubmitPatchUseCase:
             )
             return responses.ResponseSuccess(result)
         except Exception as exc:
-            logger.exception("Package scratch build use case failure", exc_info=True)
+            logger.exception("Submit patch use case failure", exc_info=True)
             return responses.ResponseFailure.patcher_error(exc)
