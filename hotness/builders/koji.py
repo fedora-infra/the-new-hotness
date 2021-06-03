@@ -182,7 +182,8 @@ class Koji(Builder):
             output["patch_filename"] = filename
 
             # Copy the content of file to output
-            with open(filename) as f:
+            patch = os.path.join(tmp, filename)
+            with open(patch) as f:
                 output["patch"] = f.read()
 
             return output
