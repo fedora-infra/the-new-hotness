@@ -131,7 +131,8 @@ class TestKojiBuild:
             f.write("Adeptus Astartes")
 
         # Mock patch file
-        file = os.path.join(tmpdir, "patch")
+        filename = "patch"
+        file = os.path.join(tmpdir, filename)
         with open(file, "w") as f:
             f.write("This is a patch")
         mock_session = mock.Mock()
@@ -149,7 +150,7 @@ class TestKojiBuild:
             "git config",
             "git config",
             "git commit",
-            file.encode(),
+            filename.encode(),
         ]
 
         # Prepare package
@@ -161,7 +162,7 @@ class TestKojiBuild:
         assert output == {
             "build_id": 1000,
             "patch": "This is a patch",
-            "patch_filename": file,
+            "patch_filename": filename,
             "message": "",
         }
 
