@@ -56,5 +56,5 @@ class RetrieveDataUseCase:
             result = self.database.retrieve(request.key)
             return responses.ResponseSuccess(result)
         except Exception as exc:
-            logger.exception("Insert data use case failure", exc_info=True)
+            logger.exception("Retrieve data use case failure", exc_info=True)
             return responses.ResponseFailure.database_error(exc)
