@@ -158,7 +158,7 @@ class Koji(Builder):
             session = self._session_maker()
             if not session:
                 raise BuilderException("Can't authenticate with Koji!")
-            output["build_id"] = self._scratch_build(session, package, srpm)
+            output["build_id"] = self._scratch_build(session, package.name, srpm)
 
             # Now, craft a patch to attach to the ticket
             sp.check_output(
