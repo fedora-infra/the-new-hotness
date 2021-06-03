@@ -117,13 +117,13 @@ class Bugzilla(Patcher):
         # and stop bandit from complaining about a hardcoded temporary directory
         # because it's needed for OpenShift
         with TemporaryDirectory(prefix="thn-", dir="/var/tmp") as tmp:  # nosec
-            file = os.path.join(tmp, filename)
-            with open(file, "w") as f:
+            filepath = os.path.join(tmp, filename)
+            with open(filepath, "w") as f:
                 f.write(patch)
 
             _logger.debug("Attaching file to bug %r" % bug_id)
             description = "Update to {} (#{})".format(package.version, bug_id)
-            self.bugzilla.attachfile(bug_id, filename, description, is_patch=True)
+            self.bugzilla.attachfile(bug_id, filepath, description, is_patch=True)
             _logger.info("Attached file to bug: %r" % bug_id)
 
         output["bz_id"] = bug_id
