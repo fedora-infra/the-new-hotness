@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+import os
+
 import pytest
 from unittest import mock
 
@@ -138,11 +140,12 @@ class TestBugzillaSubmitPatch:
         opts = {"bz_id": 100, "patch_filename": "patch"}
 
         mock_temp_dir.return_value.__enter__.return_value = tmpdir
+        filepath = os.path.join(tmpdir, "patch")
 
         output = self.patcher.submit_patch(package, patch, opts)
 
         self.patcher.bugzilla.attachfile.assert_called_with(
-            100, "patch", "Update to 1.0 (#100)", is_patch=True
+            100, filepath, "Update to 1.0 (#100)", is_patch=True
         )
 
         assert output == {
