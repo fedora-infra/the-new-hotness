@@ -93,24 +93,17 @@ class UpdateDrop(message.Message):
             list(str): A list of affected package names or empty list.
         """
         if self.reason == "anitya":
+            # Return name of the project instead of list of Fedora packages
+            # if we don't know how the package is called in Fedora land
             original = self.body["trigger"]["msg"]
+            project_name = ""
+            if "project" in original:
+                project_name = original["project"]["name"]
 
-            packages = []
-            if "packages" in original["message"]:
-                packages = original["message"]["packages"]
-            elif "packages" in original:
-                packages = original["packages"]
+            if "message" in original and "project" in original["message"]:
+                project_name = original["message"]["project"]["name"]
 
-            if packages:
-                return [
-                    set(
-                        [
-                            pkg["package_name"]
-                            for pkg in packages
-                            if pkg["distro"] == "Fedora"
-                        ]
-                    ).pop()
-                ]
+            return [project_name]
 
         if "package_listing" in self.body["trigger"]["msg"]:
             original = self.body["trigger"]["msg"]
