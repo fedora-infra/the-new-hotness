@@ -182,6 +182,9 @@ Directory containing external systems used to submit patch created by the-new-ho
 #### bugzilla.py
 This class contains every method that is needed to attach patch to existing issue in bugzilla. Inherits from `patcher.py`.
 
+#### pagure.py
+This class contains every method that is needed to submit pull request to Fedora dist-git. Inherits from `patcher.py`.
+
 ### databases
 Directory containing external systems acting like a database for the-new-hotness.
 

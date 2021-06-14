@@ -17,3 +17,4 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from .patcher import Patcher  # noqa: F401
 from .bugzilla import Bugzilla  # noqa: F401
+from .pagure import Pagure # noqa: F401
