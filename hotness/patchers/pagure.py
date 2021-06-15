@@ -25,6 +25,7 @@ from packit.distgit import DistGit
 from packit.utils import run_command
 
 from hotness.domain import Package
+from hotness.exceptions import PatcherException
 from .patcher import Patcher
 
 _logger = logging.getLogger(__name__)
@@ -63,20 +64,20 @@ class Pagure(Patcher):
             changelog_template: Template for changelog message
             pr_template: Pull request message template
         """
-        self.dist_git_url = config["dist_git_url"]
+        self.dist_git_url = dist_git_url
         raw_packit_config = {
             "authentication": {
                 "pagure": {
-                    "token": config["pagure_user_token"],
+                    "token": pagure_user_token,
                     "instance_url": self.dist_git_url,
                 }
             }
         }
 
-        self.config = Config(fas_user=config["fas_user"], **raw_packit_config)
+        self.config = Config(fas_user=fas_user, **raw_packit_config)
 
-        self.changelog_template = config["changelog_template"]
-        self.pr_template = config["pull_request_template"]
+        self.changelog_template = changelog_template
+        self.pr_template = pr_template
 
     def submit_patch(self, package: Package, patch: str, opts: dict) -> dict:
         """
@@ -89,7 +90,7 @@ class Pagure(Patcher):
             patch: Patch to attach. Not used by this patcher
             opts: Additional options for pagure. Example:
                 {
-                    "bz_id": 100, # Bugzilla ticket id
+                    "bugzilla_url": "https://bugzilla.redhat.com/show_bug.cgi?id=703109", # Bugzilla ticket url
                 }
 
         Returns:
@@ -98,7 +99,18 @@ class Pagure(Patcher):
             {
                 "pull_request_url": "https://src.fedoraproject.org/rpms/repo/pull-request/0"
             }
+
+        Raises:
+           PatcherException: When the opts are not filled correctly
         """
+        output = {}
+        bugzilla_url = opts.get("bugzilla_url", "")
+        if not bugzilla_url:
+            raise PatcherException(
+                "Opts parameters are missing! "
+                "Please provide `bugzilla_url`."
+            )
+
         package_config = PackageConfig(
             downstream_package_name=package.name, dist_git_base_url=self.dist_git_url
         )
@@ -120,8 +132,12 @@ class Pagure(Patcher):
         title = self.changelog_template.format(version=package.version)
         dist_git.commit(title, "", prefix="[the-new-hotness]")
         dist_git.push_to_fork(branch)
-        msg = self.pr_template.format(package=package, version=version)
-        dist_git.create_pull(title, msg, branch, branch)
+        msg = self.pr_template.format(package=package.name, version=version, bugzilla_url=bugzilla_url)
+        pull_request = dist_git.create_pull(title, msg, branch, branch)
+
+        output["pull_request_url"] = pull_request.url
+
+        return output
 
     def _bump_spec(self, version: str, specfile_path: str):
         """

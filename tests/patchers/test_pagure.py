@@ -63,3 +63,65 @@ class TestPagureInit:
         assert patcher.config.services == []
         assert patcher.changelog_template == changelog_template
         assert patcher.pr_template == pr_template
+
+class TestPagureSubmitPatch:
+    """
+    Test class for `hotness.patchers.Pagure.submit_patch` method.
+    """
+
+    #@mock.patch("hotness.patchers.pagure.Config.load_authentication")
+    #def setup(self, packit_load_authentication):
+    def setup(self):
+        """
+        Create patcher instance for tests.
+        """
+        dist_git_url = "https://src.stg.fedoraproject.org/"
+        pagure_user_token = "8NK2VH75QK9WNKXCBX8JK3O6ZFSUGJC2O6B7FKHO4XDHH1K7GA7ERIZ4TA2EZAXK"
+        fas_user = "zlopez"
+        changelog_template = "Update to {version}"
+        pr_template = "This is a testing PR for {package} to version {version} with test bugzilla url '{bugzilla_url}'"
+#        dist_git_url = "https://example.com"
+#        pagure_user_token = "TopSecretInquisitionMaterial"
+#        fas_user = "sebastian.thor"
+#        changelog_template = "Inquisitorial archive {}"
+#        pr_template = "This is a confident information. Check your access before reading."
+#
+#        packit_load_authentication.return_value = []
+
+        self.patcher = Pagure(
+            dist_git_url,
+            pagure_user_token,
+            fas_user,
+            changelog_template,
+            pr_template
+        )
+
+#        packit_load_authentication.assert_called_with({
+#            "authentication": {
+#                "pagure": {
+#                    "token": pagure_user_token,
+#                    "instance_url": dist_git_url,
+#                }
+#            }
+#        })
+
+        assert self.patcher.dist_git_url == dist_git_url
+        assert self.patcher.config.fas_user == fas_user
+        #assert self.patcher.config.services == []
+        assert self.patcher.changelog_template == changelog_template
+        assert self.patcher.pr_template == pr_template
+
+    def test_submit_patch(self):
+        """
+        Assert that submit_patch works correctly.
+        """
+        # Prepare package
+        package = Package(name="0ad", version="1.0", distro="Fedora")
+
+        opts = {"bugzilla_url": "https://bugzilla.redhat.com/show_bug.cgi?id=100"}
+
+        output = self.patcher.submit_patch(package, "", opts)
+
+        assert output["pull_request_url"].startswith(
+            "https://src.stg.fedoraproject.org/rpms/repo/pull-request/"
+        )
