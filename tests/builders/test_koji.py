@@ -293,6 +293,71 @@ class TestKojiBuild:
                 "between releases, for example service files, or the specfile does not use "
                 "version macro in its source URLs. If this is the second case, then please "
                 "update the specfile to use version macro in its source URLs.\n"
+                "Here is the list of the files with SHA512 checksums:\n"
+                "Old: ['Lectitio_Divinitatus'] -> New: ['Lectitio_Divinitatus'] "
+                "(96140cc21155a13c9bfa03377410ac63e3f7e6aef22cc3bf09c4efbfad1c7ced"
+                "45e150e391c23271dfe49df71c60f1547fbe70ed47d5bc515ff00271309939f7)\n"
+            ),
+        }
+
+    @mock.patch("hotness.builders.koji.sp.check_output")
+    @mock.patch("hotness.builders.koji.koji")
+    @mock.patch("hotness.builders.koji.TemporaryDirectory")
+    def test_build_identical_new_sources(
+        self, mock_temp_dir, mock_koji, mock_check_output, tmpdir
+    ):
+        """
+        Assert that correct output is returned when sources from current package
+        and new build are identical.
+        """
+        # Create temporary file
+        file = os.path.join(tmpdir, "Lectitio_Divinitatus")
+        with open(file, "w") as f:
+            f.write("The Emperor is God")
+
+        # Mock patch file
+        file = os.path.join(tmpdir, "patch")
+        with open(file, "w") as f:
+            f.write("This is a patch")
+        mock_session = mock.Mock()
+        mock_session.build.return_value = 1000
+        mock_session.krb_login.return_value = True
+        mock_koji.ClientSession.return_value = mock_session
+        mock_temp_dir.return_value.__enter__.return_value = tmpdir
+
+        mock_check_output.side_effect = [
+            "git clone",
+            "rpmdev-bumpspec",
+            (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
+            b"Getting Lectitio_Divinitatus\nGetting Lectitio_Divinitatus\n",
+            b"rpmbuild foobar.srpm",
+            "git config",
+            "git config",
+            "git commit",
+            file.encode(),
+        ]
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        opts = {"bz_id": 100}
+
+        output = self.builder.build(package, opts)
+
+        assert output == {
+            "build_id": 1000,
+            "patch": "This is a patch",
+            "patch_filename": file,
+            "message": (
+                "One or more of the new sources for this package are identical to "
+                "the old sources. This is most likely caused either by identical source files "
+                "between releases, for example service files, or the specfile does not use "
+                "version macro in its source URLs. If this is the second case, then please "
+                "update the specfile to use version macro in its source URLs.\n"
+                "Here is the list of the files with SHA512 checksums:\n"
+                "Old: ['Lectitio_Divinitatus'] -> New: ['Lectitio_Divinitatus',"
+                "'Lectitio_Divinitatus'] (96140cc21155a13c9bfa03377410ac63e3"
+                "f7e6aef22cc3bf09c4efbfad1c7ced45e150e391c23271dfe49df71c60f"
+                "1547fbe70ed47d5bc515ff00271309939f7)\n"
             ),
         }
 

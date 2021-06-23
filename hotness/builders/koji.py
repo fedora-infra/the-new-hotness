@@ -303,23 +303,58 @@ class Koji(Builder):
         """
         old_checksums = set()
         new_checksums = set()
-        for sources, checksums in (
-            (old_sources, old_checksums),
-            (new_sources, new_checksums),
-        ):
+        source_checksum = {}
+        for sources, checksums in ((old_sources, old_checksums),):
             for file_path in sources:
                 with open(file_path, "rb") as fd:
-                    h = hashlib.sha256()
+                    h = hashlib.sha512()
                     h.update(fd.read())
-                    checksums.add(h.hexdigest())
+                    checksum = h.hexdigest()
+                    checksums.add(checksum)
+                    if checksum not in source_checksum:
+                        source_checksum[checksum] = {
+                            "old_sources": [],
+                            "new_sources": [],
+                        }
+                    source_checksum[checksum]["old_sources"].append(
+                        os.path.basename(file_path)
+                    )
 
-        if old_checksums.intersection(new_checksums):
+        for sources, checksums in ((new_sources, new_checksums),):
+            for file_path in sources:
+                with open(file_path, "rb") as fd:
+                    h = hashlib.sha512()
+                    h.update(fd.read())
+                    checksum = h.hexdigest()
+                    checksums.add(checksum)
+                    if checksum not in source_checksum:
+                        source_checksum[checksum] = {
+                            "old_sources": [],
+                            "new_sources": [],
+                        }
+                    source_checksum[checksum]["new_sources"].append(
+                        os.path.basename(file_path)
+                    )
+
+        intersection_checksums = old_checksums.intersection(new_checksums)
+        if intersection_checksums:
+            files_string = ""
+            for checksum in intersection_checksums:
+                source_dict = source_checksum[checksum]
+                old_sources = source_dict["old_sources"]
+                new_sources = source_dict["new_sources"]
+                files_string = (
+                    files_string
+                    + f"Old: {old_sources} -> New: {new_sources} ({checksum})\n"
+                )
             return (
                 "One or more of the new sources for this package are identical to "
                 "the old sources. This is most likely caused either by identical source files "
                 "between releases, for example service files, or the specfile does not use "
                 "version macro in its source URLs. If this is the second case, then please "
                 "update the specfile to use version macro in its source URLs.\n"
+                "Here is the list of the files with SHA512 checksums:\n"
+                f"{files_string}"
             )
 
         return ""
