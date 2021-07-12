@@ -116,11 +116,12 @@ class Pagure(Patcher):
             downstream_package_name=package.name, dist_git_base_url=self.dist_git_url
         )
 
-        with TemporaryDirectory(prefix="thn-", dir="/var/tmp") as tmp:  # nosec
-            dist_git = DistGit.clone(self.config, package_config, tmp)
 
-            # Use master branch
-            branch = "rawhide"
+        # Use master branch
+        branch = "rawhide"
+
+        with TemporaryDirectory(prefix="thn-", dir="/var/tmp") as tmp:  # nosec
+            dist_git = DistGit.clone(self.config, package_config, tmp, branch=branch)
 
             _logger.info(
                 "Creating pull request for '{}' in dist-git repository '{}'".format(
