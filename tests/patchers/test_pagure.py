@@ -116,7 +116,7 @@ class TestPagureSubmitPatch:
         Assert that submit_patch works correctly.
         """
         # Prepare package
-        package = Package(name="0ad", version="1.0", distro="Fedora")
+        package = Package(name="msort", version="9.00", distro="Fedora")
 
         opts = {"bugzilla_url": "https://bugzilla.redhat.com/show_bug.cgi?id=100"}
 

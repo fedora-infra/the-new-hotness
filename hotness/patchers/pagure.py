@@ -18,6 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 import logging
+from tempfile import TemporaryDirectory
 from typing import Dict
 
 from packit.config import Config, PackageConfig
@@ -115,27 +116,28 @@ class Pagure(Patcher):
             downstream_package_name=package.name, dist_git_base_url=self.dist_git_url
         )
 
-        dist_git = DistGit(self.config, package_config)
+        with TemporaryDirectory(prefix="thn-", dir="/var/tmp") as tmp:  # nosec
+            dist_git = DistGit.clone(self.config, package_config, tmp)
 
-        # Use master branch
-        branch = "rawhide"
+            # Use master branch
+            branch = "rawhide"
 
-        _logger.info(
-            "Creating pull request for '{}' in dist-git repository '{}'".format(
-                package, package_config.dist_git_package_url
+            _logger.info(
+                "Creating pull request for '{}' in dist-git repository '{}'".format(
+                    package, package_config.dist_git_package_url
+                )
             )
-        )
 
-        dist_git.update_branch(branch)
-        self._bump_spec(package.version, dist_git.absolute_specfile_path)
+            dist_git.update_branch(branch)
+            self._bump_spec(package.version, dist_git.absolute_specfile_path)
 
-        title = self.changelog_template.format(version=package.version)
-        dist_git.commit(title, "", prefix="[the-new-hotness]")
-        dist_git.push_to_fork(branch)
-        msg = self.pr_template.format(package=package.name, version=version, bugzilla_url=bugzilla_url)
-        pull_request = dist_git.create_pull(title, msg, branch, branch)
+            title = self.changelog_template.format(version=package.version)
+            dist_git.commit(title, "", prefix="[the-new-hotness]")
+            dist_git.push_to_fork(branch)
+            msg = self.pr_template.format(package=package.name, version=package.version, bugzilla_url=bugzilla_url)
+            pull_request = dist_git.create_pull(title, msg, branch, branch)
 
-        output["pull_request_url"] = pull_request.url
+            output["pull_request_url"] = pull_request.url
 
         return output
 
