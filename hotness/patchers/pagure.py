@@ -23,7 +23,9 @@ from typing import Dict
 
 from packit.config import Config, PackageConfig
 from packit.distgit import DistGit
+from packit.local_project import LocalProject
 from packit.utils import run_command
+from packit.utils.repo import clone_fedora_package
 
 from hotness.domain import Package
 from hotness.exceptions import PatcherException
@@ -92,6 +94,7 @@ class Pagure(Patcher):
             opts: Additional options for pagure. Example:
                 {
                     "bugzilla_url": "https://bugzilla.redhat.com/show_bug.cgi?id=703109", # Bugzilla ticket url
+                    "staging": True, # Should we use staging dist-git or production (default: False)
                 }
 
         Returns:
@@ -106,6 +109,7 @@ class Pagure(Patcher):
         """
         output = {}
         bugzilla_url = opts.get("bugzilla_url", "")
+        staging = opts.get("staging", False)
         if not bugzilla_url:
             raise PatcherException(
                 "Opts parameters are missing! "
@@ -121,7 +125,9 @@ class Pagure(Patcher):
         branch = "rawhide"
 
         with TemporaryDirectory(prefix="thn-", dir="/var/tmp") as tmp:  # nosec
-            dist_git = DistGit.clone(self.config, package_config, tmp, branch=branch)
+            clone_fedora_package(package.name, tmp, branch=branch, stg=staging)
+            local_project = LocalProject(working_dir=tmp)
+            dist_git = DistGit(self.config, package_config, local_project=local_project)
 
             _logger.info(
                 "Creating pull request for '{}' in dist-git repository '{}'".format(
@@ -129,7 +135,6 @@ class Pagure(Patcher):
                 )
             )
 
-            dist_git.update_branch(branch)
             self._bump_spec(package.version, dist_git.absolute_specfile_path)
 
             title = self.changelog_template.format(version=package.version)
