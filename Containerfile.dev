@@ -28,11 +28,13 @@ RUN pip install wheel twine towncrier
 COPY . .
 
 # Copy message of the day
-COPY ./devel/ansible/roles/hotness-dev/files/motd >> /etc/motd
+RUN cat /app/devel/ansible/roles/hotness-dev/files/motd >> /etc/motd
+
+RUN cp /app/config/config.toml.example ~/config.toml
 
 # Install local packages in editable mode
-RUN pip install -e .
-RUN pip install -e ./hotness_schema
+RUN pip install -e /app
+RUN pip install -e /app/hotness_schema
 
 # Comment out the line that starts with 'default_ccache_name'
 # for preventing following error: `kinit: Invalid UID in persistent keyring name while getting default ccache`
