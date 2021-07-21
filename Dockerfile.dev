@@ -1,4 +1,5 @@
-FROM fedora:34
+ARG FEDORA_VERSION
+FROM fedora:${FEDORA_VERSION}
 
 WORKDIR /app
 
@@ -12,9 +13,10 @@ RUN dnf install -y krb5-workstation krb5-devel krb5-libs
 
 # fedmsg (Federated Message Bus)
 RUN dnf install -y fedmsg
+RUN cp -r /etc/fedmsg.d .
 
 # Python packages
-RUN dnf install -y python3-devel python3-pip python3-bugzilla python3-requests-gssapi python3-blinker python3-wrapt python3-gssapi
+RUN dnf install -y python3-devel python3-pip python3-requests-gssapi python3-blinker python3-wrapt python3-gssapi
 
 # Development tools (for doing stuff inside of the container)
 RUN dnf install -y vim

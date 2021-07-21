@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
+      args:
+        FEDORA_VERSION: 34
     container_name: "hotness"
     hostname: "hotness-service"
     volumes:
