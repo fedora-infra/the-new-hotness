@@ -104,12 +104,11 @@ Makefile scripts that provide easier container management:
 
 Project files are bound to each other with host and container. Whenever you change any project file from the host or the container, the same change will happen on the opposite side as well.
 
-After connecting to hotness service container::
+After connecting to hotness service container:
 
-* you can run the applicaton with:
+* you can run the applicaton with::
 
     $ fedmsg-hub
-* or start hacking by reading the :ref:`hacking guide<Hacking>`
 
 Using Python virtual env
 ^^^^^^^^^^^^^^^^^^^^^^^^
