@@ -92,6 +92,23 @@ Next, clone the repository and start containers::
 
 Hotness container starts after when Redis and RabbitMQ services successfully start. Usually, it takes around 10-30 seconds depends on the computer power.
 
+.. list-table:: Container Service Informations:
+   :widths: 25 25 50
+   :header-rows: 1
+
+   * - Name 1
+     - Url
+     - Credentials
+   * - RabbitMQ
+     - http://localhost:5672
+     - hotness:hotness
+   * - RabbitMQ Management UI
+     - http://localhost:15672
+     - hotness:hotness
+   * - Redis
+     - http://localhost:6379
+     - not required
+
 Makefile scripts that provide easier container management:
 
 * ``make up`` Starts all the container services
