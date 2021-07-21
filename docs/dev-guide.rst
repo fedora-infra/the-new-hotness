@@ -74,14 +74,14 @@ You can also use aliases:
 
 For other aliases look in the ``~/.bashrc`` file.
 
-Using Docker
+Using Docker / Podman
 ^^^^^^^^^^^^^
 
 Using Docker you will be able to control each service (hotness app, RabbitMQ, Redis, etc.) separately. You can turn off Redis or RabbitMQ or both, then connect to external services or use them with the application. 
 
 Requirements:
 
-* Docker
+* Docker / Podman (version +3 with podman-docker)
 * Docker Compose
 
 Next, clone the repository and start containers::
