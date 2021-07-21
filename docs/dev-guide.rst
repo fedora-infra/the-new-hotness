@@ -75,7 +75,7 @@ You can also use aliases:
 For other aliases look in the ``~/.bashrc`` file.
 
 Using Docker / Podman
-^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 Using Docker you will be able to control each service (hotness app, RabbitMQ, Redis, etc.) separately. You can turn off Redis or RabbitMQ or both, then connect to external services or use them with the application. 
 
@@ -90,7 +90,7 @@ Next, clone the repository and start containers::
     $ cd the-new-hotness
     $ make up
 
-Hotness container starts after Redis and RabbitMQ services successfully start. Usually, it takes around 10-30 seconds depends on the computer power.
+Hotness container starts after it's depended container successfully start. Usually, it takes around 10-30 seconds depends on the computer power.
 
 .. list-table:: Container Service Informations:
    :widths: 25 25 50
