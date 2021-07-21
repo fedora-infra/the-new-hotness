@@ -10,6 +10,7 @@ services:
     volumes:
       - ./:/app
     network_mode: host
+    privileged: true
     tty: true
     restart: unless-stopped
 
