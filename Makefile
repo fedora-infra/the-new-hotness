@@ -5,7 +5,7 @@ restart:
 halt:
 	docker-compose down
 bash:
-	docker exec -it hotness bash -c "cat /etc/motd; bash;"
+	docker-compose exec hotness bash -c "cat /etc/motd; bash;"
 logs:
 	docker-compose logs -f
 
