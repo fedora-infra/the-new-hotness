@@ -4,7 +4,7 @@ services:
   hotness:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Containerfile.dev
       args:
         FEDORA_VERSION: 34
     container_name: "hotness"
