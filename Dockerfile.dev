@@ -21,6 +21,9 @@ RUN dnf install -y python3-devel python3-pip python3-requests-gssapi python3-bli
 # Development tools (for doing stuff inside of the container)
 RUN dnf install -y vim
 
+# Packages that are required for releasing
+RUN pip install wheel twine towncrier
+
 # Comment out the line that starts with 'default_ccache_name'
 # for preventing following error: `kinit: Invalid UID in persistent keyring name while getting default ccache`
 RUN sed -i '/^[^#]/ s/\(^.*default_ccache_name.*$\)/#\1/' /etc/krb5.conf
