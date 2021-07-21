@@ -27,3 +27,7 @@ build/
 
 # Emacs projects
 .projectile
+
+# Vim
+*.swp
+*.swo
