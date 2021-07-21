@@ -9,25 +9,33 @@ WORKDIR /app
 RUN dnf upgrade --refresh -y
 
 # Kerberos packages
-RUN dnf install -y krb5-workstation krb5-devel krb5-libs
+RUN dnf install -y krb5-devel
 
-# fedmsg (Federated Message Bus)
-RUN dnf install -y fedmsg
-RUN cp -r /etc/fedmsg.d .
+# Fedora Messaging
+RUN dnf install -y fedora-messaging
 
 # Python packages
-RUN dnf install -y python3-devel python3-pip python3-requests-gssapi python3-blinker python3-wrapt python3-gssapi
+RUN dnf install -y python3-bugzilla python3-dogpile-cache python3-fedora \
+    python3-fedmsg python3-koji python3-pycurl python3-requests python3-six \
+    python3-black python3-flake8 python3-sphinx
 
 # Development tools (for doing stuff inside of the container)
-RUN dnf install -y vim
+RUN dnf install -y vim-enhanced tree tmux tox python3-rpdb nmap-ncat ngrep
 
 # Packages that are required for releasing
 RUN pip install wheel twine towncrier
 
+COPY . .
+
+# Copy message of the day
+COPY ./devel/ansible/roles/hotness-dev/files/motd >> /etc/motd
+
+# Install local packages in editable mode
+RUN pip install -e .
+RUN pip install -e ./hotness_schema
+
 # Comment out the line that starts with 'default_ccache_name'
 # for preventing following error: `kinit: Invalid UID in persistent keyring name while getting default ccache`
 RUN sed -i '/^[^#]/ s/\(^.*default_ccache_name.*$\)/#\1/' /etc/krb5.conf
-
-COPY . .
 
 RUN python setup.py develop
