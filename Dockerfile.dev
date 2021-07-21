@@ -1,0 +1,28 @@
+FROM fedora:34
+
+WORKDIR /app
+
+# Package installation steps are separated so they
+# can be cached individually on Dockerfile changes
+
+RUN dnf upgrade --refresh -y
+
+# Kerberos packages
+RUN dnf install -y krb5-workstation krb5-devel krb5-libs
+
+# fedmsg (Federated Message Bus)
+RUN dnf install -y fedmsg
+
+# Python packages
+RUN dnf install -y python3-devel python3-pip python3-bugzilla python3-requests-gssapi python3-blinker python3-wrapt python3-gssapi
+
+# Development tools (for doing stuff inside of the container)
+RUN dnf install -y vim
+
+# Comment out the line that starts with 'default_ccache_name'
+# for preventing following error: `kinit: Invalid UID in persistent keyring name while getting default ccache`
+RUN sed -i '/^[^#]/ s/\(^.*default_ccache_name.*$\)/#\1/' /etc/krb5.conf
+
+COPY . .
+
+RUN python setup.py develop
