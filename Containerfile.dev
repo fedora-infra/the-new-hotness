@@ -20,7 +20,7 @@ RUN dnf install -y python3-bugzilla python3-dogpile-cache python3-fedora \
     python3-black python3-flake8 python3-sphinx
 
 # Development tools (for doing stuff inside of the container)
-RUN dnf install -y vim-enhanced tree tmux tox python3-rpdb nmap-ncat ngrep
+RUN dnf install -y vim-enhanced tox python3-rpdb
 
 # Packages that are required for releasing
 RUN pip install wheel twine towncrier
@@ -30,7 +30,7 @@ COPY . .
 # Copy and edit motd
 RUN cat /app/.docker/motd >> /etc/motd
 
-COPY ./devel/ansible/roles/hotness-dev/files/config.toml ~
+RUN cp /app/devel/ansible/roles/hotness-dev/files/config.toml ~
 
 # Install local packages in editable mode
 RUN pip install -e /app
