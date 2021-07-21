@@ -17,8 +17,8 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      redis:
-        condition: service_healthy
+      #redis:
+      #condition: service_healthy
 
   rabbitmq:
     image: rabbitmq:3.8.16-management-alpine
