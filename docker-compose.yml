@@ -1,12 +1,15 @@
 version: "3.5"
 
 services:
-  hostness:
+  hotness:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: "hostness"
-    hostname: "hostness-service"
+    container_name: "hotness"
+    hostname: "hotness-service"
+    volumes:
+      - ./:/app
     network_mode: host
     tty: true
     restart: unless-stopped
+
