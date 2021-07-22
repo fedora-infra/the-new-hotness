@@ -11,7 +11,7 @@ Bug Fixes
 ---------
 
 * handle master -> rawhide branch change
-  (`#318 <https://github.com/fedora-infra/the-mew-hotness/issues/318>`_)
+  (`#318 <https://github.com/fedora-infra/the-new-hotness/issues/318>`_)
 
 
 Contributors
@@ -29,7 +29,7 @@ Bug Fixes
 ---------
 
 * Crash with the new API in Anitya
-  (`#316 <https://github.com/fedora-infra/the-mew-hotness/issues/316>`_)
+  (`#316 <https://github.com/fedora-infra/the-new-hotness/issues/316>`_)
 
 
 Contributors
@@ -47,14 +47,14 @@ Bug Fixes
 ---------
 
 * Errors while downloading sources
-  (`#302 <https://github.com/fedora-infra/the-mew-hotness/issues/302>`_)
+  (`#302 <https://github.com/fedora-infra/the-new-hotness/issues/302>`_)
 
 
 Development Changes
 -------------------
 
 * Add towncrier
-  (`#288 <https://github.com/fedora-infra/the-mew-hotness/issues/288>`_)
+  (`#288 <https://github.com/fedora-infra/the-new-hotness/issues/288>`_)
 
 
 Contributors
