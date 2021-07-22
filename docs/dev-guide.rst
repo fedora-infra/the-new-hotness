@@ -121,7 +121,7 @@ Project files are bound to each other with host and container. Whenever you chan
 
 After connecting to hotness container you can run the applicaton with::
 
-    $ fedmsg-hub
+    $ fedora-messaging consume
 
 Using Python virtual env
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -137,7 +137,7 @@ Set up your environment with::
 
 And then run it with::
 
-    $ fedora-messaging consume
+    $ fedmsg-hub
 
 It should pick up the the-new-hotness consumer and start running.
 
