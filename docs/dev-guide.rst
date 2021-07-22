@@ -137,7 +137,7 @@ Set up your environment with::
 
 And then run it with::
 
-    $ fedmsg-hub
+    $ fedora-messaging consume
 
 It should pick up the the-new-hotness consumer and start running.
 
