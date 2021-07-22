@@ -101,7 +101,7 @@ class Pagure(Patcher):
             Dictionary containing pull request url
             Example:
             {
-                "pull_request_url": "https://src.fedoraproject.org/rpms/repo/pull-request/0"
+                "pull_request_url": "https://src.fedoraproject.org/rpms/repo/pull-request/0",
             }
 
         Raises:
@@ -139,13 +139,29 @@ class Pagure(Patcher):
 
             title = self.changelog_template.format(version=package.version)
             dist_git.commit(title, "", prefix="[the-new-hotness]")
-            dist_git.push_to_fork(branch)
+            dist_git.push_to_fork(branch, force=True)
             msg = self.pr_template.format(package=package.name, version=package.version, bugzilla_url=bugzilla_url)
+            # Close any existing PRs first
+            self._close_existing_pr(dist_git)
             pull_request = dist_git.create_pull(title, msg, branch, branch)
-
             output["pull_request_url"] = pull_request.url
 
+            print(output)
+
         return output
+
+    def _close_existing_pr(self, dist_git: DistGit) -> None:
+        """
+        Gets all opened pull requests and closes the once created by the fas_user
+        specified in __init__.
+
+        Params:
+            dist_git: Packit DistGit object to retrieve pull requests from
+        """
+        pr_list = dist_git.local_project.git_project.get_pr_list()
+        for pr in pr_list:
+            if pr.author == self.config.fas_user:
+                pr.close()
 
     def _bump_spec(self, version: str, specfile_path: str):
         """
