@@ -29,7 +29,7 @@ COPY . .
 
 # Providing config.toml
 RUN cp /app/devel/ansible/roles/hotness-dev/files/config.toml ~
-ENV FEDORA_MESSAGING_CONF=~/config.toml
+ENV FEDORA_MESSAGING_CONF=/root/config.toml
 
 # Install local packages in editable mode
 RUN pip install -e /app
