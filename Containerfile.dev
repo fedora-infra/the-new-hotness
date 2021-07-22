@@ -28,7 +28,7 @@ RUN pip install wheel twine towncrier
 COPY . .
 
 # Copy and edit motd
-RUN cat /app/.docker/motd >> /etc/motd
+RUN cat /app/.container/motd >> /etc/motd
 
 RUN cp /app/devel/ansible/roles/hotness-dev/files/config.toml ~
 
