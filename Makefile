@@ -1,11 +1,11 @@
 up:
-	docker-compose up -d hotness
+	docker-compose -f container-compose.yml up -d hotness
 restart:
-	docker-compose restart
+	docker-compose -f container-compose.yml restart
 halt:
-	docker-compose down
+	docker-compose -f container-compose.yml down
 bash:
-	docker-compose exec hotness bash -c "cat /app/.container/motd; bash;"
+	docker-compose -f container-compose.yml exec hotness bash -c "cat /app/.container/motd; bash;"
 logs:
-	docker-compose logs -f
+	docker-compose -f container-compose.yml logs -f
 
