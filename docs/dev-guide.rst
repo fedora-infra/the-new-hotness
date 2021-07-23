@@ -90,7 +90,7 @@ Next, clone the repository and start containers::
     $ cd the-new-hotness
     $ make up
 
-Hotness container starts after it's depended container successfully start. Usually, it takes around 10-30 seconds depends on the computer power.
+Hotness container starts after the start of containers running services required by the-new-hotness. Usually, it takes around 10-30 seconds depends on the computer power.
 
 .. list-table:: Container Service Informations:
    :widths: 25 25 50
