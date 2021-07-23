@@ -74,6 +74,55 @@ You can also use aliases:
 
 For other aliases look in the ``~/.bashrc`` file.
 
+Using Docker / Podman
+^^^^^^^^^^^^^^^^^^^^^
+
+Using Docker you will be able to control each service (hotness app, RabbitMQ, Redis, etc.) separately. You can turn off Redis or RabbitMQ or both, then connect to external services or use them with the application. 
+
+Requirements:
+
+* Docker / Podman (version +3 with podman-docker)
+* Docker Compose
+
+Next, clone the repository and start containers::
+
+    $ git clone https://github.com/fedora-infra/the-new-hotness.git
+    $ cd the-new-hotness
+    $ make up
+
+Hotness container starts after the start of containers running services required by the-new-hotness. Usually, it takes around 10-30 seconds depends on the computer power.
+
+.. list-table:: Container Service Informations:
+   :widths: 25 25 50
+   :header-rows: 1
+
+   * - Name 1
+     - Url
+     - Credentials
+   * - RabbitMQ
+     - http://localhost:5672
+     - hotness:hotness
+   * - RabbitMQ Management UI
+     - http://localhost:15672
+     - hotness:hotness
+   * - Redis
+     - http://localhost:6379
+     - not required
+
+Makefile scripts that provide easier container management:
+
+* ``make up`` Starts all the container services
+* ``make restart`` Restarts all the container services that are either stopped or running 
+* ``make halt`` Stops and removes the containers
+* ``make bash`` Connects to hotness container
+* ``make logs`` Shows all logs of all containers
+
+Project files are bound to each other with host and container. Whenever you change any project file from the host or the container, the same change will happen on the opposite side as well.
+
+After connecting to hotness container you can run the applicaton with::
+
+    $ fedora-messaging consume
+
 Using Python virtual env
 ^^^^^^^^^^^^^^^^^^^^^^^^
 

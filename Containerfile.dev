@@ -1,0 +1,42 @@
+ARG FEDORA_VERSION
+FROM fedora:${FEDORA_VERSION}
+
+WORKDIR /app
+
+# Package installation steps are separated so they
+# can be cached individually on Dockerfile changes
+
+RUN dnf upgrade --refresh -y
+
+# Kerberos packages
+RUN dnf install -y krb5-devel
+
+# Fedora Messaging
+RUN dnf install -y fedora-messaging
+
+# Python packages
+RUN dnf install -y python3-bugzilla python3-dogpile-cache python3-fedora \
+    python3-fedmsg python3-koji python3-pycurl python3-requests python3-six \
+    python3-black python3-flake8 python3-sphinx
+
+# Development tools (for doing stuff inside of the container)
+RUN dnf install -y vim-enhanced tox python3-rpdb
+
+# Packages that are required for releasing
+RUN pip install wheel twine towncrier
+
+COPY . .
+
+# Providing config.toml
+RUN cp /app/devel/ansible/roles/hotness-dev/files/config.toml ~
+ENV FEDORA_MESSAGING_CONF=/root/config.toml
+
+# Install local packages in editable mode
+RUN pip install -e /app
+RUN pip install -e /app/hotness_schema
+
+# Comment out the line that starts with 'default_ccache_name'
+# for preventing following error: `kinit: Invalid UID in persistent keyring name while getting default ccache`
+RUN sed -i '/^[^#]/ s/\(^.*default_ccache_name.*$\)/#\1/' /etc/krb5.conf
+
+RUN python setup.py develop

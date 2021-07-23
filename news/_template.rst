@@ -4,7 +4,7 @@
    {%- elif value.startswith("C") -%}
      `{{ value[1:] }} <https://github.com/fedora-infra/the-new-hotness/commit/{{ value[1:] }}>`_
    {%- else -%}
-     `#{{ value }} <https://github.com/fedora-infra/the-mew-hotness/issues/{{ value }}>`_
+     `#{{ value }} <https://github.com/fedora-infra/the-new-hotness/issues/{{ value }}>`_
    {%- endif -%}
 {%- endmacro -%}
 

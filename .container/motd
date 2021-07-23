@@ -1,0 +1,20 @@
+
+Welcome to The New Hotness development environment!
+
+To start development you need to do this first:
+
+* add your bugzilla credentials or API key to ~/config.toml
+
+* acquire a valid Kerberos ticket by `kinit <fas-username>@FEDORAPROJECT.ORG`
+
+Here are some tips:
+
+* Run tests with `tox`
+
+* To build documentation run `tox -e docs`
+
+* For additional informations see documentation
+  <https://the-new-hotness.readthedocs.io/en/stable/>
+
+Happy hacking!
+
