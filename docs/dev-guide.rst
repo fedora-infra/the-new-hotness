@@ -84,6 +84,9 @@ Requirements:
 * Docker / Podman (version +3 with podman-docker)
 * Docker Compose
 
+.. warning::
+    If using podman, in ``container-compose.yml`` either the ``depends_on`` block of ``hotness`` service or all the ``healthcheck`` blocks must be commented out. Podman does not support healthchecking yet.
+
 Next, clone the repository and start containers::
 
     $ git clone https://github.com/fedora-infra/the-new-hotness.git
