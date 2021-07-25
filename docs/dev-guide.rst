@@ -227,7 +227,7 @@ News type can be one of the following:
   
 For example:
 
-If this PR is solving issue #714 with labeled as ``type.bug``, the file inside news should be called 714.bug (PR714.bug if the PR does not related with any issue) and the content of the file would be:
+If this PR is solving issue #714 labeled as ``type.bug`` and named "Javascript error on add project page", the file inside news should be called 714.bug (PR714.bug if the PR does not have any linked issue and the PR number is 714) and the content of the file would be:
 
 ``Javascript error on add project page``
 
@@ -323,4 +323,3 @@ If you are a maintainer and wish to make a release, follow these steps:
 
 .. note::
     Optional steps are required only if you want to release a new version of message schema.
-
