@@ -206,7 +206,17 @@ Release notes
 =============
 
 To add entries to the release notes, create a file in the ``news`` directory
-with the ``source.type`` name format, where ``type`` is one of:
+with the ``source.type`` name format, where the ``source`` part of the filename is:
+
+* ``42`` when the change is described in issue ``42``
+* ``PR42`` when the change has been implemented in pull request ``42``, and
+  there is no associated issue
+* ``username`` for contributors (``author`` extention). It should be the
+  username part of their commit's email address.
+
+And where ``type`` is label of the issue or PR that is named ``type.label``. If the issue or PR is missing a label, please ask maintainer to add one.
+
+News type can be one of the following:
 
 * ``feature``: for new features
 * ``bug``: for bug fixes
@@ -214,19 +224,10 @@ with the ``source.type`` name format, where ``type`` is one of:
 * ``dev``: for development-related changes
 * ``author``: for contributor names
 * ``other``: for other changes
-
-And where the ``source`` part of the filename is:
-
-* ``42`` when the change is described in issue ``42``
-* ``PR42`` when the change has been implemented in pull request ``42``, and
-  there is no associated issue
-* ``username`` for contributors (``author`` extention). It should be the
-  username part of their commit's email address.
   
 For example:
 
-If this PR is solving bug 714 the file inside ``news`` should be called ``714.bug``
-and the content of the file would be:
+If this PR is solving issue #714 labeled as ``type.bug`` and named "Javascript error on add project page", the file inside news should be called 714.bug (PR714.bug if the PR does not have any linked issue and the PR number is 714) and the content of the file would be:
 
 ``Javascript error on add project page``
 
