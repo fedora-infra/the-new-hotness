@@ -117,6 +117,7 @@ class HotnessConsumer(object):
         self.explanation_url = config["bugzilla"]["explanation_url"]
         self.distro = config["distro"]
         self.repoid = config["repoid"]
+        self.hotness_issue_tracker = config["hotness_issue_tracker"]
         self.builder_koji = Koji(
             server_url=config["koji"]["server"],
             web_url=config["koji"]["weburl"],
@@ -588,9 +589,21 @@ class HotnessConsumer(object):
         build_koji_use_case = PackageScratchBuildUseCase(self.builder_koji)
         response = build_koji_use_case.build(build_request)
         if not response:
+            message = "Build failed:\n{}\n".format(response.value["message"])
+            if response.traceback:
+                message = message + "Traceback:\n{}\n".format(response.traceback)
+            if response.stdout:
+                message = message + "StdOut:\n{}\n".format(response.stdout)
+            if response.stderr:
+                message = message + "StdErr:\n{}\n".format(response.stderr)
+            message = message + (
+                "If you think this issue is caused by some bug in the-new-hotness, "
+                "please report it on the-new-hotness issue tracker: "
+                "{}".format(self.hotness_issue_tracker)
+            )
             notify_request = NotifyRequest(
                 package=package,
-                message="Build failed:\n{}".format(response.value["message"]),
+                message=message,
                 opts={"bz_id": bz_id},
             )
             notifier_bugzilla_use_case = NotifyUserUseCase(self.notifier_bugzilla)

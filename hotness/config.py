@@ -36,6 +36,8 @@ DEFAULTS = dict(
     dist_git_url="https://src.fedoraproject.org",
     # mdapi URL
     mdapi_url="https://apps.fedoraproject.org/mdapi",
+    # hotness issue tracker URL
+    hotness_issue_tracker="https://github.com/fedora-infra/the-new-hotness/issues",
     # Repository id
     repoid="rawhide",
     # Distribution

@@ -31,6 +31,7 @@ full_config = {
         "mdapi_url": "https://apps.fedoraproject.org/mdapi_test",
         "repoid": "",
         "distro": "",
+        "hotness_issue_tracker": "https://github.com/fedora-infra/the-new-hotness/issues",
         "connect_timeout": 30,
         "read_timeout": 30,
         "requests_retries": 1,

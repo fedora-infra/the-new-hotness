@@ -19,12 +19,14 @@
 # of Red Hat, Inc.
 import json
 import os
+import traceback
 from unittest import mock
 
 from fedora_messaging.message import Message
 
 from hotness.hotness_consumer import HotnessConsumer
 from hotness.domain import Package
+from hotness.exceptions import BuilderException
 
 FIXTURES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "fixtures/"))
 
@@ -439,9 +441,13 @@ class TestHotnessConsumerCall:
             "version": "0.16.0",
             "release": 1,
         }
+        builder_exception = BuilderException(
+            "This is heresy!",
+            std_out="This is a standard output",
+            std_err="This is an error output",
+        )
         self.consumer.notifier_bugzilla.notify.return_value = {"bz_id": 100}
-        self.consumer.builder_koji.build.side_effect = Exception("This is heresy!")
-
+        self.consumer.builder_koji.build.side_effect = builder_exception
         self.consumer.__call__(message)
 
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
@@ -466,7 +472,14 @@ class TestHotnessConsumerCall:
             ),
             mock.call(
                 package,
-                ("Build failed:\n" "Exception: This is heresy!"),
+                (
+                    "Build failed:\n"
+                    "BuilderException: {}\n".format(str(builder_exception)),
+                    "Traceback:\n"
+                    "{}\n".format(traceback.format_tb(builder_exception.__traceback__)),
+                    "StdOut:\n" "{}\n".format(builder_exception.std_out),
+                    "StdErr:\n" "{}\n".format(builder_exception.std_err),
+                ),
                 {"bz_id": 100},
             ),
         ]

@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+import traceback
 from typing import Any
 
+from hotness.exceptions import BuilderException
 from hotness.requests import Request
 from hotness.responses import Response
 
@@ -30,6 +32,10 @@ class ResponseFailure(Response):
     Attributes:
         type: Type of the failure.
         message: Error message.
+        traceback: Exception traceback as string.
+        output: Partial use case output from Exception, if provided.
+        std_out: Standard output from exception, if provided.
+        std_err: Error output from exception, if provided.
     """
 
     VALIDATOR_ERROR = "ValidatorError"
@@ -45,6 +51,65 @@ class ResponseFailure(Response):
         """
         self.type = type
         self.message = self._format_message(message)
+        self.traceback = self._get_stack_trace(message)
+        self.output = self._get_output(message)
+        self.stdout, self.stderr = self._get_std_out_err(message)
+
+    def _get_std_out_err(self, message: Any) -> (str, str):
+        """
+        Retrieves the standard output and error output from Exception,
+        otherwise just returns tuple with empty strings.
+
+        Params:
+            message: Input to retrieve use case output from
+
+        Returns:
+            Output if message is Exception, otherwise tuple containing empty strings
+        """
+        std_out = ""
+        std_err = ""
+
+        if type(message) is BuilderException:
+            std_out = message.std_out
+            std_err = message.std_err
+
+        return (std_out, std_err)
+
+    def _get_output(self, message: Any) -> dict:
+        """
+        Retrieves the use case output information from Exception,
+        otherwise just returns empty dict.
+
+        Params:
+            message: Input to retrieve use case output from
+
+        Returns:
+            Output if message is Exception, otherwise empty dict
+        """
+        output = {}
+
+        if isinstance(message, BuilderException):
+            output = message.output
+
+        return output
+
+    def _get_stack_trace(self, message: Any) -> [str]:
+        """
+        Retrieves the stack trace information from Exception,
+        otherwise just returns empty list.
+
+        Params:
+            message: Input to retrieve stack trace from
+
+        Returns:
+            Stack trace if message is Exception, otherwise empty string
+        """
+        stack_trace = []
+
+        if isinstance(message, Exception):
+            stack_trace = traceback.format_tb(message.__traceback__)
+
+        return stack_trace
 
     def _format_message(self, message: Any) -> Any:
         """
@@ -57,7 +122,7 @@ class ResponseFailure(Response):
         Returns:
             String if exception, otherwise return the same object we received.
         """
-        if type(message) is Exception:
+        if isinstance(message, Exception):
             return "{}: {}".format(message.__class__.__name__, "{}".format(message))
 
         return message
