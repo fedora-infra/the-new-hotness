@@ -354,7 +354,7 @@ class TestKojiBuild:
                 "version macro in its source URLs. If this is the second case, then please "
                 "update the specfile to use version macro in its source URLs.\n"
                 "Here is the list of the files with SHA512 checksums:\n"
-                "Old: ['Lectitio_Divinitatus'] -> New: ['Lectitio_Divinitatus',"
+                "Old: ['Lectitio_Divinitatus'] -> New: ['Lectitio_Divinitatus', "
                 "'Lectitio_Divinitatus'] (96140cc21155a13c9bfa03377410ac63e3"
                 "f7e6aef22cc3bf09c4efbfad1c7ced45e150e391c23271dfe49df71c60f"
                 "1547fbe70ed47d5bc515ff00271309939f7)\n"
@@ -604,3 +604,139 @@ class TestKojiBuild:
                 "please report this as a bug on the-new-hotness issue tracker.\n"
                 "'spectool -g' failed (exit 100): Some output"
             )
+
+    @mock.patch("hotness.builders.koji.sp.check_output")
+    @mock.patch("hotness.builders.koji.TemporaryDirectory")
+    def test_build_git_clone_error(self, mock_temp_dir, mock_check_output, tmpdir):
+        """
+        Assert that build fails with BuilderException when git clone raises error.
+        """
+        mock_temp_dir.return_value.__enter__.return_value = tmpdir
+
+        mock_check_output.side_effect = [
+            CalledProcessError(
+                1, "git clone", output=b"Some output", stderr=b"Failed miserably"
+            ),
+        ]
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        opts = {"bz_id": 100}
+
+        with pytest.raises(BuilderException) as exc:
+            self.builder.build(package, opts)
+
+            assert exc.message == ""
+            assert exc.output == {}
+            assert exc.std_out == "Some output"
+            assert exc.std_err == "Failed miserably"
+
+    @mock.patch("hotness.builders.koji.sp.check_output")
+    @mock.patch("hotness.builders.koji.TemporaryDirectory")
+    def test_build_rpmdev_bumpspec_error(
+        self, mock_temp_dir, mock_check_output, tmpdir
+    ):
+        """
+        Assert that build fails with BuilderException when rpmdev-bumpspec raises error.
+        """
+        mock_temp_dir.return_value.__enter__.return_value = tmpdir
+
+        mock_check_output.side_effect = [
+            "git clone",
+            CalledProcessError(
+                1, "rpmdev-bumpspec", output=b"Some output", stderr=b"Failed miserably"
+            ),
+        ]
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        opts = {"bz_id": 100}
+
+        with pytest.raises(BuilderException) as exc:
+            self.builder.build(package, opts)
+
+            assert exc.message == ""
+            assert exc.output == {}
+            assert exc.std_out == "Some output"
+            assert exc.std_err == "Failed miserably"
+
+    @mock.patch("hotness.builders.koji.sp.check_output")
+    @mock.patch("hotness.builders.koji.TemporaryDirectory")
+    def test_build_rpmbuild_error(self, mock_temp_dir, mock_check_output, tmpdir):
+        """
+        Assert that build fails with BuilderException when rpmbuild raises error.
+        """
+        # Create temporary file
+        file = os.path.join(tmpdir, "Lectitio_Divinitatus")
+        with open(file, "w") as f:
+            f.write("The Emperor is God")
+
+        mock_temp_dir.return_value.__enter__.return_value = tmpdir
+
+        mock_check_output.side_effect = [
+            "git clone",
+            "rpmdev-bumpspec",
+            (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
+            b"Getting Lectitio_Divinitatus\nGetting Lectitio_Divinitatus\n",
+            CalledProcessError(
+                1, "rpmdevbuild", output=b"Some output", stderr=b"Failed miserably"
+            ),
+        ]
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        opts = {"bz_id": 100}
+
+        with pytest.raises(BuilderException) as exc:
+            self.builder.build(package, opts)
+
+            assert exc.message == ""
+            assert exc.output == {}
+            assert exc.std_out == "Some output"
+            assert exc.std_err == "Failed miserably"
+
+    @mock.patch("hotness.builders.koji.sp.check_output")
+    @mock.patch("hotness.builders.koji.koji")
+    @mock.patch("hotness.builders.koji.TemporaryDirectory")
+    def test_build_git_commit_error(
+        self, mock_temp_dir, mock_koji, mock_check_output, tmpdir
+    ):
+        """
+        Assert that build fails with BuilderException when git commit raises error.
+        """
+        # Create temporary file
+        file = os.path.join(tmpdir, "Lectitio_Divinitatus")
+        with open(file, "w") as f:
+            f.write("The Emperor is God")
+
+        mock_session = mock.Mock()
+        mock_session.build.return_value = 1000
+        mock_session.krb_login.return_value = True
+        mock_koji.ClientSession.return_value = mock_session
+        mock_temp_dir.return_value.__enter__.return_value = tmpdir
+
+        mock_check_output.side_effect = [
+            "git clone",
+            "rpmdev-bumpspec",
+            (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
+            b"Getting Lectitio_Divinitatus\nGetting Lectitio_Divinitatus\n",
+            b"rpmbuild foobar.srpm",
+            "git config",
+            "git config",
+            CalledProcessError(
+                1, "git commit", output=b"Some output", stderr=b"Failed miserably"
+            ),
+            file.encode(),
+        ]
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        opts = {"bz_id": 100}
+
+        with pytest.raises(BuilderException) as exc:
+            self.builder.build(package, opts)
+
+            assert exc.message == ""
+            assert exc.output == {}
+            assert exc.std_out == "Some output"
+            assert exc.std_err == "Failed miserably"

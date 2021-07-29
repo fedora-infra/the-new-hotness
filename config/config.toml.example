@@ -60,6 +60,8 @@ handlers = ["console"]
 # the-new-hotness consumer configuration
 [consumer_config]
 mdapi_url = "https://apps.fedoraproject.org/mdapi"
+# URL to hotness issue tracker that will be shown together with error in bugzilla
+hotness_issue_tracker = "https://github.com/fedora-infra/the-new-hotness/issues"
 # The time in seconds the-new-hotness should wait for a socket to connect
 # before giving up.
 connect_timeout = 15

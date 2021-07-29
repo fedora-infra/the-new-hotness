@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+import traceback
+
+from hotness.exceptions import BuilderException
 from hotness.requests import Request
 from hotness.responses import ResponseFailure
 
@@ -37,6 +40,10 @@ class TestResponseFailureInit:
             "type": ResponseFailure.VALIDATOR_ERROR,
             "message": "This is heresy!",
         }
+        assert response.traceback == []
+        assert response.output == {}
+        assert response.stderr == ""
+        assert response.stdout == ""
 
 
 class TestResponseFailureBool:
@@ -93,6 +100,31 @@ class TestResponseFailureBuilderError:
             "type": ResponseFailure.BUILDER_ERROR,
             "message": "Exception: This is builder heresy!",
         }
+
+    def test_buider_exception(self):
+        """
+        Assert that `hotness.exceptions.BuilderException` is handled correctly.
+        """
+        builder_exception = BuilderException(
+            "This is builder heresy!",
+            output={"build_id": 100},
+            std_out="This is a standard output.",
+            std_err="This is an error output.",
+        )
+
+        response = ResponseFailure.builder_error(message=builder_exception)
+
+        assert response.type == ResponseFailure.BUILDER_ERROR
+        assert response.value == {
+            "type": ResponseFailure.BUILDER_ERROR,
+            "message": "BuilderException: This is builder heresy!",
+        }
+        assert response.traceback == traceback.format_tb(
+            builder_exception.__traceback__
+        )
+        assert response.output == {"build_id": 100}
+        assert response.stdout == "This is a standard output."
+        assert response.stderr == "This is an error output."
 
 
 class TestResponseFailureDatabaseError:

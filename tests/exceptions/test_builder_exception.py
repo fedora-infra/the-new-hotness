@@ -36,6 +36,25 @@ class TestBuilderExceptionInit:
 
         assert exception.message == "This error is a tech heresy!"
 
+    def test_init_optional_arguments(self):
+        """
+        Assert that exception is created correctly.
+        """
+        exception = BuilderException(
+            "This error is a tech heresy!",
+            output={"build_id": 100},
+            std_out="This is a standard output",
+            std_err="This is an error output",
+        )
+
+        with pytest.raises(Exception):
+            raise exception
+
+        assert exception.message == "This error is a tech heresy!"
+        assert exception.output == {"build_id": 100}
+        assert exception.std_out == "This is a standard output"
+        assert exception.std_err == "This is an error output"
+
 
 class TestBuilderExceptionStr:
     """

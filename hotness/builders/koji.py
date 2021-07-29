@@ -119,7 +119,10 @@ class Koji(Builder):
         with TemporaryDirectory(prefix="thn-", dir="/var/tmp") as tmp:  # nosec
             dist_git_url = self.git_url.format(package=package.name)
             _logger.info("Cloning %r to %r" % (dist_git_url, tmp))
-            sp.check_output(["git", "clone", dist_git_url, tmp], stderr=sp.STDOUT)
+            try:
+                sp.check_output(["git", "clone", dist_git_url, tmp], stderr=sp.STDOUT)
+            except sp.CalledProcessError as exc:
+                raise BuilderException(str(exc), std_out=exc.stdout, std_err=exc.stderr)
 
             specfile = os.path.join(tmp, package.name + ".spec")
 
@@ -136,7 +139,10 @@ class Koji(Builder):
                 " ".join(self.user_email),
                 specfile,
             ]
-            sp.check_output(cmd, stderr=sp.STDOUT)
+            try:
+                sp.check_output(cmd, stderr=sp.STDOUT)
+            except sp.CalledProcessError as exc:
+                raise BuilderException(str(exc), std_out=exc.stdout, std_err=exc.stderr)
 
             # We compare the old sources to the new ones to make sure we download
             # new sources from bumping the specfile version. Some packages don't
@@ -146,11 +152,24 @@ class Koji(Builder):
             new_sources = self._spec_sources(specfile, tmp)
             output["message"] = self._compare_sources(old_sources, new_sources)
 
-            cmd_output = sp.check_output(
-                ["rpmbuild", "-D", "_sourcedir .", "-D", "_topdir .", "-bs", specfile],
-                cwd=tmp,
-                stderr=sp.STDOUT,
-            )
+            try:
+                cmd_output = sp.check_output(
+                    [
+                        "rpmbuild",
+                        "-D",
+                        "_sourcedir .",
+                        "-D",
+                        "_topdir .",
+                        "-bs",
+                        specfile,
+                    ],
+                    cwd=tmp,
+                    stderr=sp.STDOUT,
+                )
+            except sp.CalledProcessError as exc:
+                raise BuilderException(
+                    str(exc), output=output, std_out=exc.stdout, std_err=exc.stderr
+                )
 
             srpm = os.path.join(tmp, cmd_output.decode("utf-8").strip().split()[-1])
             _logger.debug("Got srpm %r" % srpm)
@@ -161,23 +180,28 @@ class Koji(Builder):
             output["build_id"] = self._scratch_build(session, package.name, srpm)
 
             # Now, craft a patch to attach to the ticket
-            sp.check_output(
-                ["git", "config", "user.name", self.user_email[0]],
-                cwd=tmp,
-                stderr=sp.STDOUT,
-            )
-            sp.check_output(
-                ["git", "config", "user.email", self.user_email[1]],
-                cwd=tmp,
-                stderr=sp.STDOUT,
-            )
-            sp.check_output(
-                ["git", "commit", "-a", "-m", comment], cwd=tmp, stderr=sp.STDOUT
-            )
-            filename = sp.check_output(
-                ["git", "format-patch", "HEAD^"], cwd=tmp, stderr=sp.STDOUT
-            )
-            filename = filename.decode("utf-8").strip()
+            try:
+                sp.check_output(
+                    ["git", "config", "user.name", self.user_email[0]],
+                    cwd=tmp,
+                    stderr=sp.STDOUT,
+                )
+                sp.check_output(
+                    ["git", "config", "user.email", self.user_email[1]],
+                    cwd=tmp,
+                    stderr=sp.STDOUT,
+                )
+                sp.check_output(
+                    ["git", "commit", "-a", "-m", comment], cwd=tmp, stderr=sp.STDOUT
+                )
+                filename = sp.check_output(
+                    ["git", "format-patch", "HEAD^"], cwd=tmp, stderr=sp.STDOUT
+                )
+                filename = filename.decode("utf-8").strip()
+            except sp.CalledProcessError as exc:
+                raise BuilderException(
+                    str(exc), output=output, std_out=exc.stdout, std_err=exc.stderr
+                )
 
             output["patch_filename"] = filename
 
