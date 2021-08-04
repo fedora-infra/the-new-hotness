@@ -589,7 +589,14 @@ class HotnessConsumer(object):
         build_koji_use_case = PackageScratchBuildUseCase(self.builder_koji)
         response = build_koji_use_case.build(build_request)
         if not response:
-            message = "Build failed:\n{}\n".format(response.value["message"])
+            if "build_id" in response.output:
+                build_id = response.output["build_id"]
+                message = (
+                    "Build started but failure happened"
+                    "during post build operations:\n{}\n"
+                ).format(response.value["message"])
+            else:
+                message = "Build failed:\n{}\n".format(response.value["message"])
             if response.traceback:
                 message = message + "Traceback:\n{}\n".format(response.traceback)
             if response.stdout:
@@ -608,6 +615,15 @@ class HotnessConsumer(object):
             )
             notifier_bugzilla_use_case = NotifyUserUseCase(self.notifier_bugzilla)
             notifier_bugzilla_use_case.notify(notify_request)
+
+            # Insert the build_id to cache if available
+            if "build_id" in response.output:
+                build_id = response.output["build_id"]
+                insert_data_request = InsertDataRequest(
+                    key=str(build_id), value=str(bz_id)
+                )
+                insert_data_cache_use_case = InsertDataUseCase(self.database_cache)
+                response = insert_data_cache_use_case.insert(insert_data_request)
             return
 
         build_id = response.value["build_id"]
