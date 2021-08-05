@@ -7,5 +7,5 @@ pull_request_rules:
   conditions:
   - label!=no-mergify
   - '#approved-reviews-by>=1'
-  - status-success=continuous-integration/jenkins/pr-merge
+  - check-success=fedora/check
   name: default
