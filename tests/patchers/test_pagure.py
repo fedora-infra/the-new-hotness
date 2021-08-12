@@ -76,7 +76,7 @@ class TestPagureSubmitPatch:
         Create patcher instance for tests.
         """
         dist_git_url = "https://src.stg.fedoraproject.org/"
-        pagure_user_token = "SDC45K38QUXVT80B0WCRWRYBYEP4OM0UAZ4294W199LM2WLU0KN5YBOUIEVLWDFG"
+        pagure_user_token = "GVFVWOG7ZSBDN7E0738V1CSEDBDK47NBF1I4PW0WOL3AKKX743UZCCOVA4Z9LL21"
         fas_user = "zlopez"
         changelog_template = "Update to {version}"
         pr_template = "This is a testing PR for {package} to version {version} with test bugzilla url '{bugzilla_url}'"
@@ -116,7 +116,7 @@ class TestPagureSubmitPatch:
         Assert that submit_patch works correctly.
         """
         # Prepare package
-        package = Package(name="msort", version="9.00", distro="Fedora")
+        package = Package(name="python-semver", version="9.00", distro="Fedora")
 
         opts = {
             "bugzilla_url": "https://bugzilla.redhat.com/show_bug.cgi?id=100",
@@ -126,5 +126,5 @@ class TestPagureSubmitPatch:
         output = self.patcher.submit_patch(package, "", opts)
 
         assert output["pull_request_url"].startswith(
-            "https://src.stg.fedoraproject.org/rpms/repo/pull-request/"
+            "https://src.stg.fedoraproject.org/rpms/python-semver/pull-request/"
         )

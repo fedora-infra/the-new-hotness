@@ -23,9 +23,7 @@ from typing import Dict
 
 from packit.config import Config, PackageConfig
 from packit.distgit import DistGit
-from packit.local_project import LocalProject
 from packit.utils import run_command
-from packit.utils.repo import clone_fedora_package
 
 from hotness.domain import Package
 from hotness.exceptions import PatcherException
@@ -125,9 +123,7 @@ class Pagure(Patcher):
         branch = "rawhide"
 
         with TemporaryDirectory(prefix="thn-", dir="/var/tmp") as tmp:  # nosec
-            clone_fedora_package(package.name, tmp, branch=branch, stg=staging)
-            local_project = LocalProject(working_dir=tmp)
-            dist_git = DistGit(self.config, package_config, local_project=local_project)
+            dist_git = DistGit.clone(self.config, package_config, tmp)
 
             _logger.info(
                 "Creating pull request for '{}' in dist-git repository '{}'".format(
@@ -145,8 +141,6 @@ class Pagure(Patcher):
             self._close_existing_pr(dist_git)
             pull_request = dist_git.create_pull(title, msg, branch, branch)
             output["pull_request_url"] = pull_request.url
-
-            print(output)
 
         return output
 
