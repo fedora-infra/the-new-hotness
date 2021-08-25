@@ -1,11 +1,15 @@
+define compose
+	docker-compose -f container-compose.yml
+endef
+
 up:
-	docker-compose -f container-compose.yml up -d hotness
+	$(call compose) up -d hotness
 restart:
-	docker-compose -f container-compose.yml restart
+	$(call compose) restart
 halt:
-	docker-compose -f container-compose.yml down
+	$(call compose) down
 bash:
-	docker-compose -f container-compose.yml exec hotness bash -c "cat /app/.container/motd; bash;"
+	$(call compose) exec hotness bash -c "cat /app/.container/motd; bash;"
 logs:
-	docker-compose -f container-compose.yml logs -f
+	$(call compose) logs -f
 
