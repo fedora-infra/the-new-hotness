@@ -16,12 +16,12 @@ services:
     restart: unless-stopped
     depends_on:
       rabbitmq:
-        condition: service_healthy
-      #redis:
-      #condition: service_healthy
+        condition: service_started
+      redis:
+        condition: service_started
 
   rabbitmq:
-    image: rabbitmq:3.8.16-management-alpine
+    image: docker.io/library/rabbitmq:3.8.16-management-alpine
     container_name: "rabbitmq"
     network_mode: host
     restart: unless-stopped
@@ -35,7 +35,7 @@ services:
       - RABBITMQ_DEFAULT_PASS=hotness
 
   redis:
-    image: redis:6.0.9-alpine
+    image: docker.io/library/redis:6.0.9-alpine
     container_name: "redis"
     network_mode: host
     restart: unless-stopped

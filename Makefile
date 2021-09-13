@@ -1,15 +1,19 @@
-define compose
-	docker-compose -f container-compose.yml
+_CHECK_PODMAN := $(shell command -v podman 2> /dev/null)
+
+define compose-tool
+	$(if $(_CHECK_PODMAN), podman-compose, docker-compose) -f container-compose.yml
+endef
+
+define container-tool
+	$(if $(_CHECK_PODMAN), podman, docker)
 endef
 
 up:
-	$(call compose) up -d hotness
+	$(call compose-tool) up -d
 restart:
-	$(call compose) restart
+	$(MAKE) halt && $(MAKE) up
 halt:
-	$(call compose) down
+	$(call compose-tool) down -t1
 bash:
-	$(call compose) exec hotness bash -c "cat /app/.container/motd; bash;"
-logs:
-	$(call compose) logs -f
+	$(call container-tool) exec -it hotness bash -c "cat /app/.container/motd; bash;"
 
