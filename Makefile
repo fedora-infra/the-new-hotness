@@ -16,4 +16,6 @@ halt:
 	$(call compose-tool) down -t1
 bash:
 	$(call container-tool) exec -it hotness bash -c "cat /app/.container/motd; bash;"
+logs:
+	$(call container-tool) logs -f hotness rabbitmq redis
 

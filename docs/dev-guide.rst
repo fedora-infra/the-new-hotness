@@ -116,6 +116,7 @@ Makefile scripts that provide easier container management:
 * ``make restart`` Restarts all the container services that are either stopped or running
 * ``make halt`` Stops and removes the containers
 * ``make bash`` Connects to hotness container
+* ``make logs`` Shows all logs of all containers
 
 Project files are bound to each other with host and container. Whenever you change any project file from the host or the container, the same change will happen on the opposite side as well.
 
