@@ -77,15 +77,13 @@ For other aliases look in the ``~/.bashrc`` file.
 Using Docker / Podman
 ^^^^^^^^^^^^^^^^^^^^^
 
-Using Docker you will be able to control each service (hotness app, RabbitMQ, Redis, etc.) separately. You can turn off Redis or RabbitMQ or both, then connect to external services or use them with the application. 
+Using Docker you will be able to control each service (hotness app, RabbitMQ, Redis, etc.) separately. You can turn off Redis or RabbitMQ or both, then connect to external services or use them with the application.
 
 Requirements:
 
-* Docker / Podman (version +3 with podman-docker)
-* Docker Compose
-
-.. warning::
-    If using podman, in ``container-compose.yml`` either the ``depends_on`` block of ``hotness`` service or all the ``healthcheck`` blocks must be commented out. Podman does not support healthchecking yet.
+* Docker + Docker Compose
+  or
+* Podman + Podman Compose
 
 Next, clone the repository and start containers::
 
@@ -115,10 +113,9 @@ Hotness container starts after the start of containers running services required
 Makefile scripts that provide easier container management:
 
 * ``make up`` Starts all the container services
-* ``make restart`` Restarts all the container services that are either stopped or running 
+* ``make restart`` Restarts all the container services that are either stopped or running
 * ``make halt`` Stops and removes the containers
 * ``make bash`` Connects to hotness container
-* ``make logs`` Shows all logs of all containers
 
 Project files are bound to each other with host and container. Whenever you change any project file from the host or the container, the same change will happen on the opposite side as well.
 
