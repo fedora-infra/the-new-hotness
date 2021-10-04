@@ -4,7 +4,7 @@
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
- config.vm.box = "fedora/32-cloud-base"
+ config.vm.box = "fedora/34-cloud-base"
 
  # Forward traffic on the host to the development server on the guest
  # RabbitMQ
