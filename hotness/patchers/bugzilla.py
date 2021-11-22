@@ -109,8 +109,8 @@ class Bugzilla(Patcher):
         filename = opts.get("patch_filename", "")
         if bug_id == 0 or not filename:
             raise PatcherException(
-                "Opts parameters are missing! "
-                "Please provide either `bz_id` or `bz_short_desc`."
+                "Additional parameters are missing! "
+                "Please provide `bz_id` and `patch_filename`."
             )
 
         # Write file to temporary directory

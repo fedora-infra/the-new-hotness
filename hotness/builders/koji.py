@@ -122,7 +122,13 @@ class Koji(Builder):
             try:
                 sp.check_output(["git", "clone", dist_git_url, tmp], stderr=sp.STDOUT)
             except sp.CalledProcessError as exc:
-                raise BuilderException(str(exc), std_out=exc.stdout, std_err=exc.stderr)
+                std_out = ""
+                std_err = ""
+                if exc.stdout:
+                    std_out = exc.stdout.decode()
+                if exc.stderr:
+                    std_err = exc.stderr.decode()
+                raise BuilderException(str(exc), std_out=std_out, std_err=std_err)
 
             specfile = os.path.join(tmp, package.name + ".spec")
 
@@ -142,7 +148,13 @@ class Koji(Builder):
             try:
                 sp.check_output(cmd, stderr=sp.STDOUT)
             except sp.CalledProcessError as exc:
-                raise BuilderException(str(exc), std_out=exc.stdout, std_err=exc.stderr)
+                std_out = ""
+                std_err = ""
+                if exc.stdout:
+                    std_out = exc.stdout.decode()
+                if exc.stderr:
+                    std_err = exc.stderr.decode()
+                raise BuilderException(str(exc), std_out=std_out, std_err=std_err)
 
             # We compare the old sources to the new ones to make sure we download
             # new sources from bumping the specfile version. Some packages don't
@@ -167,8 +179,14 @@ class Koji(Builder):
                     stderr=sp.STDOUT,
                 )
             except sp.CalledProcessError as exc:
+                std_out = ""
+                std_err = ""
+                if exc.stdout:
+                    std_out = exc.stdout.decode()
+                if exc.stderr:
+                    std_err = exc.stderr.decode()
                 raise BuilderException(
-                    str(exc), output=output, std_out=exc.stdout, std_err=exc.stderr
+                    str(exc), output=output, std_out=std_out, std_err=std_err
                 )
 
             srpm = os.path.join(tmp, cmd_output.decode("utf-8").strip().split()[-1])
@@ -199,8 +217,14 @@ class Koji(Builder):
                 )
                 filename = filename.decode("utf-8").strip()
             except sp.CalledProcessError as exc:
+                std_out = ""
+                std_err = ""
+                if exc.stdout:
+                    std_out = exc.stdout.decode()
+                if exc.stderr:
+                    std_err = exc.stderr.decode()
                 raise BuilderException(
-                    str(exc), output=output, std_out=exc.stdout, std_err=exc.stderr
+                    str(exc), output=output, std_out=std_out, std_err=std_err
                 )
 
             output["patch_filename"] = filename
@@ -295,13 +319,15 @@ class Koji(Builder):
                 )
             elif e.returncode == 60:
                 msg = (
-                    "Unable to validate the TLS certificate for one of the package's"
+                    "Unable to validate the TLS certificate for one of the package's "
                     "Source URLs"
                 )
             else:
                 msg = (
                     "An unexpected error occurred while downloading the new package sources; "
-                    "please report this as a bug on the-new-hotness issue tracker."
+                    "please report this as a bug on the-new-hotness issue tracker.\n"
+                    "Error output:\n"
+                    "{}".format(e.stderr)
                 )
                 _logger.error(
                     "{cmd} failed (exit {code}): {msg}".format(

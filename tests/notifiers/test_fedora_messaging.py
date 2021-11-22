@@ -85,9 +85,10 @@ class TestFedoraMessagingNotify:
         with pytest.raises(NotifierException) as exc:
             self.notifier.notify(package, topic, {})
 
-            assert exc.msg == (
-                "Opts parameters are missing! " "Please provide `body` for the message."
-            )
+        assert exc.value.message == (
+            "Additional parameters are missing! "
+            "Please provide `body` for the message."
+        )
 
     @mock.patch("hotness.notifiers.fedora_messaging.fm_message.get_class")
     def test_notify_unknown_topic(self, mock_fm_get_class):
@@ -108,7 +109,7 @@ class TestFedoraMessagingNotify:
         with pytest.raises(NotifierException) as exc:
             self.notifier.notify(package, topic, opts)
 
-            assert exc.msg == ("Unknown topic provided 'hotness.foobar'")
+        assert exc.value.message == ("Unknown topic provided 'hotness.foobar'")
 
     @mock.patch("hotness.notifiers.fedora_messaging.api.publish")
     def test_notify_publish_exception(self, mock_fm_publish):
@@ -128,7 +129,7 @@ class TestFedoraMessagingNotify:
         with pytest.raises(NotifierException) as exc:
             self.notifier.notify(package, topic, opts)
 
-            assert exc.msg.startswith("Fedora messaging broker rejected message")
+        assert exc.value.message.startswith("Fedora messaging broker rejected message")
 
     @mock.patch("hotness.notifiers.fedora_messaging.api.publish")
     def test_notify_connection_exception(self, mock_fm_publish):
@@ -148,4 +149,4 @@ class TestFedoraMessagingNotify:
         with pytest.raises(NotifierException) as exc:
             self.notifier.notify(package, topic, opts)
 
-            assert exc.msg.startswith("Error sending the message")
+        assert exc.value.message.startswith("Error sending the message")
