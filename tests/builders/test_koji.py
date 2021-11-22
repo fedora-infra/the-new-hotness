@@ -395,7 +395,7 @@ class TestKojiBuild:
         with pytest.raises(BuilderException) as exc:
             self.builder.build(package, opts)
 
-            assert exc.msg == ("Can't authenticate with Koji!")
+        assert exc.value.message == ("Can't authenticate with Koji!")
 
     @mock.patch("hotness.builders.koji.sp.check_output")
     @mock.patch("hotness.builders.koji.koji")
@@ -427,10 +427,10 @@ class TestKojiBuild:
         with pytest.raises(DownloadException) as exc:
             self.builder.build(package, opts)
 
-            assert exc.msg == (
-                "The specfile contains a Source URL with an unknown protocol; it should"
-                'be "https", "http", or "ftp".'
-            )
+        assert exc.value.message == (
+            "The specfile contains a Source URL with an unknown protocol; it should"
+            'be "https", "http", or "ftp".'
+        )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
     @mock.patch("hotness.builders.koji.koji")
@@ -462,9 +462,9 @@ class TestKojiBuild:
         with pytest.raises(DownloadException) as exc:
             self.builder.build(package, opts)
 
-            assert exc.msg == (
-                "Unable to resolve the hostname for one of the package's Source URLs"
-            )
+        assert exc.value.message == (
+            "Unable to resolve the hostname for one of the package's Source URLs"
+        )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
     @mock.patch("hotness.builders.koji.koji")
@@ -496,9 +496,9 @@ class TestKojiBuild:
         with pytest.raises(DownloadException) as exc:
             self.builder.build(package, opts)
 
-            assert exc.msg == (
-                "Unable to connect to the host for one of the package's Source URLs"
-            )
+        assert exc.value.message == (
+            "Unable to connect to the host for one of the package's Source URLs"
+        )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
     @mock.patch("hotness.builders.koji.koji")
@@ -530,9 +530,9 @@ class TestKojiBuild:
         with pytest.raises(DownloadException) as exc:
             self.builder.build(package, opts)
 
-            assert exc.msg == (
-                "An HTTP error occurred downloading the package's new Source URLs: URL2"
-            )
+        assert exc.value.message == (
+            "An HTTP error occurred downloading the package's new Source URLs: URL2"
+        )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
     @mock.patch("hotness.builders.koji.koji")
@@ -564,10 +564,10 @@ class TestKojiBuild:
         with pytest.raises(DownloadException) as exc:
             self.builder.build(package, opts)
 
-            assert exc.msg == (
-                "Unable to validate the TLS certificate for one of the package's "
-                "Source URLs"
-            )
+        assert exc.value.message == (
+            "Unable to validate the TLS certificate for one of the package's "
+            "Source URLs"
+        )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
     @mock.patch("hotness.builders.koji.koji")
@@ -599,11 +599,12 @@ class TestKojiBuild:
         with pytest.raises(DownloadException) as exc:
             self.builder.build(package, opts)
 
-            assert exc.msg == (
-                "An unexpected error occurred while downloading the new package sources; "
-                "please report this as a bug on the-new-hotness issue tracker.\n"
-                "'spectool -g' failed (exit 100): Some output"
-            )
+        assert exc.value.message == (
+            "An unexpected error occurred while downloading the new package sources; "
+            "please report this as a bug on the-new-hotness issue tracker.\n"
+            "Error output:\n"
+            "None"
+        )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
     @mock.patch("hotness.builders.koji.TemporaryDirectory")
@@ -626,10 +627,12 @@ class TestKojiBuild:
         with pytest.raises(BuilderException) as exc:
             self.builder.build(package, opts)
 
-            assert exc.message == ""
-            assert exc.output == {}
-            assert exc.std_out == "Some output"
-            assert exc.std_err == "Failed miserably"
+        assert (
+            exc.value.message == "Command 'git clone' returned non-zero exit status 1."
+        )
+        assert exc.value.output == {}
+        assert exc.value.std_out == "Some output"
+        assert exc.value.std_err == "Failed miserably"
 
     @mock.patch("hotness.builders.koji.sp.check_output")
     @mock.patch("hotness.builders.koji.TemporaryDirectory")
@@ -655,10 +658,13 @@ class TestKojiBuild:
         with pytest.raises(BuilderException) as exc:
             self.builder.build(package, opts)
 
-            assert exc.message == ""
-            assert exc.output == {}
-            assert exc.std_out == "Some output"
-            assert exc.std_err == "Failed miserably"
+        assert (
+            exc.value.message
+            == "Command 'rpmdev-bumpspec' returned non-zero exit status 1."
+        )
+        assert exc.value.output == {}
+        assert exc.value.std_out == "Some output"
+        assert exc.value.std_err == "Failed miserably"
 
     @mock.patch("hotness.builders.koji.sp.check_output")
     @mock.patch("hotness.builders.koji.TemporaryDirectory")
@@ -677,7 +683,7 @@ class TestKojiBuild:
             "git clone",
             "rpmdev-bumpspec",
             (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
-            b"Getting Lectitio_Divinitatus\nGetting Lectitio_Divinitatus\n",
+            b"Getting Lectitio_Divinitatus\n",
             CalledProcessError(
                 1, "rpmdevbuild", output=b"Some output", stderr=b"Failed miserably"
             ),
@@ -690,10 +696,13 @@ class TestKojiBuild:
         with pytest.raises(BuilderException) as exc:
             self.builder.build(package, opts)
 
-            assert exc.message == ""
-            assert exc.output == {}
-            assert exc.std_out == "Some output"
-            assert exc.std_err == "Failed miserably"
+        assert (
+            exc.value.message
+            == "Command 'rpmdevbuild' returned non-zero exit status 1."
+        )
+        assert exc.value.output["message"] != ""
+        assert exc.value.std_out == "Some output"
+        assert exc.value.std_err == "Failed miserably"
 
     @mock.patch("hotness.builders.koji.sp.check_output")
     @mock.patch("hotness.builders.koji.koji")
@@ -719,7 +728,7 @@ class TestKojiBuild:
             "git clone",
             "rpmdev-bumpspec",
             (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
-            b"Getting Lectitio_Divinitatus\nGetting Lectitio_Divinitatus\n",
+            b"Getting Lectitio_Divinitatus\n",
             b"rpmbuild foobar.srpm",
             "git config",
             "git config",
@@ -736,7 +745,9 @@ class TestKojiBuild:
         with pytest.raises(BuilderException) as exc:
             self.builder.build(package, opts)
 
-            assert exc.message == ""
-            assert exc.output == {}
-            assert exc.std_out == "Some output"
-            assert exc.std_err == "Failed miserably"
+        assert (
+            exc.value.message == "Command 'git commit' returned non-zero exit status 1."
+        )
+        assert exc.value.output["build_id"] == 1000
+        assert exc.value.std_out == "Some output"
+        assert exc.value.std_err == "Failed miserably"

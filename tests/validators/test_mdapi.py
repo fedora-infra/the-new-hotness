@@ -186,14 +186,16 @@ class TestMDAPIValidate:
         package = Package(name="test", version="1.0", distro="Fedora")
 
         validator = MDApi(url, requests_session, timeout)
+        validator.requests_session.get.return_value = response
 
         with pytest.raises(HTTPException) as ex:
             validator.validate(package)
 
-            assert ex.status_code == 500
-            assert ex.msg == "Error encountered on request {}/koji/srcpkg/test".format(
-                url
-            )
+        assert ex.value.error_code == 500
+        assert (
+            ex.value.message
+            == "Error encountered on request {}/koji/srcpkg/test".format(url)
+        )
 
         requests_session.get.assert_called_with(
             url + "/koji/srcpkg/test", timeout=timeout

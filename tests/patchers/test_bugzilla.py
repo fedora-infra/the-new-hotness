@@ -96,10 +96,10 @@ class TestBugzillaInit:
                 api_key,
             )
 
-            assert exc.msg == (
-                "Authentication info not provided! Provide either 'username' and 'password' "
-                "or API key."
-            )
+        assert exc.value.message == (
+            "Authentication info not provided! Provide either 'username' and 'password' "
+            "or API key."
+        )
 
 
 class TestBugzillaSubmitPatch:
@@ -164,7 +164,7 @@ class TestBugzillaSubmitPatch:
         with pytest.raises(PatcherException) as exc:
             self.patcher.submit_patch(package, patch, opts)
 
-            assert exc.msg(
-                "Opts parameters are missing! "
-                "Please provide `bz_id` and `patch_filename`."
-            )
+        assert exc.value.message == (
+            "Additional parameters are missing! "
+            "Please provide `bz_id` and `patch_filename`."
+        )

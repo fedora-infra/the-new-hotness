@@ -177,7 +177,7 @@ class Bugzilla(Notifier):
 
         if not short_desc:
             raise NotifierException(
-                "Opts parameters are missing! "
+                "Additional parameters are missing! "
                 "Please provide either `bz_id` or `bz_short_desc`."
             )
 

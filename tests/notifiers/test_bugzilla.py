@@ -164,10 +164,10 @@ class TestBugzillaInit:
                 status,
             )
 
-            assert exc.msg == (
-                "Authentication info not provided! Provide either 'username' and 'password' "
-                "or API key."
-            )
+        assert exc.value.message == (
+            "Authentication info not provided! Provide either 'username' and 'password' "
+            "or API key."
+        )
 
 
 class TestBugzillaNotify:
@@ -396,7 +396,7 @@ class TestBugzillaNotify:
         with pytest.raises(NotifierException) as exc:
             self.notifier.notify(package, message, opts)
 
-            assert exc.msg == (
-                "Opts parameters are missing! "
-                "Please provide either `bz_id` or `bz_short_desc`."
-            )
+        assert exc.value.message == (
+            "Additional parameters are missing! "
+            "Please provide either `bz_id` or `bz_short_desc`."
+        )
