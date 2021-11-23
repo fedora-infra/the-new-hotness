@@ -18,7 +18,7 @@
 import traceback
 from typing import Any
 
-from hotness.exceptions import BuilderException
+from hotness.exceptions import BaseHotnessException
 from hotness.requests import Request
 from hotness.responses import Response
 
@@ -33,16 +33,14 @@ class ResponseFailure(Response):
         type: Type of the failure.
         message: Error message.
         traceback: Exception traceback as string.
-        output: Partial use case output from Exception, if provided.
-        std_out: Standard output from exception, if provided.
-        std_err: Error output from exception, if provided.
+        use_case_value: Partial use case output from Exception, if provided.
     """
 
     VALIDATOR_ERROR = "ValidatorError"
     BUILDER_ERROR = "BuilderError"
     DATABASE_ERROR = "DatabaseError"
     NOTIFIER_ERROR = "NotifierError"
-    PATCHER_ERROR = "PatherError"
+    PATCHER_ERROR = "PatcherError"
     INVALID_REQUEST_ERROR = "InvalidRequestError"
 
     def __init__(self, type: str, message: Any) -> None:
@@ -52,46 +50,25 @@ class ResponseFailure(Response):
         self.type = type
         self.message = self._format_message(message)
         self.traceback = self._get_stack_trace(message)
-        self.output = self._get_output(message)
-        self.stdout, self.stderr = self._get_std_out_err(message)
+        self.use_case_value = self._get_value(message)
 
-    def _get_std_out_err(self, message: Any) -> (str, str):
+    def _get_value(self, message: Any) -> dict:
         """
-        Retrieves the standard output and error output from Exception,
-        otherwise just returns tuple with empty strings.
-
-        Params:
-            message: Input to retrieve use case output from
-
-        Returns:
-            Output if message is Exception, otherwise tuple containing empty strings
-        """
-        std_out = ""
-        std_err = ""
-
-        if type(message) is BuilderException:
-            std_out = message.std_out
-            std_err = message.std_err
-
-        return (std_out, std_err)
-
-    def _get_output(self, message: Any) -> dict:
-        """
-        Retrieves the use case output information from Exception,
+        Retrieves the use case value information from Exception,
         otherwise just returns empty dict.
 
         Params:
-            message: Input to retrieve use case output from
+            message: Input to retrieve use case value from
 
         Returns:
-            Output if message is Exception, otherwise empty dict
+            Value if message is Exception, otherwise None
         """
-        output = {}
+        value = None
 
-        if isinstance(message, BuilderException):
-            output = message.output
+        if isinstance(message, BaseHotnessException):
+            value = message.value
 
-        return output
+        return value
 
     def _get_stack_trace(self, message: Any) -> [str]:
         """
@@ -132,7 +109,11 @@ class ResponseFailure(Response):
         """
         Returns the dict representation of the failure response.
         """
-        return {"type": self.type, "message": self.message}
+        return {
+            "type": self.type,
+            "message": self.message,
+            "use_case_value": self.use_case_value,
+        }
 
     def __bool__(self) -> bool:
         """

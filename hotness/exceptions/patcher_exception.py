@@ -15,7 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-class PatcherException(Exception):
+from . import BaseHotnessException
+
+
+class PatcherException(BaseHotnessException):
     """
     Class representing patcher exception.
     This exception is raised by patcher
@@ -31,9 +34,3 @@ class PatcherException(Exception):
         """
         self.message = message
         super(PatcherException, self).__init__(self.message)
-
-    def __str__(self) -> str:
-        """
-        String representation of error.
-        """
-        return self.message

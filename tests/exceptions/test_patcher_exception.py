@@ -35,17 +35,3 @@ class TestPatcherExceptionInit:
             raise exception
 
         assert exception.message == "This error is a tech heresy!"
-
-
-class TestPatcherExceptionStr:
-    """
-    Test class for `hotness.exceptions.PatcherException.__str__` method.
-    """
-
-    def test_str(self):
-        """
-        Assert that the string representation of exception is correct.
-        """
-        exception = PatcherException("This error is a tech heresy!")
-
-        assert str(exception) == "This error is a tech heresy!"

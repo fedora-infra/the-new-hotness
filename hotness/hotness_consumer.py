@@ -589,20 +589,11 @@ class HotnessConsumer(object):
         build_koji_use_case = PackageScratchBuildUseCase(self.builder_koji)
         response = build_koji_use_case.build(build_request)
         if not response:
-            if "build_id" in response.output:
-                build_id = response.output["build_id"]
-                message = (
-                    "Build started but failure happened"
-                    "during post build operations:\n{}\n"
-                ).format(response.value["message"])
-            else:
-                message = "Build failed:\n{}\n".format(response.value["message"])
+            message = response.message
             if response.traceback:
-                message = message + "Traceback:\n{}\n".format(response.traceback)
-            if response.stdout:
-                message = message + "StdOut:\n{}\n".format(response.stdout)
-            if response.stderr:
-                message = message + "StdErr:\n{}\n".format(response.stderr)
+                message = message + "\nTraceback:\n{}\n".format(
+                    "".join(response.traceback)
+                )
             message = message + (
                 "If you think this issue is caused by some bug in the-new-hotness, "
                 "please report it on the-new-hotness issue tracker: "
@@ -617,8 +608,8 @@ class HotnessConsumer(object):
             notifier_bugzilla_use_case.notify(notify_request)
 
             # Insert the build_id to cache if available
-            if "build_id" in response.output:
-                build_id = response.output["build_id"]
+            if response.use_case_value and "build_id" in response.use_case_value:
+                build_id = response.use_case_value["build_id"]
                 insert_data_request = InsertDataRequest(
                     key=str(build_id), value=str(bz_id)
                 )

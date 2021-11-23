@@ -35,17 +35,3 @@ class TestDownloadExceptionInit:
             raise exception
 
         assert exception.message == "This error is a tech heresy!"
-
-
-class TestDownloadExceptionStr:
-    """
-    Test class for `hotness.exceptions.DownloadException.__str__` method.
-    """
-
-    def test_str(self):
-        """
-        Assert that the string representation of exception is correct.
-        """
-        exception = DownloadException("This error is a tech heresy!")
-
-        assert str(exception) == "This error is a tech heresy!"

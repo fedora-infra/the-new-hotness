@@ -630,7 +630,7 @@ class TestKojiBuild:
         assert (
             exc.value.message == "Command 'git clone' returned non-zero exit status 1."
         )
-        assert exc.value.output == {}
+        assert exc.value.value == {}
         assert exc.value.std_out == "Some output"
         assert exc.value.std_err == "Failed miserably"
 
@@ -662,7 +662,7 @@ class TestKojiBuild:
             exc.value.message
             == "Command 'rpmdev-bumpspec' returned non-zero exit status 1."
         )
-        assert exc.value.output == {}
+        assert exc.value.value == {}
         assert exc.value.std_out == "Some output"
         assert exc.value.std_err == "Failed miserably"
 
@@ -700,7 +700,7 @@ class TestKojiBuild:
             exc.value.message
             == "Command 'rpmdevbuild' returned non-zero exit status 1."
         )
-        assert exc.value.output["message"] != ""
+        assert exc.value.value["message"] != ""
         assert exc.value.std_out == "Some output"
         assert exc.value.std_err == "Failed miserably"
 
@@ -748,6 +748,6 @@ class TestKojiBuild:
         assert (
             exc.value.message == "Command 'git commit' returned non-zero exit status 1."
         )
-        assert exc.value.output["build_id"] == 1000
+        assert exc.value.value["build_id"] == 1000
         assert exc.value.std_out == "Some output"
         assert exc.value.std_err == "Failed miserably"

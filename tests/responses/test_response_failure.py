@@ -39,11 +39,10 @@ class TestResponseFailureInit:
         assert response.value == {
             "type": ResponseFailure.VALIDATOR_ERROR,
             "message": "This is heresy!",
+            "use_case_value": None,
         }
         assert response.traceback == []
-        assert response.output == {}
-        assert response.stderr == ""
-        assert response.stdout == ""
+        assert response.use_case_value is None
 
 
 class TestResponseFailureBool:
@@ -79,6 +78,7 @@ class TestResponseFailureValidatorError:
         assert response.value == {
             "type": ResponseFailure.VALIDATOR_ERROR,
             "message": "Exception: This is validator heresy!",
+            "use_case_value": None,
         }
 
 
@@ -99,6 +99,7 @@ class TestResponseFailureBuilderError:
         assert response.value == {
             "type": ResponseFailure.BUILDER_ERROR,
             "message": "Exception: This is builder heresy!",
+            "use_case_value": None,
         }
 
     def test_buider_exception(self):
@@ -107,7 +108,7 @@ class TestResponseFailureBuilderError:
         """
         builder_exception = BuilderException(
             "This is builder heresy!",
-            output={"build_id": 100},
+            value={"build_id": 100},
             std_out="This is a standard output.",
             std_err="This is an error output.",
         )
@@ -117,14 +118,20 @@ class TestResponseFailureBuilderError:
         assert response.type == ResponseFailure.BUILDER_ERROR
         assert response.value == {
             "type": ResponseFailure.BUILDER_ERROR,
-            "message": "BuilderException: This is builder heresy!",
+            "message": (
+                "BuilderException: Build started, but failure happened "
+                "during post build operations:\nThis is builder heresy!\n\n"
+                "StdOut:\n"
+                "This is a standard output.\n\n"
+                "StdErr:\n"
+                "This is an error output.\n"
+            ),
+            "use_case_value": {"build_id": 100},
         }
         assert response.traceback == traceback.format_tb(
             builder_exception.__traceback__
         )
-        assert response.output == {"build_id": 100}
-        assert response.stdout == "This is a standard output."
-        assert response.stderr == "This is an error output."
+        assert response.use_case_value == {"build_id": 100}
 
 
 class TestResponseFailureDatabaseError:
@@ -144,6 +151,7 @@ class TestResponseFailureDatabaseError:
         assert response.value == {
             "type": ResponseFailure.DATABASE_ERROR,
             "message": "Exception: This is database heresy!",
+            "use_case_value": None,
         }
 
 
@@ -164,6 +172,7 @@ class TestResponseFailureNotifierError:
         assert response.value == {
             "type": ResponseFailure.NOTIFIER_ERROR,
             "message": "Exception: This is notifier heresy!",
+            "use_case_value": None,
         }
 
 
@@ -184,6 +193,7 @@ class TestResponseFailurePatcherError:
         assert response.value == {
             "type": ResponseFailure.PATCHER_ERROR,
             "message": "Exception: This is patcher heresy!",
+            "use_case_value": None,
         }
 
 
@@ -204,4 +214,5 @@ class TestResponseFailureInvalidRequestError:
         assert response.value == {
             "type": ResponseFailure.INVALID_REQUEST_ERROR,
             "message": "[{'parameter': 'param', 'error': 'You shall not pass!'}]",
+            "use_case_value": None,
         }
