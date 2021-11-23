@@ -19,6 +19,26 @@
         label: pod-python-f33
 
 - job:
+    name: tox-python37
+    description: |
+      Run unit tests for a Python project under cPython version 3.7.
+
+      Uses tox with the ``py37`` environment.
+
+      Ensures that the python37 interpreter is installed.
+
+    parent: tox
+    run: ci/test-tox.yaml
+    vars:
+      tox_env: py37
+      dependencies:
+        - python37
+    nodeset:
+      nodes:
+        name: test-node
+        label: pod-python-f33
+
+- job:
     name: simple-tox-docs
     description: |
       Build docs in tox.
