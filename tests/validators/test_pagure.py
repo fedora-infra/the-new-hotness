@@ -212,13 +212,13 @@ class TestPagureValidate:
         with pytest.raises(HTTPException) as ex:
             self.validator.validate(package)
 
-            assert ex.status_code == 500
-            assert (
-                ex.msg
-                == "Error encountered on request {}/_dg/anitya/rpms/{}".format(
-                    self.validator.url, package.name
-                )
+        assert ex.value.error_code == 500
+        assert (
+            ex.value.message
+            == "Error encountered on request {}/_dg/anitya/rpms/{}".format(
+                self.validator.url, package.name
             )
+        )
 
         # Parameters for requests get call
         timeout = (5, 20)
