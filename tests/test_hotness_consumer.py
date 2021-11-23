@@ -26,7 +26,7 @@ from fedora_messaging.message import Message
 
 from hotness.hotness_consumer import HotnessConsumer
 from hotness.domain import Package
-from hotness.exceptions import BuilderException
+from hotness.exceptions import BuilderException, DownloadException
 
 FIXTURES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "fixtures/"))
 
@@ -382,27 +382,29 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.assert_called_with(package)
         self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
-        self.consumer.notifier_bugzilla.notify.assert_has_calls == [
-            mock.call(
-                package,
-                self.consumer.description_template
-                % dict(
-                    latest_upstream=package.version,
-                    repo_name=self.consumer.repoid,
-                    repo_version="0.16.0",
-                    repo_release=1,
-                    url=message.body["project"]["homepage"],
-                    explanation_url=self.consumer.explanation_url,
-                    projectid=message.body["project"]["id"],
+        self.consumer.notifier_bugzilla.notify.assert_has_calls(
+            [
+                mock.call(
+                    package,
+                    self.consumer.description_template
+                    % dict(
+                        latest_upstream=package.version,
+                        repo_name=self.consumer.repoid,
+                        repo_version="0.16.0",
+                        repo_release=1,
+                        url=message.body["project"]["homepage"],
+                        explanation_url=self.consumer.explanation_url,
+                        projectid=message.body["project"]["id"],
+                    ),
+                    {"bz_short_desc": "flatpak-1.0.4 is available"},
                 ),
-                {"bz_short_desc": "flatpak-1.0.4 is available"},
-            ),
-            mock.call(
-                package,
-                "Emperor protects!",
-                {"bz_id": 100},
-            ),
-        ]
+                mock.call(
+                    package,
+                    "Emperor protects!",
+                    {"bz_id": 100},
+                ),
+            ]
+        )
         self.consumer.builder_koji.build.assert_called_with(package, {"bz_id": 100})
         self.consumer.database_cache.insert.assert_called_with("1000", "100")
         self.consumer.patcher_bugzilla.submit_patch.assert_called_with(
@@ -455,34 +457,40 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.assert_called_with(package)
         self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
-        self.consumer.notifier_bugzilla.notify.assert_has_calls == [
-            mock.call(
-                package,
-                self.consumer.description_template
-                % dict(
-                    latest_upstream=package.version,
-                    repo_name=self.consumer.repoid,
-                    repo_version="0.16.0",
-                    repo_release=1,
-                    url=message.body["project"]["homepage"],
-                    explanation_url=self.consumer.explanation_url,
-                    projectid=message.body["project"]["id"],
+        self.consumer.notifier_bugzilla.notify.assert_has_calls(
+            [
+                mock.call(
+                    package,
+                    self.consumer.description_template
+                    % dict(
+                        latest_upstream=package.version,
+                        repo_name=self.consumer.repoid,
+                        repo_version="0.16.0",
+                        repo_release=1,
+                        url=message.body["project"]["homepage"],
+                        explanation_url=self.consumer.explanation_url,
+                        projectid=message.body["project"]["id"],
+                    ),
+                    {"bz_short_desc": "flatpak-1.0.4 is available"},
                 ),
-                {"bz_short_desc": "flatpak-1.0.4 is available"},
-            ),
-            mock.call(
-                package,
-                (
-                    "Build failed:\n"
-                    "BuilderException: {}\n".format(str(builder_exception)),
-                    "Traceback:\n"
-                    "{}\n".format(traceback.format_tb(builder_exception.__traceback__)),
-                    "StdOut:\n" "{}\n".format(builder_exception.std_out),
-                    "StdErr:\n" "{}\n".format(builder_exception.std_err),
+                mock.call(
+                    package,
+                    (
+                        "BuilderException: {}\n"
+                        "Traceback:\n"
+                        "{}\n"
+                        "If you think this issue is caused by some bug in the-new-hotness, "
+                        "please report it on the-new-hotness issue tracker: "
+                        "{}"
+                    ).format(
+                        str(builder_exception),
+                        "".join(traceback.format_tb(builder_exception.__traceback__)),
+                        self.consumer.hotness_issue_tracker,
+                    ),
+                    {"bz_id": 100},
                 ),
-                {"bz_id": 100},
-            ),
-        ]
+            ]
+        )
         self.consumer.builder_koji.build.assert_called_with(package, {"bz_id": 100})
 
         exp_opts = {
@@ -496,6 +504,73 @@ class TestHotnessConsumerCall:
         self.consumer.notifier_fedora_messaging.notify.assert_called_with(
             package, "update.bug.file", exp_opts
         )
+
+    def test_call_anitya_update_scratch_build_download_failure(self):
+        """
+        Assert that update message is handled correctly when scratch build is started,
+        but download of sources fails.
+        """
+        message = create_message("anitya.project.version.update", "fedora_mapping")
+        self.consumer.validator_pagure.validate.return_value = {
+            "monitoring": True,
+            "scratch_build": True,
+        }
+        self.consumer.validator_pdc.validate.return_value = {
+            "retired": False,
+            "count": 1,
+        }
+        self.consumer.validator_mdapi.validate.return_value = {
+            "newer": True,
+            "version": "0.16.0",
+            "release": 1,
+        }
+        download_exception = DownloadException(
+            "This is heresy!",
+        )
+        self.consumer.notifier_bugzilla.notify.return_value = {"bz_id": 100}
+        self.consumer.builder_koji.build.side_effect = download_exception
+        self.consumer.__call__(message)
+
+        package = Package(name="flatpak", version="1.0.4", distro="Fedora")
+
+        self.consumer.validator_pagure.validate.assert_called_with(package)
+        self.consumer.validator_pdc.validate.assert_called_with(package)
+        self.consumer.validator_mdapi.validate.assert_called_with(package)
+        self.consumer.notifier_bugzilla.notify.assert_has_calls(
+            [
+                mock.call(
+                    package,
+                    self.consumer.description_template
+                    % dict(
+                        latest_upstream=package.version,
+                        repo_name=self.consumer.repoid,
+                        repo_version="0.16.0",
+                        repo_release=1,
+                        url=message.body["project"]["homepage"],
+                        explanation_url=self.consumer.explanation_url,
+                        projectid=message.body["project"]["id"],
+                    ),
+                    {"bz_short_desc": "flatpak-1.0.4 is available"},
+                ),
+                mock.call(
+                    package,
+                    (
+                        "DownloadException: {}\n"
+                        "Traceback:\n"
+                        "{}\n"
+                        "If you think this issue is caused by some bug in the-new-hotness, "
+                        "please report it on the-new-hotness issue tracker: "
+                        "{}"
+                    ).format(
+                        str(download_exception),
+                        "".join(traceback.format_tb(download_exception.__traceback__)),
+                        self.consumer.hotness_issue_tracker,
+                    ),
+                    {"bz_id": 100},
+                ),
+            ]
+        )
+        self.consumer.builder_koji.build.assert_called_with(package, {"bz_id": 100})
 
     def test_call_anitya_update_scratch_build_post_build_failure(self):
         """
@@ -520,7 +595,7 @@ class TestHotnessConsumerCall:
             "This is heresy!",
             std_out="This is a standard output",
             std_err="This is an error output",
-            output={"build_id": 1000},
+            value={"build_id": 1000},
         )
         self.consumer.notifier_bugzilla.notify.return_value = {"bz_id": 100}
         self.consumer.builder_koji.build.side_effect = builder_exception
@@ -531,34 +606,40 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.assert_called_with(package)
         self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
-        self.consumer.notifier_bugzilla.notify.assert_has_calls == [
-            mock.call(
-                package,
-                self.consumer.description_template
-                % dict(
-                    latest_upstream=package.version,
-                    repo_name=self.consumer.repoid,
-                    repo_version="0.16.0",
-                    repo_release=1,
-                    url=message.body["project"]["homepage"],
-                    explanation_url=self.consumer.explanation_url,
-                    projectid=message.body["project"]["id"],
+        self.consumer.notifier_bugzilla.notify.assert_has_calls(
+            [
+                mock.call(
+                    package,
+                    self.consumer.description_template
+                    % dict(
+                        latest_upstream=package.version,
+                        repo_name=self.consumer.repoid,
+                        repo_version="0.16.0",
+                        repo_release=1,
+                        url=message.body["project"]["homepage"],
+                        explanation_url=self.consumer.explanation_url,
+                        projectid=message.body["project"]["id"],
+                    ),
+                    {"bz_short_desc": "flatpak-1.0.4 is available"},
                 ),
-                {"bz_short_desc": "flatpak-1.0.4 is available"},
-            ),
-            mock.call(
-                package,
-                (
-                    "Build started but failure happened during post build operations:\n"
-                    "BuilderException: {}\n".format(str(builder_exception)),
-                    "Traceback:\n"
-                    "{}\n".format(traceback.format_tb(builder_exception.__traceback__)),
-                    "StdOut:\n" "{}\n".format(builder_exception.std_out),
-                    "StdErr:\n" "{}\n".format(builder_exception.std_err),
+                mock.call(
+                    package,
+                    (
+                        "BuilderException: {}\n"
+                        "Traceback:\n"
+                        "{}\n"
+                        "If you think this issue is caused by some bug in the-new-hotness, "
+                        "please report it on the-new-hotness issue tracker: "
+                        "{}"
+                    ).format(
+                        str(builder_exception),
+                        "".join(traceback.format_tb(builder_exception.__traceback__)),
+                        self.consumer.hotness_issue_tracker,
+                    ),
+                    {"bz_id": 100},
                 ),
-                {"bz_id": 100},
-            ),
-        ]
+            ]
+        )
         self.consumer.builder_koji.build.assert_called_with(package, {"bz_id": 100})
 
         exp_opts = {

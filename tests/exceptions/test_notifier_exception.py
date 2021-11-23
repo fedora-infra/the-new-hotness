@@ -35,17 +35,3 @@ class TestNotifierExceptionInit:
             raise exception
 
         assert exception.message == "This error is a tech heresy!"
-
-
-class TestNotifierExceptionStr:
-    """
-    Test class for `hotness.exceptions.NotifierException.__str__` method.
-    """
-
-    def test_str(self):
-        """
-        Assert that the string representation of exception is correct.
-        """
-        exception = NotifierException("This error is a tech heresy!")
-
-        assert str(exception) == "This error is a tech heresy!"

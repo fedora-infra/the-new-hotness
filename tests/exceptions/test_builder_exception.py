@@ -42,7 +42,7 @@ class TestBuilderExceptionInit:
         """
         exception = BuilderException(
             "This error is a tech heresy!",
-            output={"build_id": 100},
+            value={"build_id": 100},
             std_out="This is a standard output",
             std_err="This is an error output",
         )
@@ -51,7 +51,7 @@ class TestBuilderExceptionInit:
             raise exception
 
         assert exception.message == "This error is a tech heresy!"
-        assert exception.output == {"build_id": 100}
+        assert exception.value == {"build_id": 100}
         assert exception.std_out == "This is a standard output"
         assert exception.std_err == "This is an error output"
 
@@ -67,4 +67,38 @@ class TestBuilderExceptionStr:
         """
         exception = BuilderException("This error is a tech heresy!")
 
-        assert str(exception) == "This error is a tech heresy!"
+        assert str(exception) == ("Build failed:\n" "This error is a tech heresy!\n")
+
+    def test_str_build_id(self):
+        """
+        Assert that the string representation of exception is correct
+        when build id is available.
+        """
+        exception = BuilderException(
+            "This error is a tech heresy!", value={"build_id": 100}
+        )
+
+        assert str(exception) == (
+            "Build started, but failure happened during post build operations:\n"
+            "This error is a tech heresy!\n"
+        )
+
+    def test_str_std_err_out(self):
+        """
+        Assert that the string representation of exception is correct
+        when stderr and stdout are available.
+        """
+        exception = BuilderException(
+            "This error is a tech heresy!",
+            std_err="This blasphemy should never happen!",
+            std_out="Praise Slaanesh!",
+        )
+
+        assert str(exception) == (
+            "Build failed:\n"
+            "This error is a tech heresy!\n\n"
+            "StdOut:\n"
+            "Praise Slaanesh!\n\n"
+            "StdErr:\n"
+            "This blasphemy should never happen!\n"
+        )

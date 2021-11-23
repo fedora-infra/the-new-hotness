@@ -91,6 +91,7 @@ class TestInsertDataUseCaseInsert:
         assert result.value == {
             "type": responses.ResponseFailure.INVALID_REQUEST_ERROR,
             "message": str(errors),
+            "use_case_value": None,
         }
 
     def test_insert_failure(self):
@@ -118,4 +119,5 @@ class TestInsertDataUseCaseInsert:
         assert result.value == {
             "type": responses.ResponseFailure.DATABASE_ERROR,
             "message": "Exception: This is heresy!",
+            "use_case_value": None,
         }

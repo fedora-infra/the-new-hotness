@@ -186,7 +186,7 @@ class Koji(Builder):
                 if exc.stderr:
                     std_err = exc.stderr.decode()
                 raise BuilderException(
-                    str(exc), output=output, std_out=std_out, std_err=std_err
+                    str(exc), value=output, std_out=std_out, std_err=std_err
                 )
 
             srpm = os.path.join(tmp, cmd_output.decode("utf-8").strip().split()[-1])
@@ -224,7 +224,7 @@ class Koji(Builder):
                 if exc.stderr:
                     std_err = exc.stderr.decode()
                 raise BuilderException(
-                    str(exc), output=output, std_out=std_out, std_err=std_err
+                    str(exc), value=output, std_out=std_out, std_err=std_err
                 )
 
             output["patch_filename"] = filename
