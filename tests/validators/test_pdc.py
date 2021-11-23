@@ -150,13 +150,13 @@ class TestPDCValidate:
         with pytest.raises(HTTPException) as ex:
             self.validator.validate(package)
 
-            assert ex.status_code == 500
-            assert (
-                ex.msg
-                == "Error encountered on request {}/rest_api/v1/component-branches/".format(
-                    self.validator.url
-                )
+        assert ex.value.error_code == 500
+        assert (
+            ex.value.message
+            == "Error encountered on request {}/rest_api/v1/component-branches/".format(
+                self.validator.url
             )
+        )
 
         # Parameters for requests get call
         timeout = (5, 20)

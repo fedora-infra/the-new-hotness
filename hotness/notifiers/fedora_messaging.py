@@ -81,7 +81,7 @@ class FedoraMessaging(Notifier):
 
         if not body:
             raise NotifierException(
-                "Opts parameters are missing! " "Please provide `body` for the message."
+                "Additional parameters are missing! Please provide `body` for the message."
             )
 
         message_class = fm_message.get_class(topic)
