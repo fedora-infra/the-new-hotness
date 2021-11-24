@@ -2,6 +2,9 @@ Contributing
 ============
 
 The New Hotness welcomes contributions! This document should help you get started.
+The New Hotness is using
+`Clean Architecture Design <https://www.freecodecamp.org/news/a-quick-introduction-to-clean-architecture-990c014448d2/>`_,
+the implementation details are in :doc:`ca-design`.
 
 
 Contribution Guidelines
@@ -55,6 +58,8 @@ in the virtual machine.
 
 You also need to acquire a valid Kerberos ticket to perform Koji scratch builds.
 You can get this by performing ``kinit <fas-username>@FEDORAPROJECT.ORG``.
+When using two-factor authentication, please follow `official fedora guide
+<https://docs.fedoraproject.org/en-US/fedora-accounts/user/#pkinit>`_.
 
 .. warning::
     Services will fail to start if you do not provide valid credentials.
@@ -124,72 +129,18 @@ After connecting to hotness container you can run the applicaton with::
 
     $ fedora-messaging consume
 
-Using Python virtual env
-^^^^^^^^^^^^^^^^^^^^^^^^
+Before you can run ``the-new-hotness``, you need to add your bugzilla credentials
+to the configuration. You can set these credentials in ``~/config.toml``
+in the virtual machine.
 
-Set up your environment with::
+You also need to acquire a valid Kerberos ticket to perform Koji scratch builds.
+You can get this by performing ``kinit <fas-username>@FEDORAPROJECT.ORG``.
+When using two-factor authentication, please follow `official fedora guide
+<https://docs.fedoraproject.org/en-US/fedora-accounts/user/#pkinit>`_.
 
-    $ sudo yum install rpm yum-utils
+.. warning::
+    Services will fail to start if you do not provide valid credentials.
 
-    $ virtualenv my-env --system-site-packages
-    $ source my-env/bin/activate
-
-    $ python setup.py develop
-
-And then run it with::
-
-    $ fedmsg-hub
-
-It should pick up the the-new-hotness consumer and start running.
-
-Hacking
-'''''''
-
-1. Can you run it?  Try running ``PYTHONPATH=.fedmsg-hub`` in your virtualenv.
-   Does it look like it starts without tracebacks?
-2. You may need to edit ``fedmsg.d/hotness-example.py`` and add 'bugzilla'
-   username and password.  To create those for yourself, check out
-   https://partner-bugzilla.redhat.com/ (that's a "test" bugzilla instance that
-   you can do whatever to -- it gets repaved every so often and it never sends
-   emails to people so we can spam test stuff in tickets without worry)
-3. If you can get it running, it will be useful to be able to locally fake
-   messages from anitya (release-monitoring.org).., for that you'll need to:
-4. Add a new file to ``fedmsg.d/`` called ``fedmsg.d/relay.py`` and add these
-   contents to it::
-
-    config = dict(
-        endpoints={
-            # This is the output side of the relay to which the-new-hotness
-            # can listen (where the-new-hotness is running as a part of 'fedmsg-hub')
-            "relay_outbound": [
-                "tcp://127.0.0.1:4001",
-            ],
-        },
-
-        # This is the input side of the relay to which 'fedmsg-logger' and 'fedmsg-dg-replay' will send messages.
-        # It will just repeat those messages out the 'relay_outbound' endpoint on your own box.
-        relay_inbound=[
-            "tcp://127.0.0.1:2003",
-        ],
-    )
-
-5. Open three terminals, activate your virtualenv in all three and cd into the the-new-hotness/ dir.
-6. In one terminal run ``fedmsg-relay`` with no arguments.  It should start in
-   the foreground and show some logs and then sit there.  It shouldn't have any
-   tracebacks going by.
-7. In another terminal run ``fedmsg-tail --really-pretty``.  It should start up
-   and just sit there, waiting for messages to arrive.
-8. In the third terminal run ``echo "liberation" | fedmsg-logger``.  If you
-   look at the second terminal from point 3.3, It should have a JSON blob show
-   up. Success!  you just sent a fedmsg message locally to a fedmsg-relay which
-   then got bounced over to fedmsg-tail.
-
-9. Keep 'fedmsg-relay' open cause you'll need it.  Keep 'fedmsg-tail' open for debugging.
-10. Find anitya messages from the past here http://apps.fedoraproject.org/datagrepper/raw?category=anitya
-11. Get the 'msg-id' from one of them and replay it on your local fedmsg-relay
-    by running
-    ``fedmsg-dg-replay --msg-id 2014-cf0182f1-9ecb-48a7-a999-6f24a529b669``
-12. Watch what happens in the 'fedmsg-hub' logs.  Did it file a bug?  Did it explode?  Hack!
 
 Simulating updates
 ^^^^^^^^^^^^^^^^^^
@@ -197,11 +148,11 @@ Simulating updates
 You can now replay actual messages the production deployment of Anitya has sent
 with ``fedora-messaging-replay.py``::
 
-    $ python3 devel/fedmsg-messaging-replay.py <msg-id>
+    $ python3 devel/fedora-messaging-replay.py <msg-id>
 
 There's a helpful script to retrieve message IDs. From the root of the repository::
 
-    $ python devel/anitya_messages.py
+    $ python devel/anitya_updates.py
 
 Release notes
 =============
@@ -228,7 +179,9 @@ News type can be one of the following:
   
 For example:
 
-If this PR is solving issue #714 labeled as ``type.bug`` and named "Javascript error on add project page", the file inside news should be called 714.bug (PR714.bug if the PR does not have any linked issue and the PR number is 714) and the content of the file would be:
+If this PR is solving issue #714 labeled as ``type.bug`` and named "Javascript error on add project page",
+the file inside news should be called 714.bug (PR714.bug if the PR does not have any linked issue and the PR number is 714)
+and the content of the file would be:
 
 ``Javascript error on add project page``
 
@@ -306,7 +259,7 @@ If you are a maintainer and wish to make a release, follow these steps:
 
 10. Upload the packages with ``twine upload dist/<dists>``.
 
-11. (Optional) Repeat steps 7 and 8 in ``hotness_schema`` folder.
+11. (Optional) Repeat steps 9 and 10 in ``hotness_schema`` folder.
 
 12. Create new release on `GitHub releases <https://github.com/fedora-infra/the-new-hotness/releases>`_.
 

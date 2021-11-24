@@ -22,11 +22,3 @@ Development
 ^^^^^^^^^^^
 
 Contributions are welcome, check out `contribution guidelines <https://the-new-hotness.readthedocs.io/en/stable/dev-guide.html#contribution-guidelines>`_.
-
-Future Plans
-^^^^^^^^^^^^
-
-- Kick off koji scratch builds of new upstream releases and comment in existing
-  bugs with the status.
-- Attach patches to bugs of simple revbump changes?
-- Add support for creating github issues for flathub projects
