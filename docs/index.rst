@@ -14,6 +14,22 @@ The New Hotness attempts to build the new version and reports problems on the bu
 
 :Github page: https://github.com/fedora-infra/the-new-hotness
 
+User guide
+----------
+
+.. toctree::
+   :maxdepth: 2
+
+   user-guide
+
+Admin guide
+-----------
+
+.. toctree::
+   :maxdepth: 2
+
+   admin-guide
+
 Developer guide
 ---------------
 
@@ -21,6 +37,9 @@ Developer guide
    :maxdepth: 2
 
    dev-guide
+   requirements
+   ca-design
+   message-schema
 
 Releases
 --------

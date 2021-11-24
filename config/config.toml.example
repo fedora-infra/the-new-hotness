@@ -72,19 +72,34 @@ read_timeout = 15
 # that failed for any reason (e.g. read timeout, DNS error, etc)
 requests_retries = 3
 
+# Bugzilla configuration for the-new-hotness
 [consumer_config.bugzilla]
+# If the bugzilla wrapper is enabled, currently ignored
 enabled = true
+# User that is used to report the issue in bugzilla
 reporter = "Upstream Release Monitoring"
+# When authenticated by user and password, uncomment the following lines
+# and comment out api_key
 #user = None
 #password = None
+# Use bugzilla API key for communication with bugzilla
 api_key = ""
+# URL of the bugzilla instance
 url = "https://partner-bugzilla.redhat.com"
+# Product in bugzilla under which to file the new issue
 product = "Fedora"
+# Version of product to file issue against
 version = "rawhide"
+# Keywords for new issue
 keywords = "FutureFeature,Triaged"
+# Bug status to set on creation
 bug_status = "NEW"
+# URL with explanation about what release-monitoring is
+# Used in template
 explanation_url = "https://fedoraproject.org/wiki/upstream_release_monitoring"
+# Title for new issue in bugzilla
 short_desc_template = "%(name)s-%(latest_upstream)s is available"
+# Description of the issue (first comment on the issue)
 description_template = """
 Latest upstream release: %(latest_upstream)s
 
@@ -112,8 +127,11 @@ upstream.
 Based on the information from anitya: https://release-monitoring.org/project/%(projectid)s/
 """
 
+# Configuration of Koji for the-new-hotness
 [consumer_config.koji]
+# Server URL for koji
 server = "https://koji.fedoraproject.org/kojihub"
+# Frontend URL of koji
 weburl = "https://koji.fedoraproject.org/koji"
 # Kerberos configuration to authenticate with Koji. In development
 # environments, use `kinit <fas-name>@FEDORAPROJECT.ORG` to get a
@@ -123,11 +141,16 @@ krb_keytab = ""
 krb_ccache = ""
 krb_proxyuser = ""
 krb_sessionopts = {timeout = 3600, krb_rdns = false}
+# Git URL where to find the package
 git_url = "https://src.fedoraproject.org/cgit/rpms/{package}.git",
+# User name and e-mail for starting the scratch build
 user_email = [
     "Upstream Monitor",
     "<upstream-release-monitoring@fedoraproject.org>",
 ]
+# Options for koji build
 opts = {scratch = true}
+# Priority of the build
 priority = 30
+# Tag to build against
 target_tag = "rawhide"
