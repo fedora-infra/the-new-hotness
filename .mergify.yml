@@ -1,11 +1,15 @@
+queue_rules:
+  - name: default
+    conditions:
+      - check-success=fedora/check
+
 pull_request_rules:
-- actions:
-    merge:
-      method: rebase
-      rebase_fallback: null
-      strict: true
-  conditions:
-  - label!=no-mergify
-  - '#approved-reviews-by>=1'
-  - check-success=fedora/check
-  name: default
+  - name: default
+    actions:
+      queue:
+        method: rebase
+        name: default
+    conditions:
+    - label!=no-mergify
+    - '#approved-reviews-by>=1'
+    - check-success=fedora/check
