@@ -155,7 +155,7 @@ There's a helpful script to retrieve message IDs. From the root of the repositor
     $ python devel/anitya_updates.py
 
 Release notes
-=============
+-------------
 
 To add entries to the release notes, create a file in the ``news`` directory
 with the ``source.type`` name format, where the ``source`` part of the filename is:
@@ -191,7 +191,7 @@ The text inside the file will be used as entry text.
 A preview of the release notes can be generated with ``towncrier --draft``.
 
 Release testing guide
-=====================
+---------------------
 
 Before releasing a new version it is good to try deployment in `staging environment <https://os.stg.fedoraproject.org>`_.
 To deploy the release candidate to staging follow these steps:
@@ -218,7 +218,7 @@ The new staging branch will be automatically deployed in the `staging environmen
     This guide assumes that you have write permissions for the-new-hotness repository.
 
 Release Guide
-=============
+-------------
 
 To do the release you need following python packages installed::
 
