@@ -4,6 +4,73 @@ Release notes
 
 .. towncrier release notes start
 
+1.0.0 (2021-12-08)
+Features
+--------
+
+* Update documentation to current state
+  (`#228 <https://github.com/fedora-infra/the-new-hotness/issues/228>`_)
+
+* Add SHA512 values to error message about same sources
+  (`#286 <https://github.com/fedora-infra/the-new-hotness/issues/286>`_)
+
+* Show stdout + stderr from CalledProcessError
+  (`#333 <https://github.com/fedora-infra/the-new-hotness/issues/333>`_)
+
+
+Bug Fixes
+---------
+
+* Error when constructing hotness.update.drop message
+  (`#330 <https://github.com/fedora-infra/the-new-hotness/issues/330>`_)
+
+* Save koji task id, even if the build event fails
+  (`#332 <https://github.com/fedora-infra/the-new-hotness/issues/332>`_)
+
+* Fix the format error when scratch build fails
+  (`#345 <https://github.com/fedora-infra/the-new-hotness/issues/345>`_)
+
+
+Development Changes
+-------------------
+
+* Provide podman compatibility
+  (`PR#340 <https://github.com/fedora-infra/the-new-hotness/pull/340>`_)
+
+* Update vagrant environment to F34
+  (`PR#349 <https://github.com/fedora-infra/the-new-hotness/pull/349>`_)
+
+* Refactor the-new-hotness using CA design
+  (`#276 <https://github.com/fedora-infra/the-new-hotness/issues/276>`_)
+
+* Migrate to Zuul
+  (`#309 <https://github.com/fedora-infra/the-new-hotness/issues/309>`_)
+
+* Provide Containerized workflow
+  (`#336 <https://github.com/fedora-infra/the-new-hotness/issues/336>`_)
+
+* Update filename format of news file to correspond with labels for issues
+  (`#338 <https://github.com/fedora-infra/the-new-hotness/issues/338>`_)
+
+* Unify exceptions
+  (`#353 <https://github.com/fedora-infra/the-new-hotness/issues/353>`_)
+
+
+Others
+------
+
+* Release message schema version 1.1.1
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release:
+
+* Michal Konečný
+* mscherer
+* Onur
+
+
 0.13.4 (2021-02-04)
 ===================
 
