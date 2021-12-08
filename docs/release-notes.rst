@@ -5,6 +5,8 @@ Release notes
 .. towncrier release notes start
 
 1.0.0 (2021-12-08)
+==================
+
 Features
 --------
 
