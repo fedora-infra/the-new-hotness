@@ -11,4 +11,4 @@ pytest-cov==3.0.0
 sphinx==4.3.2
 
 # Mypy test requirements
-mypy==0.930
+mypy==0.931
