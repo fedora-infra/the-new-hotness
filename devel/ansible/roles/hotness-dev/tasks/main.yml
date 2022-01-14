@@ -6,10 +6,8 @@
       git,
       ngrep,
       nmap-ncat,
-      python3-rpdb,
       tox,
       tmux,
-      tree,
       vim-enhanced
     ]
     state: present
@@ -40,13 +38,8 @@
       # Python dependencies
       fedora-messaging,
       python3-bugzilla,
-      python3-dogpile-cache,
-      python3-fedora,
-      python3-fedmsg,
       python3-koji,
-      python3-pycurl,
       python3-requests,
-      python3-six
     ]
     state: present
 
