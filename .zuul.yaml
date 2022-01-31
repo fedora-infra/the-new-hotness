@@ -1,24 +1,4 @@
 - job:
-    name: tox-python36
-    description: |
-      Run unit tests for a Python project under cPython version 3.6.
-
-      Uses tox with the ``py36`` environment.
-
-      Ensures that the python36 interpreter is installed.
-
-    parent: tox
-    run: ci/test-tox.yaml
-    vars:
-      tox_env: py36
-      dependencies:
-        - python36
-    nodeset:
-      nodes:
-        name: test-node
-        label: pod-python-f33
-
-- job:
     name: tox-python37
     description: |
       Run unit tests for a Python project under cPython version 3.7.
@@ -66,10 +46,6 @@
               dependencies:
                 - gcc
         - tox-format:
-            vars:
-              dependencies:
-                - gcc
-        - tox-python36:
             vars:
               dependencies:
                 - gcc
