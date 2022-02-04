@@ -4,6 +4,7 @@
       dnf:
         name:
           "{{dependencies}}"
+      become: True
       when: (dependencies is defined) and (dependencies|length > 0)
 
     - name: Run test
