@@ -1,5 +1,9 @@
 - hosts: all
   tasks:
+    - name: Print dependencies
+      debug:
+        var: dependencies
+
     - name: Install dependencies
       dnf:
         name:
