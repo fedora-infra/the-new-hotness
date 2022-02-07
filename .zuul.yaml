@@ -11,8 +11,9 @@
     run: ci/test-tox.yaml
     vars:
       tox_env: py37
-      dependencies:
+      job_dependencies:
         - python37
+        - tox
     nodeset:
       nodes:
         name: test-node
@@ -32,6 +33,8 @@
     run: ci/test-tox.yaml
     vars:
       tox_env: docs
+      job_dependencies:
+        - tox
     nodeset:
       nodes:
         name: test-node
