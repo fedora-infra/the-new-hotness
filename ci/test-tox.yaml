@@ -1,5 +1,16 @@
 - hosts: all
   tasks:
+    - name: Print job dependencies
+      debug:
+        var: job_dependencies
+
+    - name: Install dependencies
+      dnf:
+        name:
+          "{{job_dependencies}}"
+      become: True
+      when: (job_dependencies is defined) and (job_dependencies|length > 0)
+
     - name: Print dependencies
       debug:
         var: dependencies
