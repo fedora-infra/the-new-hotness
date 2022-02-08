@@ -55,7 +55,7 @@
         - tox-python37:
             vars:
               dependencies:
-                - gcc
+                - krb5-devel
         - tox-python38:
             vars:
               dependencies:
@@ -67,7 +67,7 @@
         - simple-tox-docs:
             vars:
               dependencies:
-                - gcc
+                - krb5-devel
         - tox-bandit:
             vars:
               dependencies:
