@@ -589,7 +589,7 @@ class HotnessConsumer(object):
         build_koji_use_case = PackageScratchBuildUseCase(self.builder_koji)
         response = build_koji_use_case.build(build_request)
         if not response:
-            message = "Scratch build failed. Details bellow:\n\n"
+            message = "Scratch build failed. Details below:\n\n"
             message = message + response.message
             if response.traceback:
                 message = message + "\nTraceback:\n{}\n".format(

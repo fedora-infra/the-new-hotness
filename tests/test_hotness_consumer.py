@@ -476,7 +476,7 @@ class TestHotnessConsumerCall:
                 mock.call(
                     package,
                     (
-                        "Scratch build failed. Details bellow:\n\n"
+                        "Scratch build failed. Details below:\n\n"
                         "BuilderException: {}\n"
                         "Traceback:\n"
                         "{}\n"
@@ -556,7 +556,7 @@ class TestHotnessConsumerCall:
                 mock.call(
                     package,
                     (
-                        "Scratch build failed. Details bellow:\n\n"
+                        "Scratch build failed. Details below:\n\n"
                         "DownloadException: {}\n"
                         "Traceback:\n"
                         "{}\n"
@@ -627,7 +627,7 @@ class TestHotnessConsumerCall:
                 mock.call(
                     package,
                     (
-                        "Scratch build failed. Details bellow:\n\n"
+                        "Scratch build failed. Details below:\n\n"
                         "BuilderException: {}\n"
                         "Traceback:\n"
                         "{}\n"

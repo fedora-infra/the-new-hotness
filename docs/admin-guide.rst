@@ -71,7 +71,7 @@ Configuration
 The New Hotness configuration is read from the `consumer_config` section of the
 `fedora messaging configuration <https://fedora-messaging.readthedocs.io/en/stable/configuration.html>`_.
 
-The configuration is using the TOML format and the sample could be found bellow.
+The configuration is using the TOML format and the sample could be found below.
 
 .. include:: ../config/config.toml.example
    :literal:
