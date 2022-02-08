@@ -47,11 +47,11 @@
         - tox-lint:
             vars:
               dependencies:
-                - gcc
+                - krb5-devel
         - tox-format:
             vars:
               dependencies:
-                - gcc
+                - krb5-devel
         - tox-python37:
             vars:
               dependencies:
@@ -59,11 +59,11 @@
         - tox-python38:
             vars:
               dependencies:
-                - gcc
+                - krb5-devel
         - tox-python39:
             vars:
               dependencies:
-                - gcc
+                - krb5-devel
         - simple-tox-docs:
             vars:
               dependencies:
@@ -71,8 +71,8 @@
         - tox-bandit:
             vars:
               dependencies:
-                - gcc
+                - krb5-devel
         - tox-diff-cover:
             vars:
               dependencies:
-                - gcc
+                - krb5-devel
