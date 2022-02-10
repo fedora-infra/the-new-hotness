@@ -34,9 +34,8 @@ class TestBugzillaInit:
         Assert that Bugzilla notifier object is initialized correctly.
         """
         server_url = "https://example.com/"
-        reporter = "cain@inquisition.w40k"
-        username = "Fabius@Bile.w40k"
-        password = "UltraSuperHyperPassword"
+        reporter = "Fabius Bile"
+        reporter_email = "Fabius@Bile.w40k"
         api_key = "some API key"
         product = "Fedora"
         keywords = "Tzeentch, Chaos"
@@ -48,8 +47,7 @@ class TestBugzillaInit:
         notifier = Bugzilla(
             server_url,
             reporter,
-            username,
-            password,
+            reporter_email,
             api_key,
             product,
             keywords,
@@ -67,63 +65,7 @@ class TestBugzillaInit:
             "query_format": "advanced",
             "emailreporter1": "1",
             "emailtype1": "exact",
-            "email1": username,
-            "product": product,
-        }
-        assert notifier.new_bug == {
-            "op_sys": "Unspecified",
-            "platform": "Unspecified",
-            "bug_severity": "unspecified",
-            "product": product,
-            "keywords": keywords,
-            "version": version,
-            "status": status,
-        }
-
-    @mock.patch("hotness.notifiers.bugzilla.bugzilla")
-    def test_init_no_api_key(self, mock_bugzilla):
-        """
-        Assert that Bugzilla notifier object is initialized correctly when api_key is not provided.
-        """
-        server_url = "https://example.com/"
-        reporter = "cain@inquisition.w40k"
-        username = "Fabius@Bile.w40k"
-        password = "UltraSuperHyperPassword"
-        api_key = ""
-        product = "Fedora"
-        keywords = "Tzeentch, Chaos"
-        version = "1.0"
-        status = "NEW"
-        bugzilla_session = mock.Mock()
-        mock_bugzilla.Bugzilla.return_value = bugzilla_session
-
-        notifier = Bugzilla(
-            server_url,
-            reporter,
-            username,
-            password,
-            api_key,
-            product,
-            keywords,
-            version,
-            status,
-        )
-
-        mock_bugzilla.Bugzilla.assert_called_with(
-            url=server_url,
-            user=username,
-            password=password,
-            cookiefile=None,
-            tokenfile=None,
-        )
-
-        assert notifier.reporter == reporter
-        assert notifier.bugzilla == bugzilla_session
-        assert notifier.base_query == {
-            "query_format": "advanced",
-            "emailreporter1": "1",
-            "emailtype1": "exact",
-            "email1": username,
+            "email1": reporter_email,
             "product": product,
         }
         assert notifier.new_bug == {
@@ -142,9 +84,8 @@ class TestBugzillaInit:
         if authentication info is not provided.
         """
         server_url = "https://example.com/"
-        reporter = "cain@inquisition.w40k"
-        username = ""
-        password = ""
+        reporter = "Fabius Bile"
+        reporter_email = "Fabius@Bile.w40k"
         api_key = ""
         product = "Fedora"
         keywords = "Tzeentch, Chaos"
@@ -155,8 +96,7 @@ class TestBugzillaInit:
             Bugzilla(
                 server_url,
                 reporter,
-                username,
-                password,
+                reporter_email,
                 api_key,
                 product,
                 keywords,
@@ -165,8 +105,7 @@ class TestBugzillaInit:
             )
 
         assert exc.value.message == (
-            "Authentication info not provided! Provide either 'username' and 'password' "
-            "or API key."
+            "Authentication info not provided! Provide API key."
         )
 
 
@@ -181,9 +120,8 @@ class TestBugzillaNotify:
         Create notifier instance for tests.
         """
         server_url = "https://example.com/"
-        reporter = "cain@inquisition.w40k"
-        username = "Fabius@Bile.w40k"
-        password = "UltraSuperHyperPassword"
+        reporter = "Fabius Bile"
+        reporter_email = "Fabius@Bile.w40k"
         api_key = "some API key"
         product = "Fedora"
         keywords = ["Tzeentch", "Chaos"]
@@ -195,8 +133,7 @@ class TestBugzillaNotify:
         self.notifier = Bugzilla(
             server_url,
             reporter,
-            username,
-            password,
+            reporter_email,
             api_key,
             product,
             keywords,

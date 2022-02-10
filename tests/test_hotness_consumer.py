@@ -171,8 +171,7 @@ Based on the information from anitya: https://release-monitoring.org/project/%(p
         mock_bz_notifier_new.assert_called_with(
             server_url="https://partner-bugzilla.redhat.com",
             reporter="Upstream Release Monitoring",
-            username=None,
-            password=None,
+            email="upstream-release-monitoring@fedoraproject.org",
             api_key="",
             product="Fedora",
             keywords="FutureFeature, Triaged",
@@ -184,8 +183,6 @@ Based on the information from anitya: https://release-monitoring.org/project/%(p
 
         mock_bz_patcher_new.assert_called_with(
             server_url="https://partner-bugzilla.redhat.com",
-            username=None,
-            password=None,
             api_key="",
         )
 

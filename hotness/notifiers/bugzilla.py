@@ -73,8 +73,7 @@ class Bugzilla(Notifier):
         self,
         server_url: str,
         reporter: str,
-        username: str,
-        password: str,
+        email: str,
         api_key: str,
         product: str,
         keywords: str,
@@ -85,15 +84,12 @@ class Bugzilla(Notifier):
         Class constructor.
 
         It initializes bugzilla session using the provided credentials.
-        If the `api_key` is not provided, it will try to establish a session
-        using `username` and `password`. If none of these authentication
-        methods is provided it raises an `NotifierException`.
+        If the `api_key` is not provided it raises an `NotifierException`.
 
         Params:
             server_url: URL of the bugzilla server
-            reporter: Reporter e-mail to use
-            username: Username to use for authentication
-            password: Password to use for authentication
+            reporter: User that is reporting the issues
+            email: E-mail of the reporter user
             api_key: API key to use for authentication
             product: Product to assign the ticket to
             keywords: Keywords for the new ticket
@@ -108,25 +104,16 @@ class Bugzilla(Notifier):
             self.bugzilla = bugzilla.Bugzilla(
                 url=server_url, api_key=api_key, cookiefile=None, tokenfile=None
             )
-        elif username and password:
-            self.bugzilla = bugzilla.Bugzilla(
-                url=server_url,
-                user=username,
-                password=password,
-                cookiefile=None,
-                tokenfile=None,
-            )
         else:
             raise NotifierException(
-                "Authentication info not provided! Provide either 'username' and 'password' "
-                "or API key."
+                "Authentication info not provided! Provide API key."
             )
         self.bugzilla.bug_autorefresh = True
 
         self.reporter = reporter
 
         self.base_query["product"] = product
-        self.base_query["email1"] = username
+        self.base_query["email1"] = email
 
         self.new_bug["product"] = product
         if keywords:

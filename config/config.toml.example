@@ -78,10 +78,8 @@ requests_retries = 3
 enabled = true
 # User that is used to report the issue in bugzilla
 reporter = "Upstream Release Monitoring"
-# When authenticated by user and password, uncomment the following lines
-# and comment out api_key
-#user = None
-#password = None
+# E-mail of the reporter bugzilla account
+reporter_email = "upstream-release-monitoring@fedoraproject.org"
 # Use bugzilla API key for communication with bugzilla
 api_key = ""
 # URL of the bugzilla instance
