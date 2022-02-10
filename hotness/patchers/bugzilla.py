@@ -41,21 +41,16 @@ class Bugzilla(Patcher):
     def __init__(
         self,
         server_url: str,
-        username: str,
-        password: str,
         api_key: str,
     ) -> None:
         """
         Class constructor.
 
         It initializes bugzilla session using the provided credentials.
-        If the `api_key` is not provided, it will try to establish a session
-        using `username` and `password`.
+        If the `api_key` is not provided it raises an `PatcherException`.
 
         Params:
             server_url: URL of the bugzilla server
-            username: Username to use for authentication
-            password: Password to use for authentication
             api_key: API key to use for authentication
 
         Raises:
@@ -66,19 +61,8 @@ class Bugzilla(Patcher):
             self.bugzilla = bugzilla.Bugzilla(
                 url=server_url, api_key=api_key, cookiefile=None, tokenfile=None
             )
-        elif username and password:
-            self.bugzilla = bugzilla.Bugzilla(
-                url=server_url,
-                user=username,
-                password=password,
-                cookiefile=None,
-                tokenfile=None,
-            )
         else:
-            raise PatcherException(
-                "Authentication info not provided! Provide either 'username' and 'password' "
-                "or API key."
-            )
+            raise PatcherException("Authentication info not provided! Provide API key.")
         self.bugzilla.bug_autorefresh = True
 
     def submit_patch(self, package: Package, patch: str, opts: dict) -> dict:

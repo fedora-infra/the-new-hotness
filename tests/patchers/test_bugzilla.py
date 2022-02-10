@@ -36,46 +36,16 @@ class TestBugzillaInit:
         Assert that Bugzilla patcher object is initialized correctly.
         """
         server_url = "https://example.com/"
-        username = "Fabius@Bile.w40k"
-        password = "UltraSuperHyperPassword"
         api_key = "some API key"
         bugzilla_session = mock.Mock()
         mock_bugzilla.Bugzilla.return_value = bugzilla_session
 
-        notifier = Bugzilla(server_url, username, password, api_key)
+        notifier = Bugzilla(server_url, api_key)
 
         mock_bugzilla.Bugzilla.assert_called_with(
             url=server_url, api_key=api_key, cookiefile=None, tokenfile=None
         )
 
-        assert notifier.bugzilla == bugzilla_session
-
-    @mock.patch("hotness.patchers.bugzilla.bugzilla")
-    def test_init_no_api_key(self, mock_bugzilla):
-        """
-        Assert that Bugzilla patcher object is initialized correctly when api_key is not provided.
-        """
-        server_url = "https://example.com/"
-        username = "Fabius@Bile.w40k"
-        password = "UltraSuperHyperPassword"
-        api_key = ""
-        bugzilla_session = mock.Mock()
-        mock_bugzilla.Bugzilla.return_value = bugzilla_session
-
-        notifier = Bugzilla(
-            server_url,
-            username,
-            password,
-            api_key,
-        )
-
-        mock_bugzilla.Bugzilla.assert_called_with(
-            url=server_url,
-            user=username,
-            password=password,
-            cookiefile=None,
-            tokenfile=None,
-        )
         assert notifier.bugzilla == bugzilla_session
 
     def test_init_no_authentication(self):
@@ -84,21 +54,16 @@ class TestBugzillaInit:
         if authentication info is not provided.
         """
         server_url = "https://example.com/"
-        username = ""
-        password = ""
         api_key = ""
 
         with pytest.raises(PatcherException) as exc:
             Bugzilla(
                 server_url,
-                username,
-                password,
                 api_key,
             )
 
         assert exc.value.message == (
-            "Authentication info not provided! Provide either 'username' and 'password' "
-            "or API key."
+            "Authentication info not provided! Provide API key."
         )
 
 
@@ -113,16 +78,12 @@ class TestBugzillaSubmitPatch:
         Create patcher instance for tests.
         """
         server_url = "https://example.com/"
-        username = "Fabius@Bile.w40k"
-        password = "UltraSuperHyperPassword"
         api_key = "some API key"
         bugzilla_session = mock.Mock()
         mock_bugzilla.Bugzilla.return_value = bugzilla_session
 
         self.patcher = Bugzilla(
             server_url,
-            username,
-            password,
             api_key,
         )
 

@@ -55,8 +55,6 @@ DEFAULTS = dict(
     bugzilla=dict(
         enabled=True,
         url="https://partner-bugzilla.redhat.com",
-        user=None,
-        password=None,
         api_key="",
         product="Fedora",
         version="rawhide",
@@ -64,6 +62,7 @@ DEFAULTS = dict(
         bug_status="NEW",
         explanation_url="https://fedoraproject.org/wiki/upstream_release_monitoring",
         reporter="Upstream Release Monitoring",
+        reporter_email="upstream-release-monitoring@fedoraproject.org",
         short_desc_template="%(name)s-%(latest_upstream)s is available",
         description_template="""
 Latest upstream release: %(latest_upstream)s
@@ -161,11 +160,7 @@ def load(config_dict: dict) -> dict:
     _log.info("Loading the-new-hotness configuration")
     config = _load_dict(consumer_config, config)
 
-    if (
-        config["bugzilla"]["user"] == DEFAULTS["bugzilla"]["user"]
-        and config["bugzilla"]["password"] == DEFAULTS["bugzilla"]["password"]
-        and config["bugzilla"]["api_key"] == DEFAULTS["bugzilla"]["api_key"]
-    ):
+    if config["bugzilla"]["api_key"] == DEFAULTS["bugzilla"]["api_key"]:
         _log.warning(
             "No authentication method configured for bugzilla."
             "The-new-hotness will be unable to do any change in bugzilla."

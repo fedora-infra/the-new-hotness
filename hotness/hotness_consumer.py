@@ -138,8 +138,7 @@ class HotnessConsumer(object):
         self.notifier_bugzilla = bz_notifier(
             server_url=config["bugzilla"]["url"],
             reporter=config["bugzilla"]["reporter"],
-            username=config["bugzilla"]["user"],
-            password=config["bugzilla"]["password"],
+            email=config["bugzilla"]["reporter_email"],
             api_key=config["bugzilla"]["api_key"],
             product=config["bugzilla"]["product"],
             keywords=config["bugzilla"]["keywords"],
@@ -149,8 +148,6 @@ class HotnessConsumer(object):
         self.notifier_fedora_messaging = FedoraMessaging(prefix=PREFIX)
         self.patcher_bugzilla = bz_patcher(
             server_url=config["bugzilla"]["url"],
-            username=config["bugzilla"]["user"],
-            password=config["bugzilla"]["password"],
             api_key=config["bugzilla"]["api_key"],
         )
         self.validator_mdapi = MDApi(

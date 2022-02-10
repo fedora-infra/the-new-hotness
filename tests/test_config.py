@@ -38,8 +38,6 @@ full_config = {
         "bugzilla": {
             "enabled": False,
             "url": "https://partner-bugzilla.redhat.com_test",
-            "user": "",
-            "password": "",
             "api_key": "",
             "product": "",
             "version": "",
@@ -47,6 +45,7 @@ full_config = {
             "bug_status": "",
             "explanation_url": "https://fedoraproject.org/wiki/upstream_release_monitoring_test",
             "reporter": "",
+            "reporter_email": "",
             "short_desc_template": "",
             "description_template": "",
         },

@@ -74,10 +74,8 @@ legacy_messaging = false
 
 [consumer_config.bugzilla]
 enabled = true
-#user = None
-#password = None
 api_key = ""
-url = "https://partner-bugzilla.redhat.com"
+url = "https://bugzilla.stage.redhat.com"
 product = "Fedora"
 version = "rawhide"
 keywords = "FutureFeature,Triaged"
