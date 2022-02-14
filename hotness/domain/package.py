@@ -72,4 +72,4 @@ class Package:
         Return:
             Compare result.
         """
-        return self.to_dict() == other.to_dict()
+        return self.to_dict() == other.to_dict()  # type: ignore

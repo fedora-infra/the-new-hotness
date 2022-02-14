@@ -19,7 +19,7 @@ import logging
 import os
 from tempfile import TemporaryDirectory
 
-import bugzilla
+import bugzilla  # type: ignore
 
 from hotness.exceptions import PatcherException
 from hotness.domain.package import Package

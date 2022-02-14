@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import traceback
-from typing import Any
+from typing import Any, Optional, List
 
 from hotness.exceptions import BaseHotnessException
 from hotness.requests import Request
@@ -52,7 +52,7 @@ class ResponseFailure(Response):
         self.traceback = self._get_stack_trace(message)
         self.use_case_value = self._get_value(message)
 
-    def _get_value(self, message: Any) -> dict:
+    def _get_value(self, message: Any) -> Optional[dict]:
         """
         Retrieves the use case value information from Exception,
         otherwise just returns empty dict.
@@ -70,7 +70,7 @@ class ResponseFailure(Response):
 
         return value
 
-    def _get_stack_trace(self, message: Any) -> [str]:
+    def _get_stack_trace(self, message: Any) -> List[str]:
         """
         Retrieves the stack trace information from Exception,
         otherwise just returns empty list.

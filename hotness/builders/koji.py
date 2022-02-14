@@ -26,7 +26,7 @@ import threading
 import time
 import typing
 
-import koji
+import koji  # type: ignore
 
 from . import Builder
 from hotness.domain.package import Package
@@ -215,7 +215,7 @@ class Koji(Builder):
                 filename = sp.check_output(
                     ["git", "format-patch", "HEAD^"], cwd=tmp, stderr=sp.STDOUT
                 )
-                filename = filename.decode("utf-8").strip()
+                filename_str = filename.decode("utf-8").strip()
             except sp.CalledProcessError as exc:
                 std_out = ""
                 std_err = ""
@@ -227,10 +227,10 @@ class Koji(Builder):
                     str(exc), value=output, std_out=std_out, std_err=std_err
                 )
 
-            output["patch_filename"] = filename
+            output["patch_filename"] = filename_str
 
             # Copy the content of file to output
-            patch = os.path.join(tmp, filename)
+            patch = os.path.join(tmp, filename_str)
             with open(patch) as f:
                 output["patch"] = f.read()
 
@@ -351,9 +351,9 @@ class Koji(Builder):
             String containing information message, it is returned when identical files
             are found, otherwise it's empty.
         """
-        old_checksums = set()
-        new_checksums = set()
-        source_checksum = {}
+        old_checksums: typing.Set[str] = set()
+        new_checksums: typing.Set[str] = set()
+        source_checksum: typing.Dict = {}
         for sources, checksums in ((old_sources, old_checksums),):
             for file_path in sources:
                 with open(file_path, "rb") as fd:

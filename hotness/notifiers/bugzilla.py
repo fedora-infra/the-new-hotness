@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import logging
 
-import bugzilla
+import bugzilla  # type: ignore
 
 from hotness.exceptions import NotifierException
 from hotness.domain.package import Package

@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+from typing import List
+
+
 class Request:
     """
     Parent class for requests. Defines error management methods for requests.
@@ -30,7 +33,7 @@ class Request:
         """
         Class contructor.
         """
-        self.errors = []
+        self.errors: List[dict] = []
 
     def add_error(self, parameter: str, error: str) -> None:
         """

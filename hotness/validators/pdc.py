@@ -81,11 +81,11 @@ class PDC(Validator):
         """
         output = {}
         pdc_url = "{0}/rest_api/v1/component-branches/".format(self.url)
-        params = dict(
-            name=self.branch,
-            global_component=package.name,
-            type=self.package_type,
-            active=True,
+        params = (
+            ("name", self.branch),
+            ("global_component", package.name),
+            ("type", self.package_type),
+            ("active", True),
         )
         _logger.debug(
             "Checking {} to see if {} is retired, {}".format(pdc_url, package, params)
