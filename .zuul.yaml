@@ -52,10 +52,6 @@
             vars:
               dependencies:
                 - krb5-devel
-        - tox-python37:
-            vars:
-              dependencies:
-                - krb5-devel
         - tox-python38:
             vars:
               dependencies:
