@@ -43,7 +43,10 @@
 - project:
     check:
       jobs:
-        #- tox-mypy
+        - tox-mypy:
+            vars:
+              dependencies:
+                - krb5-devel
         - tox-lint:
             vars:
               dependencies:
