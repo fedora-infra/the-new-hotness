@@ -17,8 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import logging
 
-from fedora_messaging import api, message as fm_message
-from fedora_messaging.exceptions import PublishException, ConnectionException
+from fedora_messaging import api, message as fm_message  # type: ignore
+from fedora_messaging.exceptions import PublishException, ConnectionException  # type: ignore
 
 from hotness.exceptions import NotifierException
 from hotness.domain.package import Package

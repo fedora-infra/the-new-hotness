@@ -84,12 +84,12 @@ class TestPDCValidate:
 
         # Parameters for requests get call
         timeout = (5, 20)
-        params = {
-            "name": self.validator.branch,
-            "global_component": package.name,
-            "type": self.validator.package_type,
-            "active": True,
-        }
+        params = (
+            ("name", self.validator.branch),
+            ("global_component", package.name),
+            ("type", self.validator.package_type),
+            ("active", True),
+        )
 
         self.validator.requests_session.get.assert_called_with(
             self.validator.url + "/rest_api/v1/component-branches/",
@@ -119,12 +119,12 @@ class TestPDCValidate:
 
         # Parameters for requests get call
         timeout = (5, 20)
-        params = {
-            "name": self.validator.branch,
-            "global_component": package.name,
-            "type": self.validator.package_type,
-            "active": True,
-        }
+        params = (
+            ("name", self.validator.branch),
+            ("global_component", package.name),
+            ("type", self.validator.package_type),
+            ("active", True),
+        )
 
         self.validator.requests_session.get.assert_called_with(
             self.validator.url + "/rest_api/v1/component-branches/",
@@ -160,12 +160,12 @@ class TestPDCValidate:
 
         # Parameters for requests get call
         timeout = (5, 20)
-        params = {
-            "name": self.validator.branch,
-            "global_component": package.name,
-            "type": self.validator.package_type,
-            "active": True,
-        }
+        params = (
+            ("name", self.validator.branch),
+            ("global_component", package.name),
+            ("type", self.validator.package_type),
+            ("active", True),
+        )
 
         self.validator.requests_session.get.assert_called_with(
             self.validator.url + "/rest_api/v1/component-branches/",

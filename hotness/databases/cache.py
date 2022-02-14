@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+from typing import Dict
+
 from . import Database
 
 
@@ -32,7 +34,7 @@ class Cache(Database):
         Class constructor.
         """
         super(Cache, self).__init__()
-        self.cache = {}
+        self.cache: Dict = {}
 
     def insert(self, key: str, value: str) -> dict:
         """

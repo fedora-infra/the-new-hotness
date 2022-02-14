@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-from typing import Optional
+from typing import Dict
 
 from . import BaseHotnessException
 
@@ -36,9 +36,9 @@ class BuilderException(BaseHotnessException):
     def __init__(
         self,
         message: str,
-        value: Optional[dict] = {},
-        std_out: Optional[str] = "",
-        std_err: Optional[str] = "",
+        value: Dict = {},
+        std_out: str = "",
+        std_err: str = "",
     ) -> None:
         """
         Class constructor.
@@ -54,12 +54,13 @@ class BuilderException(BaseHotnessException):
         String representation of error.
         """
         message = ""
-        if "build_id" in self.value:
-            message = (
-                "Build started, but failure happened "
-                "during post build operations:\n{}\n"
-            ).format(self.message)
-        else:
+        if self.value:
+            if "build_id" in self.value:
+                message = (
+                    "Build started, but failure happened "
+                    "during post build operations:\n{}\n"
+                ).format(self.message)
+        if not message:
             message = "Build failed:\n{}\n".format(self.message)
         if self.std_out:
             message = message + "\nStdOut:\n{}\n".format(self.std_out)

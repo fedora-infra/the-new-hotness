@@ -18,10 +18,12 @@
 # License and may only be used or replicated with the express permission
 # of Red Hat, Inc.
 import logging
+from typing import cast, List
 
 import requests
-from requests.packages.urllib3.util import retry
-from anitya_schema.project_messages import ProjectVersionUpdated
+from requests.packages.urllib3.util import retry  # type: ignore
+from anitya_schema.project_messages import ProjectVersionUpdated  # type: ignore
+from fedora_messaging.message import Message  # type: ignore
 
 from hotness.config import config
 from hotness.domain import Package
@@ -30,6 +32,7 @@ from hotness.databases import Cache
 from hotness.notifiers import Bugzilla as bz_notifier, FedoraMessaging
 from hotness.patchers import Bugzilla as bz_patcher
 from hotness.validators import MDApi, Pagure, PDC
+from hotness.responses import ResponseFailure
 from hotness.requests import (
     BuildRequest,
     InsertDataRequest,
@@ -166,7 +169,7 @@ class HotnessConsumer(object):
             package_type="rpm",
         )
 
-    def __call__(self, msg: "fedora_messaging.message.Message") -> None:  # noqa: F821
+    def __call__(self, msg: Message) -> None:
         """
         Called when a message is received from RabbitMQ queue.
 
@@ -182,9 +185,7 @@ class HotnessConsumer(object):
         elif topic.endswith("buildsys.task.state.change"):
             self._handle_buildsys_scratch(msg)
 
-    def _handle_buildsys_scratch(
-        self, message: "fedora_messaging.message.Message"  # noqa: F821
-    ) -> None:
+    def _handle_buildsys_scratch(self, message: Message) -> None:
         """
         Message handler for build messages.
 
@@ -258,7 +259,7 @@ class HotnessConsumer(object):
                 if not isinstance(item, (dict, list)) and not item.endswith(".rpm"):
                     targets.add(item)
             if targets:
-                target = " for %s" % (self._list_to_series(targets))
+                target = " for %s" % (self._list_to_series(list(targets)))
 
         texts_for_state = {
             "FAILED": f"{owner}'s scratch build of {srpm}{target} failed",
@@ -284,7 +285,7 @@ class HotnessConsumer(object):
         notifier_bugzilla_use_case.notify(notify_request)
 
     def _list_to_series(
-        self, items: list, N: int = 3, oxford_comma: bool = True
+        self, items: List, N: int = 3, oxford_comma: bool = True
     ) -> str:
         """Convert a list of things into a comma-separated string.
         >>> list_to_series(['a', 'b', 'c', 'd'])
@@ -586,6 +587,7 @@ class HotnessConsumer(object):
         build_koji_use_case = PackageScratchBuildUseCase(self.builder_koji)
         response = build_koji_use_case.build(build_request)
         if not response:
+            response = cast(ResponseFailure, response)
             message = "Scratch build failed. Details below:\n\n"
             message = message + response.message
             if response.traceback:

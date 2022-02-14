@@ -23,7 +23,7 @@ This module is responsible for loading application configuration.
 import logging
 import copy
 
-from fedora_messaging.config import conf
+from fedora_messaging.config import conf  # type: ignore
 
 
 _log = logging.getLogger(__name__)
@@ -160,7 +160,7 @@ def load(config_dict: dict) -> dict:
     _log.info("Loading the-new-hotness configuration")
     config = _load_dict(consumer_config, config)
 
-    if config["bugzilla"]["api_key"] == DEFAULTS["bugzilla"]["api_key"]:
+    if config["bugzilla"]["api_key"] == DEFAULTS["bugzilla"]["api_key"]:  # type: ignore
         _log.warning(
             "No authentication method configured for bugzilla."
             "The-new-hotness will be unable to do any change in bugzilla."
