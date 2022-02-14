@@ -212,47 +212,44 @@ class TestHotnessConsumerCall:
     Test class for `hotness.hotness_consumer.HotnessConsumer.__call__`.
     """
 
-    @mock.patch("hotness.hotness_consumer.Koji")
-    @mock.patch("hotness.hotness_consumer.Cache")
-    @mock.patch("hotness.hotness_consumer.bz_notifier")
-    @mock.patch("hotness.hotness_consumer.FedoraMessaging")
-    @mock.patch("hotness.hotness_consumer.bz_patcher")
-    @mock.patch("hotness.hotness_consumer.MDApi")
-    @mock.patch("hotness.hotness_consumer.Pagure")
-    @mock.patch("hotness.hotness_consumer.PDC")
-    def setup(
-        self,
-        mock_pdc_new,
-        mock_pagure_new,
-        mock_mdapi_new,
-        mock_bz_patcher_new,
-        mock_fm_new,
-        mock_bz_notifier_new,
-        mock_cache_new,
-        mock_koji_new,
-    ):
+    def setup(self):
         """
         Create hotness consumer for tests.
         It is accessible as `self.consumer`.
         """
-        mock_koji = mock.MagicMock()
-        mock_koji_new.return_value = mock_koji
-        mock_cache = mock.MagicMock()
-        mock_cache_new.return_value = mock_cache
-        mock_bugzilla_notifier = mock.Mock()
-        mock_bz_notifier_new.return_value = mock_bugzilla_notifier
-        mock_fedora_messaging = mock.Mock()
-        mock_fm_new.return_value = mock_fedora_messaging
-        mock_bugzilla_patcher = mock.Mock()
-        mock_bz_patcher_new.return_value = mock_bugzilla_patcher
-        mock_mdapi = mock.Mock()
-        mock_mdapi_new.return_value = mock_mdapi
-        mock_pagure = mock.Mock()
-        mock_pagure_new.return_value = mock_pagure
-        mock_pdc = mock.Mock()
-        mock_pdc_new.return_value = mock_pdc
+        with mock.patch("hotness.hotness_consumer.Koji") as mock_koji_new, mock.patch(
+            "hotness.hotness_consumer.Cache"
+        ) as mock_cache_new, mock.patch(
+            "hotness.hotness_consumer.bz_notifier"
+        ) as mock_bz_notifier_new, mock.patch(
+            "hotness.hotness_consumer.FedoraMessaging"
+        ) as mock_fm_new, mock.patch(
+            "hotness.hotness_consumer.bz_patcher"
+        ) as mock_bz_patcher_new, mock.patch(
+            "hotness.hotness_consumer.MDApi"
+        ) as mock_mdapi_new, mock.patch(
+            "hotness.hotness_consumer.Pagure"
+        ) as mock_pagure_new, mock.patch(
+            "hotness.hotness_consumer.PDC"
+        ) as mock_pdc_new:
+            mock_koji = mock.MagicMock()
+            mock_koji_new.return_value = mock_koji
+            mock_cache = mock.MagicMock()
+            mock_cache_new.return_value = mock_cache
+            mock_bugzilla_notifier = mock.Mock()
+            mock_bz_notifier_new.return_value = mock_bugzilla_notifier
+            mock_fedora_messaging = mock.Mock()
+            mock_fm_new.return_value = mock_fedora_messaging
+            mock_bugzilla_patcher = mock.Mock()
+            mock_bz_patcher_new.return_value = mock_bugzilla_patcher
+            mock_mdapi = mock.Mock()
+            mock_mdapi_new.return_value = mock_mdapi
+            mock_pagure = mock.Mock()
+            mock_pagure_new.return_value = mock_pagure
+            mock_pdc = mock.Mock()
+            mock_pdc_new.return_value = mock_pdc
 
-        self.consumer = HotnessConsumer()
+            self.consumer = HotnessConsumer()
 
     #
     #  anitya.project.version.update topic

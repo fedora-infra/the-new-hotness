@@ -114,8 +114,7 @@ class TestBugzillaNotify:
     Test class for `hotness.notifiers.Bugzilla.notify` method.
     """
 
-    @mock.patch("hotness.notifiers.bugzilla.bugzilla")
-    def setup(self, mock_bugzilla):
+    def setup(self):
         """
         Create notifier instance for tests.
         """
@@ -128,18 +127,19 @@ class TestBugzillaNotify:
         version = "1.0"
         status = "NEW"
         bugzilla_session = mock.Mock()
-        mock_bugzilla.Bugzilla.return_value = bugzilla_session
+        with mock.patch("hotness.notifiers.bugzilla.bugzilla") as mock_bugzilla:
+            mock_bugzilla.Bugzilla.return_value = bugzilla_session
 
-        self.notifier = Bugzilla(
-            server_url,
-            reporter,
-            reporter_email,
-            api_key,
-            product,
-            keywords,
-            version,
-            status,
-        )
+            self.notifier = Bugzilla(
+                server_url,
+                reporter,
+                reporter_email,
+                api_key,
+                product,
+                keywords,
+                version,
+                status,
+            )
 
         assert self.notifier.bugzilla == bugzilla_session
 

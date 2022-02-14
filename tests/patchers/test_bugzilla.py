@@ -72,20 +72,20 @@ class TestBugzillaSubmitPatch:
     Test class for `hotness.patchers.Bugzilla.submit_patch` method.
     """
 
-    @mock.patch("hotness.patchers.bugzilla.bugzilla")
-    def setup(self, mock_bugzilla):
+    def setup(self):
         """
         Create patcher instance for tests.
         """
         server_url = "https://example.com/"
         api_key = "some API key"
-        bugzilla_session = mock.Mock()
-        mock_bugzilla.Bugzilla.return_value = bugzilla_session
+        with mock.patch("hotness.patchers.bugzilla.bugzilla") as mock_bugzilla:
+            bugzilla_session = mock.Mock()
+            mock_bugzilla.Bugzilla.return_value = bugzilla_session
 
-        self.patcher = Bugzilla(
-            server_url,
-            api_key,
-        )
+            self.patcher = Bugzilla(
+                server_url,
+                api_key,
+            )
 
         assert self.patcher.bugzilla == bugzilla_session
 
