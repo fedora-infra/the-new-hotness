@@ -8,7 +8,6 @@ services:
       args:
         FEDORA_VERSION: 34
     container_name: "hotness"
-    network_mode: host
     volumes:
       - ./:/app
     privileged: true
@@ -23,8 +22,10 @@ services:
   rabbitmq:
     image: docker.io/library/rabbitmq:3.8.16-management-alpine
     container_name: "rabbitmq"
-    network_mode: host
     restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
     healthcheck:
       test: [ "CMD", "nc", "-z", "localhost", "5672" ]
       interval: 3s
@@ -37,11 +38,11 @@ services:
   redis:
     image: docker.io/library/redis:6.0.9-alpine
     container_name: "redis"
-    network_mode: host
     restart: unless-stopped
+    ports:
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s
       timeout: 3s
       retries: 15
-
