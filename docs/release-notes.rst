@@ -4,6 +4,41 @@ Release notes
 
 .. towncrier release notes start
 
+1.1.0 (2022-03-30)
+Bug Fixes
+---------
+
+* Drop Python 3.6 support
+  (`#391 <https://github.com/fedora-infra/the-new-hotness/issues/391>`_)
+
+
+Development Changes
+-------------------
+
+* Remove Python 3.7
+  (`PR#405 <https://github.com/fedora-infra/the-new-hotness/pull/405>`_)
+
+* Enable mypy in CI
+  (`PR#407 <https://github.com/fedora-infra/the-new-hotness/pull/407>`_)
+
+* Update CI pods to newer Fedora
+  (`#393 <https://github.com/fedora-infra/the-new-hotness/issues/393>`_)
+
+* Prepare for change in Bugzilla API
+  (`#401 <https://github.com/fedora-infra/the-new-hotness/issues/401>`_)
+
+* Add support for python 3.10
+  (`#408 <https://github.com/fedora-infra/the-new-hotness/issues/408>`_)
+
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release:
+
+* Peter Hutterer
+
+
 1.0.0 (2021-12-08)
 ==================
 

@@ -6,4 +6,4 @@ from __future__ import absolute_import, unicode_literals
 
 __author__ = "Red Hat, Inc. and others"
 __license__ = "LGPLv2+"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
