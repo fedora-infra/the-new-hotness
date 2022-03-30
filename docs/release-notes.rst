@@ -5,6 +5,8 @@ Release notes
 .. towncrier release notes start
 
 1.1.0 (2022-03-30)
+==================
+
 Bug Fixes
 ---------
 
