@@ -15,8 +15,8 @@ RUN dnf install -y krb5-devel
 RUN dnf install -y fedora-messaging
 
 # Python3 and packages
-RUN dnf install -y python3 python3-pip python3-bugzilla python3-dogpile-cache python3-fedora \
-    python3-fedmsg python3-koji python3-pycurl python3-requests python3-six \
+RUN dnf install -y python3 python3-pip python3-bugzilla \
+    python3-koji python3-requests \
     python3-black python3-flake8 python3-sphinx
 
 # Development tools (for doing stuff inside of the container)
