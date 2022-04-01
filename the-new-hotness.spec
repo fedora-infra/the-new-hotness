@@ -19,20 +19,17 @@ URL:                http://pypi.python.org/pypi/the-new-hotness
 Source0:            https://pypi.python.org/packages/source/t/%{modname}/%{modname}-%{version}.tar.gz
 BuildArch:          noarch
 
-BuildRequires:      python2-devel
-BuildRequires:      python-setuptools
+BuildRequires:      python3-devel
+BuildRequires:      python3-setuptools
+BuildRequires:      fedora-messaging
+BuildRequires:      koji
+BuildRequires:      python3-bugzilla
+BuildRequires:      python3-requests
 
-BuildRequires:      python-bugzilla
-BuildRequires:      python-dogpile-cache
-BuildRequires:      fedmsg
-BuildRequires:      python-fedmsg-meta-fedora-infrastructure
-BuildRequires:      python-six
-
-Requires:           python-bugzilla
-Requires:           python-dogpile-cache
-Requires:           fedmsg
-Requires:           python-fedmsg-meta-fedora-infrastructure
-Requires:           python-six
+Requires:      fedora-messaging
+Requires:      koji
+Requires:      python3-bugzilla
+Requires:      python3-requests
 
 %description
 Fedmsg consumer that listens to release-monitoring.org and files bugzilla bugs
@@ -45,19 +42,19 @@ in response (to notify packagers that they can update their packages).
 rm -rf %{modname}.egg-info
 
 %build
-%{__python2} setup.py build
+%{python3} setup.py build
 
 %install
-%{__python2} setup.py install -O1 --skip-build --root=%{buildroot}
+%{python3} setup.py install -O1 --skip-build --root=%{buildroot}
 
 # setuptools installs these, but we don't want them.
-rm -rf %{buildroot}%{python2_sitelib}/tests/
+rm -rf %{buildroot}%{python3_sitelib}/tests/
 
 %files
 %doc README.rst
 %license LICENSE
-%{python2_sitelib}/hotness/
-%{python2_sitelib}/the_new_hotness-%{version}*
+%{python3_sitelib}/hotness/
+%{python3_sitelib}/the_new_hotness-%{version}*
 
 %changelog
 * Wed Apr 06 2016 Ralph Bean <rbean@redhat.com> - 0.7.3-1

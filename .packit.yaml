@@ -1,0 +1,25 @@
+# See the documentation for more information:
+# https://packit.dev/docs/configuration/
+
+specfile_path: the-new-hotness.spec
+
+# add or remove files that should be synced
+files_to_sync:
+    - the-new-hotness.spec
+    - .packit.yaml
+
+# name in upstream package repository or registry (e.g. in PyPI)
+upstream_package_name: the-new-hotness
+# downstream (Fedora) RPM package name
+downstream_package_name: the-new-hotness
+
+jobs:
+  - job: copr_build
+    trigger: pull_request
+    metadata:
+      targets:
+        - fedora-latest
+        - fedora-development
+        - fedora-stable
+        # - fedora-rawhide-x86_64
+        # - fedora-35-x86_64
