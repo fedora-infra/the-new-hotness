@@ -43,39 +43,61 @@
 - project:
     check:
       jobs:
-        - tox-mypy:
+        - tox:
+            name: tox-mypy
             vars:
+              tox_envlist: mypy
               dependencies:
                 - krb5-devel
-        - tox-lint:
+            pre-run: ci/test-tox.yaml
+            nodeset:
+              nodes:
+                - name: test-node
+                  label: cloud-fedora-35
+        - tox:
+            name: tox-python37
             vars:
+              tox_envlist: py37
               dependencies:
                 - krb5-devel
-        - tox-format:
-            vars:
-              dependencies:
-                - krb5-devel
-        - tox-python38:
-            vars:
-              dependencies:
-                - krb5-devel
-        - tox-python39:
-            vars:
-              dependencies:
-                - krb5-devel
-        - tox-python310:
-            vars:
-              dependencies:
-                - krb5-devel
-        - simple-tox-docs:
-            vars:
-              dependencies:
-                - krb5-devel
-        - tox-bandit:
-            vars:
-              dependencies:
-                - krb5-devel
-        - tox-diff-cover:
-            vars:
-              dependencies:
-                - krb5-devel
+            pre-run: ci/test-tox.yaml
+            nodeset:
+              nodes:
+                - name: test-node
+                  label: cloud-fedora-35
+#        - tox-mypy:
+#            vars:
+#              dependencies:
+#                - krb5-devel
+#        - tox-lint:
+#            vars:
+#              dependencies:
+#                - krb5-devel
+#        - tox-format:
+#            vars:
+#              dependencies:
+#                - krb5-devel
+#        - tox-python38:
+#            vars:
+#              dependencies:
+#                - krb5-devel
+#        - tox-python39:
+#            vars:
+#              dependencies:
+#                - krb5-devel
+#        - tox-python310:
+#            vars:
+#              dependencies:
+#                - krb5-devel
+#        - simple-tox-docs:
+#            vars:
+#              dependencies:
+#                - krb5-devel
+#        - tox-bandit:
+#            vars:
+#              dependencies:
+#                - krb5-devel
+#        - tox-diff-cover:
+#            vars:
+#              dependencies:
+#                - krb5-devel
