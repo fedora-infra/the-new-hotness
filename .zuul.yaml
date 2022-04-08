@@ -1,27 +1,27 @@
 - project:
     check:
       jobs:
-        - tox-mypy:
+        - fi-tox-mypy:
             vars:
               dependencies:
                 - krb5-devel
-        - tox-lint:
+        - fi-tox-lint:
             vars:
               dependencies:
                 - krb5-devel
-        - tox-format:
+        - fi-tox-format:
             vars:
               dependencies:
                 - krb5-devel
-        - tox-python38:
+        - fi-tox-python38:
             vars:
               dependencies:
                 - krb5-devel
-        - tox-python39:
+        - fi-tox-python39:
             vars:
               dependencies:
                 - krb5-devel
-        - tox-python310:
+        - fi-tox-python310:
             vars:
               dependencies:
                 - krb5-devel
@@ -29,11 +29,11 @@
             vars:
               dependencies:
                 - krb5-devel
-        - tox-bandit:
+        - fi-tox-bandit:
             vars:
               dependencies:
                 - krb5-devel
-        - tox-diff-cover:
+        - fi-tox-diff-cover:
             vars:
               dependencies:
                 - krb5-devel
