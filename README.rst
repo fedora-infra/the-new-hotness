@@ -1,4 +1,4 @@
-the-new-hotness
+#the-new-hotness
 ---------------
 
 `Fedora-messaging <https://github.com/fedora-infra/fedora-messaging>`_ consumer that listens to `release-monitoring.org
