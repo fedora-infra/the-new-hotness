@@ -1,3 +1,10 @@
+.. image:: https://img.shields.io/pypi/v/the-new-hotness.svg
+  :target: https://pypi.org/project/the-new-hotness/
+
+.. image:: https://readthedocs.org/projects/the-new-hotness/badge/?version=latest
+  :alt: Documentation Status
+  :target: https://the-new-hotness.readthedocs.io/en/latest/?badge=latest
+
 the-new-hotness
 ---------------
 
