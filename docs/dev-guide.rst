@@ -231,15 +231,13 @@ If you are a maintainer and wish to make a release, follow these steps:
 1. Change the version in ``hotness.__init__.__version__``. This is used to set the
    version in the documentation project and the setup.py file.
 
-2. (Optional) Update ``version`` in ``hotness_schema/setup.py`` script.
-
-3. Get authors of commits by ``python get-authors.py``.
+2. Get authors of commits by ``python get-authors.py``.
 
 .. note::
    This script must be executed in ``news`` folder, because it
    creates files in current working directory.
 
-4. Generate the changelog by running ``towncrier``.
+3. Generate the changelog by running ``towncrier``.
 
 .. note::
     If you added any news fragment in the previous step, you might see ``towncrier``
@@ -247,29 +245,27 @@ If you are a maintainer and wish to make a release, follow these steps:
     Just ignore this and remove all of them manually; release notes will be generated
     anyway.
 
-5. Remove every remaining news fragment from ``news`` folder.
+4. Remove every remaining news fragment from ``news`` folder.
 
-6. Commit your changes with message *the-new-hotness <version>*.
+5. Commit your changes with message *the-new-hotness <version>*.
 
-7. Tag a release with ``git tag -s <version>``.
+6. Tag a release with ``git tag -s <version>``.
 
-8. Don't forget to ``git push --tags``.
+7. Don't forget to ``git push --tags``.
 
-9. Build the Python packages with ``python setup.py sdist bdist_wheel``.
+8. Build the Python packages with ``python setup.py sdist bdist_wheel``.
 
-10. Upload the packages with ``twine upload dist/<dists>``.
+9. Upload the packages with ``twine upload dist/<dists>``.
 
-11. (Optional) Repeat steps 9 and 10 in ``hotness_schema`` folder.
+11. Create new release on `GitHub releases <https://github.com/fedora-infra/the-new-hotness/releases>`_.
 
-12. Create new release on `GitHub releases <https://github.com/fedora-infra/the-new-hotness/releases>`_.
-
-13. Deploy the new version in staging::
+12. Deploy the new version in staging::
 
      $ git checkout staging
      $ git rebase master
      $ git push origin staging
 
-14. When successfully tested in staging deploy to production::
+13. When successfully tested in staging deploy to production::
 
      $ git checkout production
      $ git rebase staging
