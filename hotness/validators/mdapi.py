@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import logging
 import re
+from typing import Optional, Tuple, Union
 
 from . import Validator
 from hotness.domain import Package
@@ -47,7 +48,12 @@ class MDApi(Validator):
 
     __rc_release_regex = re.compile(r"0\.[0-9]+\.(rc|pre|beta|alpha|dev)([0-9]*)", re.I)
 
-    def __init__(self, url: str, requests_session: Session, timeout: tuple) -> None:
+    def __init__(
+        self,
+        url: str,
+        requests_session: Session,
+        timeout: Optional[Union[float, Tuple[float, float], Tuple[float, None]]],
+    ) -> None:
         """
         Class constructor.
         """
