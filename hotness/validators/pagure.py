@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import logging
+from typing import Optional, Tuple, Union
 
 from . import Validator
 from hotness.domain import Package
@@ -49,7 +50,7 @@ class Pagure(Validator):
         self,
         url: str,
         requests_session: Session,
-        timeout: tuple,
+        timeout: Optional[Union[float, Tuple[float, float], Tuple[float, None]]],
     ) -> None:
         """
         Class constructor.
