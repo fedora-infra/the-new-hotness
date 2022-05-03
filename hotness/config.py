@@ -65,7 +65,9 @@ DEFAULTS = dict(
         reporter_email="upstream-release-monitoring@fedoraproject.org",
         short_desc_template="%(name)s-%(latest_upstream)s is available",
         description_template="""
-Latest upstream release: %(latest_upstream)s
+Releases retrieved: %(retrieved_versions)s
+
+Upstream release that is considered latest: %(latest_upstream)s
 
 Current version/release in %(repo_name)s: %(repo_version)s-%(repo_release)s
 

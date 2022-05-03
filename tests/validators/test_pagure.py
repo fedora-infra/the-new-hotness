@@ -85,6 +85,7 @@ class TestPagureValidate:
         )
 
         assert result["monitoring"] is True
+        assert result["all_versions"] is False
         assert result["scratch_build"] is False
 
     def test_validate_no_monitoring(self):
@@ -113,6 +114,7 @@ class TestPagureValidate:
         )
 
         assert result["monitoring"] is False
+        assert result["all_versions"] is False
         assert result["scratch_build"] is False
 
     def test_validate_monitoring_scratch(self):
@@ -141,6 +143,67 @@ class TestPagureValidate:
         )
 
         assert result["monitoring"] is True
+        assert result["all_versions"] is False
+        assert result["scratch_build"] is True
+
+    def test_validate_monitoring_all(self):
+        """
+        Assert that validation returns correct output when monitoring for all versions
+        is set.
+        """
+        # Mock requests_session
+        response = mock.Mock()
+        response.status_code = 200
+        response.json.return_value = {
+            "monitoring": "monitoring-all",
+        }
+        self.validator.requests_session.get.return_value = response
+
+        # Prepare package
+        package = Package(name="test", version="1.1", distro="Fedora")
+
+        result = self.validator.validate(package)
+
+        # Parameters for requests get call
+        timeout = (5, 20)
+
+        self.validator.requests_session.get.assert_called_with(
+            self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
+            timeout=timeout,
+        )
+
+        assert result["monitoring"] is True
+        assert result["all_versions"] is True
+        assert result["scratch_build"] is False
+
+    def test_validate_monitoring_all_scratch(self):
+        """
+        Assert that validation returns correct output when monitoring for all versions
+        with scratch build is set.
+        """
+        # Mock requests_session
+        response = mock.Mock()
+        response.status_code = 200
+        response.json.return_value = {
+            "monitoring": "monitoring-all-scratch",
+        }
+        self.validator.requests_session.get.return_value = response
+
+        # Prepare package
+        package = Package(name="test", version="1.1", distro="Fedora")
+
+        result = self.validator.validate(package)
+
+        # Parameters for requests get call
+        timeout = (5, 20)
+
+        self.validator.requests_session.get.assert_called_with(
+            self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
+            timeout=timeout,
+        )
+
+        assert result["monitoring"] is True
+        assert result["all_versions"] is True
         assert result["scratch_build"] is True
 
     def test_validate_monitoring_is_missing(self):
@@ -167,6 +230,7 @@ class TestPagureValidate:
         )
 
         assert result["monitoring"] is False
+        assert result["all_versions"] is False
         assert result["scratch_build"] is False
 
     def test_validate_invalid_monitoring_value(self):
@@ -195,6 +259,7 @@ class TestPagureValidate:
         )
 
         assert result["monitoring"] is False
+        assert result["all_versions"] is False
         assert result["scratch_build"] is False
 
     def test_validate_response_not_ok(self):

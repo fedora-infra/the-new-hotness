@@ -22,7 +22,7 @@ from typing import cast, List
 
 import requests
 from requests.packages.urllib3.util import retry  # type: ignore
-from anitya_schema.project_messages import ProjectVersionUpdated  # type: ignore
+from anitya_schema.project_messages import ProjectVersionUpdatedV2  # type: ignore
 from fedora_messaging.message import Message  # type: ignore
 
 from hotness.config import config
@@ -179,8 +179,8 @@ class HotnessConsumer(object):
         topic, body, msg_id = msg.topic, msg.body, msg.id
         _logger.debug("Received %r" % msg_id)
 
-        if topic.endswith("anitya.project.version.update"):
-            message = ProjectVersionUpdated(topic=topic, body=body)
+        if topic.endswith("anitya.project.version.update.v2"):
+            message = ProjectVersionUpdatedV2(topic=topic, body=body)
             self._handle_anitya_version_update(message)
         elif topic.endswith("buildsys.task.state.change"):
             self._handle_buildsys_scratch(msg)
@@ -318,7 +318,7 @@ class HotnessConsumer(object):
 
         return first + conjunction + items[-1]
 
-    def _handle_anitya_version_update(self, message: ProjectVersionUpdated) -> None:
+    def _handle_anitya_version_update(self, message: ProjectVersionUpdatedV2) -> None:
         """
         Message handler for new versions found by Anitya.
 
@@ -342,6 +342,7 @@ class HotnessConsumer(object):
         _logger.info("Handling anitya msg %r" % message.id)
         package = None
         fedora_messaging_use_case = NotifyUserUseCase(self.notifier_fedora_messaging)
+        latest_version = message.versions[0]
 
         # No mapping for the distribution we want to watch, just sent the message and
         # be done with it
@@ -350,7 +351,7 @@ class HotnessConsumer(object):
                 "No %r mapping for %r. Dropping." % (self.distro, message.project_name)
             )
             package = Package(
-                name=message.project_name, version=message.version, distro=""
+                name=message.project_name, version=latest_version, distro=""
             )
 
             opts = {
@@ -369,7 +370,7 @@ class HotnessConsumer(object):
             if mapping["distro"] == self.distro:
                 package = Package(
                     name=mapping["package_name"],
-                    version=message.version,
+                    version=latest_version,
                     distro=self.distro,
                 )
 
@@ -402,6 +403,7 @@ class HotnessConsumer(object):
                     current_release=current_release,
                     project_homepage=message.project_homepage,
                     project_id=message.project_id,
+                    retrieved_versions=message.upstream_versions,
                 )
 
                 # Failure happened when communicating with bugzilla
@@ -483,6 +485,7 @@ class HotnessConsumer(object):
             return output
 
         output["scratch_build"] = response.value["scratch_build"]
+        all_versions = response.value["all_versions"]
 
         # Check if the package is retired in PDC
         validate_pdc_use_case = PackageCheckUseCase(self.validator_pdc)
@@ -514,11 +517,15 @@ class HotnessConsumer(object):
 
         # Version in upstream is not newer
         if not response.value["newer"]:
-            _logger.info(
-                "Message doesn't contain newer version of %r. Dropping." % package.name
-            )
-            output["reason"] = "not newer"
-            return output
+            # If the version is not newer don't start scratch build
+            output["scratch_build"] = False
+            if not all_versions:
+                _logger.info(
+                    "Message doesn't contain newer version of %r. Dropping."
+                    % package.name
+                )
+                output["reason"] = "not newer"
+                return output
 
         output["version"] = response.value["version"]
         output["release"] = response.value["release"]
@@ -531,6 +538,7 @@ class HotnessConsumer(object):
         current_release: int,
         project_homepage: str,
         project_id: int,
+        retrieved_versions: List[str] = [],
     ) -> int:
         """
         Comment on bugzilla bug using the configured template.
@@ -541,14 +549,21 @@ class HotnessConsumer(object):
             current_release: Current release of package in distro
             project_homepage: Upstream homepage
             project_id: Project id in Anitya
+            retrieved_versions: All versions retrieved by Anitya in last check
 
         Returns:
             Bugzilla ticket id. -1 if failure was encountered.
         """
         bz_id = -1
+        latest_upstream = package.version
+
+        upstream_versions = latest_upstream
+        if retrieved_versions:
+            upstream_versions = ", ".join(retrieved_versions)
         # Prepare message for bugzilla
         description = self.description_template % dict(
             latest_upstream=package.version,
+            retrieved_versions=upstream_versions,
             repo_name=self.repoid,
             repo_version=current_version,
             repo_release=current_release,
