@@ -105,7 +105,9 @@ class TestHotnessConsumerInit:
         assert (
             consumer.description_template
             == """
-Latest upstream release: %(latest_upstream)s
+Releases retrieved: %(retrieved_versions)s
+
+Upstream release that is considered latest: %(latest_upstream)s
 
 Current version/release in %(repo_name)s: %(repo_version)s-%(repo_release)s
 
@@ -259,7 +261,7 @@ class TestHotnessConsumerCall:
         Assert that message is handled correctly when there is no distribution mapping
         in update message.
         """
-        message = create_message("anitya.project.version.update", "no_mapping")
+        message = create_message("anitya.project.version.update.v2", "no_mapping")
         self.consumer.__call__(message)
 
         exp_package = Package(name="pg-semver", version="0.17.0", distro="")
@@ -279,9 +281,10 @@ class TestHotnessConsumerCall:
         """
         Assert that update message is handled correctly.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
+            "all_versions": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -319,6 +322,203 @@ class TestHotnessConsumerCall:
                 url=message.body["project"]["homepage"],
                 explanation_url=self.consumer.explanation_url,
                 projectid=message.body["project"]["id"],
+                retrieved_versions=", ".join(
+                    message.body["message"]["upstream_versions"]
+                ),
+            ),
+            {"bz_short_desc": "flatpak-1.0.4 is available"},
+        )
+        self.consumer.builder_koji.build.assert_called_with(package, {"bz_id": 100})
+        self.consumer.database_cache.insert.assert_called_with("1000", "100")
+        self.consumer.patcher_bugzilla.submit_patch.assert_called_with(
+            package,
+            "Let's patch this heresy!",
+            {"bz_id": 100, "patch_filename": "patch_heresy.0001"},
+        )
+
+        exp_opts = {
+            "body": {
+                "trigger": {"msg": message.body, "topic": message.topic},
+                "bug": {"bug_id": 100},
+                "package": package.name,
+            }
+        }
+
+        self.consumer.notifier_fedora_messaging.notify.assert_called_with(
+            package, "update.bug.file", exp_opts
+        )
+
+    def test_call_anitya_update_all_versions(self):
+        """
+        Assert that update message is handled correctly and even the version that is not
+        considered newer is reported when all versions should be reported.
+        """
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
+        self.consumer.validator_pagure.validate.return_value = {
+            "monitoring": True,
+            "all_versions": True,
+            "scratch_build": False,
+        }
+        self.consumer.validator_pdc.validate.return_value = {
+            "retired": False,
+            "count": 1,
+        }
+        self.consumer.validator_mdapi.validate.return_value = {
+            "newer": False,
+            "version": "1.0.5",
+            "release": 1,
+        }
+        self.consumer.notifier_bugzilla.notify.return_value = {"bz_id": 100}
+
+        self.consumer.__call__(message)
+
+        package = Package(name="flatpak", version="1.0.4", distro="Fedora")
+
+        self.consumer.validator_pagure.validate.assert_called_with(package)
+        self.consumer.validator_pdc.validate.assert_called_with(package)
+        self.consumer.validator_mdapi.validate.assert_called_with(package)
+        self.consumer.notifier_bugzilla.notify.assert_called_with(
+            package,
+            self.consumer.description_template
+            % dict(
+                latest_upstream=package.version,
+                repo_name=self.consumer.repoid,
+                repo_version="1.0.5",
+                repo_release=1,
+                url=message.body["project"]["homepage"],
+                explanation_url=self.consumer.explanation_url,
+                projectid=message.body["project"]["id"],
+                retrieved_versions=", ".join(
+                    message.body["message"]["upstream_versions"]
+                ),
+            ),
+            {"bz_short_desc": "flatpak-1.0.4 is available"},
+        )
+
+        exp_opts = {
+            "body": {
+                "trigger": {"msg": message.body, "topic": message.topic},
+                "bug": {"bug_id": 100},
+                "package": package.name,
+            }
+        }
+
+        self.consumer.notifier_fedora_messaging.notify.assert_called_with(
+            package, "update.bug.file", exp_opts
+        )
+
+    def test_call_anitya_update_all_versions_scratch_build_not_newer(self):
+        """
+        Assert that update message is handled correctly and even the version that is not
+        considered newer is reported when all versions should be reported. This shouldn't
+        start the scratch build.
+        """
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
+        self.consumer.validator_pagure.validate.return_value = {
+            "monitoring": True,
+            "all_versions": True,
+            "scratch_build": True,
+        }
+        self.consumer.validator_pdc.validate.return_value = {
+            "retired": False,
+            "count": 1,
+        }
+        self.consumer.validator_mdapi.validate.return_value = {
+            "newer": False,
+            "version": "1.0.5",
+            "release": 1,
+        }
+        self.consumer.notifier_bugzilla.notify.return_value = {"bz_id": 100}
+
+        self.consumer.__call__(message)
+
+        package = Package(name="flatpak", version="1.0.4", distro="Fedora")
+
+        self.consumer.validator_pagure.validate.assert_called_with(package)
+        self.consumer.validator_pdc.validate.assert_called_with(package)
+        self.consumer.validator_mdapi.validate.assert_called_with(package)
+        self.consumer.notifier_bugzilla.notify.assert_called_with(
+            package,
+            self.consumer.description_template
+            % dict(
+                latest_upstream=package.version,
+                repo_name=self.consumer.repoid,
+                repo_version="1.0.5",
+                repo_release=1,
+                url=message.body["project"]["homepage"],
+                explanation_url=self.consumer.explanation_url,
+                projectid=message.body["project"]["id"],
+                retrieved_versions=", ".join(
+                    message.body["message"]["upstream_versions"]
+                ),
+            ),
+            {"bz_short_desc": "flatpak-1.0.4 is available"},
+        )
+        self.consumer.builder_koji.build.assert_not_called()
+        self.consumer.database_cache.insert.assert_not_called()
+        self.consumer.patcher_bugzilla.submit_patch.assert_not_called()
+
+        exp_opts = {
+            "body": {
+                "trigger": {"msg": message.body, "topic": message.topic},
+                "bug": {"bug_id": 100},
+                "package": package.name,
+            }
+        }
+
+        self.consumer.notifier_fedora_messaging.notify.assert_called_with(
+            package, "update.bug.file", exp_opts
+        )
+
+    def test_call_anitya_update_all_versions_scratch_build_newer(self):
+        """
+        Assert that update message is handled correctly and the scratch build is started
+        when the monitoring is set to all versions and the version is newer.
+        """
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
+        self.consumer.validator_pagure.validate.return_value = {
+            "monitoring": True,
+            "all_versions": True,
+            "scratch_build": True,
+        }
+        self.consumer.validator_pdc.validate.return_value = {
+            "retired": False,
+            "count": 1,
+        }
+        self.consumer.validator_mdapi.validate.return_value = {
+            "newer": True,
+            "version": "0.16.0",
+            "release": 1,
+        }
+        self.consumer.notifier_bugzilla.notify.return_value = {"bz_id": 100}
+        self.consumer.builder_koji.build.return_value = {
+            "build_id": 1000,
+            "patch": "Let's patch this heresy!",
+            "patch_filename": "patch_heresy.0001",
+            "message": "",
+        }
+
+        self.consumer.__call__(message)
+
+        package = Package(name="flatpak", version="1.0.4", distro="Fedora")
+
+        self.consumer.validator_pagure.validate.assert_called_with(package)
+        self.consumer.validator_pdc.validate.assert_called_with(package)
+        self.consumer.validator_mdapi.validate.assert_called_with(package)
+        self.consumer.notifier_bugzilla.notify.assert_called_with(
+            package,
+            self.consumer.description_template
+            % dict(
+                latest_upstream=package.version,
+                repo_name=self.consumer.repoid,
+                repo_version="0.16.0",
+                repo_release=1,
+                url=message.body["project"]["homepage"],
+                explanation_url=self.consumer.explanation_url,
+                projectid=message.body["project"]["id"],
+                retrieved_versions=", ".join(
+                    message.body["message"]["upstream_versions"]
+                ),
             ),
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
@@ -347,9 +547,10 @@ class TestHotnessConsumerCall:
         Assert that update message and bugzilla ticket is updated correctly when builder
         returns additional message.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
+            "all_versions": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -389,6 +590,9 @@ class TestHotnessConsumerCall:
                         url=message.body["project"]["homepage"],
                         explanation_url=self.consumer.explanation_url,
                         projectid=message.body["project"]["id"],
+                        retrieved_versions=", ".join(
+                            message.body["message"]["upstream_versions"]
+                        ),
                     ),
                     {"bz_short_desc": "flatpak-1.0.4 is available"},
                 ),
@@ -423,9 +627,10 @@ class TestHotnessConsumerCall:
         """
         Assert that update message is handled correctly when scratch build fails to start.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
+            "all_versions": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -464,6 +669,9 @@ class TestHotnessConsumerCall:
                         url=message.body["project"]["homepage"],
                         explanation_url=self.consumer.explanation_url,
                         projectid=message.body["project"]["id"],
+                        retrieved_versions=", ".join(
+                            message.body["message"]["upstream_versions"]
+                        ),
                     ),
                     {"bz_short_desc": "flatpak-1.0.4 is available"},
                 ),
@@ -505,9 +713,10 @@ class TestHotnessConsumerCall:
         Assert that update message is handled correctly when scratch build is started,
         but download of sources fails.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
+            "all_versions": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -544,6 +753,9 @@ class TestHotnessConsumerCall:
                         url=message.body["project"]["homepage"],
                         explanation_url=self.consumer.explanation_url,
                         projectid=message.body["project"]["id"],
+                        retrieved_versions=", ".join(
+                            message.body["message"]["upstream_versions"]
+                        ),
                     ),
                     {"bz_short_desc": "flatpak-1.0.4 is available"},
                 ),
@@ -573,9 +785,10 @@ class TestHotnessConsumerCall:
         Assert that update message is handled correctly when scratch build is started,
         but there is failure in post build process.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
+            "all_versions": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -615,6 +828,9 @@ class TestHotnessConsumerCall:
                         url=message.body["project"]["homepage"],
                         explanation_url=self.consumer.explanation_url,
                         projectid=message.body["project"]["id"],
+                        retrieved_versions=", ".join(
+                            message.body["message"]["upstream_versions"]
+                        ),
                     ),
                     {"bz_short_desc": "flatpak-1.0.4 is available"},
                 ),
@@ -656,9 +872,10 @@ class TestHotnessConsumerCall:
         """
         Assert that update message is handled correctly when monitoring is not set.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": False,
+            "all_versions": False,
             "scratch_build": True,
         }
 
@@ -684,9 +901,10 @@ class TestHotnessConsumerCall:
         Assert that update message is handled correctly, when scratch build
         is not required.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
+            "all_versions": False,
             "scratch_build": False,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -718,6 +936,9 @@ class TestHotnessConsumerCall:
                 url=message.body["project"]["homepage"],
                 explanation_url=self.consumer.explanation_url,
                 projectid=message.body["project"]["id"],
+                retrieved_versions=", ".join(
+                    message.body["message"]["upstream_versions"]
+                ),
             ),
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
@@ -739,7 +960,7 @@ class TestHotnessConsumerCall:
         """
         Assert that update message is handled correctly when pagure validator fails.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.side_effect = Exception()
 
         self.consumer.__call__(message)
@@ -763,9 +984,10 @@ class TestHotnessConsumerCall:
         """
         Assert that update message is handled correctly, when package is retired.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
+            "all_versions": False,
             "scratch_build": False,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -795,9 +1017,10 @@ class TestHotnessConsumerCall:
         """
         Assert that update message is handled correctly, when pdc raises exception.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
+            "all_versions": False,
             "scratch_build": False,
         }
         self.consumer.validator_pdc.validate.side_effect = Exception()
@@ -825,9 +1048,10 @@ class TestHotnessConsumerCall:
         Assert that update message is handled correctly if the upstream version is
         already in mdapi.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
+            "all_versions": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -863,9 +1087,10 @@ class TestHotnessConsumerCall:
         """
         Assert that update message is handled correctly if MDAPI raises exception.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
+            "all_versions": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -897,9 +1122,10 @@ class TestHotnessConsumerCall:
         """
         Assert that update message is handled correctly, when bugzilla raises exception.
         """
-        message = create_message("anitya.project.version.update", "fedora_mapping")
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
+            "all_versions": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -931,6 +1157,9 @@ class TestHotnessConsumerCall:
                 url=message.body["project"]["homepage"],
                 explanation_url=self.consumer.explanation_url,
                 projectid=message.body["project"]["id"],
+                retrieved_versions=", ".join(
+                    message.body["message"]["upstream_versions"]
+                ),
             ),
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )

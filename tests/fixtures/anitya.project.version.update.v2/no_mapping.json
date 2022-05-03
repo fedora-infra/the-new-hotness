@@ -2,7 +2,6 @@
   "distro": null,
   "message": {
     "agent": "anitya",
-    "odd_change": false,
     "old_version": "",
     "packages": [],
     "project": {
@@ -20,9 +19,14 @@
         "0.17.0"
       ]
     },
-    "upstream_version": "0.17.0",
+    "upstream_versions": [
+        "0.17.0"
+    ],
     "versions": [
       "0.17.0"
+    ],
+    "stable_versions": [
+        "0.17.0"
     ]
   },
   "project": {
