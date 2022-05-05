@@ -74,21 +74,21 @@ Current version/release in %(repo_name)s: %(repo_version)s-%(repo_release)s
 URL: %(url)s
 
 
-    Please consult the package updates policy before you
+Please consult the package updates policy before you
 issue an update to a stable branch:
-    https://docs.fedoraproject.org/en-US/fesco/Updates_Policy
+https://docs.fedoraproject.org/en-US/fesco/Updates_Policy
 
 
 More information about the service that created this bug can be found at:
 
-    %(explanation_url)s
+%(explanation_url)s
 
 
-    Please keep in mind that with any upstream change, there may also be packaging
-    changes that need to be made. Specifically, please remember that it is your
-    responsibility to review the new version to ensure that the licensing is still
-    correct and that no non-free or legally problematic items have been added
-    upstream.
+Please keep in mind that with any upstream change, there may also be packaging
+changes that need to be made. Specifically, please remember that it is your
+responsibility to review the new version to ensure that the licensing is still
+correct and that no non-free or legally problematic items have been added
+upstream.
 
 Based on the information from anitya: https://release-monitoring.org/project/%(projectid)s/
 """,

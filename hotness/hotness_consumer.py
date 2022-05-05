@@ -343,6 +343,12 @@ class HotnessConsumer(object):
         package = None
         fedora_messaging_use_case = NotifyUserUseCase(self.notifier_fedora_messaging)
         latest_version = message.versions[0]
+        # Filter the stable versions only
+        retrieved_stable_versions = [
+            version
+            for version in message.upstream_versions
+            if version in message.stable_versions
+        ]
 
         # No mapping for the distribution we want to watch, just sent the message and
         # be done with it
@@ -374,7 +380,9 @@ class HotnessConsumer(object):
                     distro=self.distro,
                 )
 
-                validation_output = self._validate_package(package)
+                validation_output = self._validate_package(
+                    package, retrieved_stable_versions
+                )
 
                 # Check if validation failed
                 if validation_output["reason"]:
@@ -396,6 +404,10 @@ class HotnessConsumer(object):
                 current_version = validation_output["version"]
                 current_release = validation_output["release"]
 
+                retrieved_versions = message.upstream_versions
+                if validation_output["stable_only"]:
+                    retrieved_versions = retrieved_stable_versions
+
                 # Comment on bugzilla
                 bz_id = self._comment_on_bugzilla_with_template(
                     package=package,
@@ -403,7 +415,7 @@ class HotnessConsumer(object):
                     current_release=current_release,
                     project_homepage=message.project_homepage,
                     project_id=message.project_id,
-                    retrieved_versions=message.upstream_versions,
+                    retrieved_versions=retrieved_versions,
                 )
 
                 # Failure happened when communicating with bugzilla
@@ -439,7 +451,7 @@ class HotnessConsumer(object):
                 if scratch_build:
                     self._handle_scratch_build(package, bz_id)
 
-    def _validate_package(self, package: Package) -> dict:
+    def _validate_package(self, package: Package, stable_versions: List[str]) -> dict:
         """
         Validates the package with every external validator.
         Used validators:
@@ -449,6 +461,8 @@ class HotnessConsumer(object):
 
         Params:
             package: Package to validate
+            stable_versions: Stable versions to check when monitoring
+                settings is set to stable only
 
         Returns:
             Dictionary containing output from the validators.
@@ -456,6 +470,8 @@ class HotnessConsumer(object):
             {
                 # Monitoring setting for scratch build
                 "scratch_build": True,
+                # Monitoring setting for stable versions
+                "stable_only": False,
                 # Current version in MDAPI
                 "version": "1.0.0",
                 # Current release in MDAPI
@@ -464,7 +480,13 @@ class HotnessConsumer(object):
                 "reason": ""
             }
         """
-        output = {"scratch_build": False, "version": "", "release": 0, "reason": ""}
+        output = {
+            "scratch_build": False,
+            "stable_only": False,
+            "version": "",
+            "release": 0,
+            "reason": "",
+        }
         # Check if we are monitoring the package
         validate_request = PackageRequest(package)
         validate_pagure_use_case = PackageCheckUseCase(self.validator_pagure)
@@ -485,7 +507,22 @@ class HotnessConsumer(object):
             return output
 
         output["scratch_build"] = response.value["scratch_build"]
+        output["stable_only"] = response.value["stable_only"]
         all_versions = response.value["all_versions"]
+
+        # If monitoring is set to stable only check if the package version
+        # is stable, if not replace it with latest stable
+        if output["stable_only"]:
+            # No stable versions were retrieved
+            if not stable_versions:
+                _logger.info(
+                    "Not a stable release. Repo says not to monitor %r. Dropping."
+                    % package.name
+                )
+                output["reason"] = "monitoring settings"
+                return output
+            if package.version not in stable_versions:
+                package.version = stable_versions[0]
 
         # Check if the package is retired in PDC
         validate_pdc_use_case = PackageCheckUseCase(self.validator_pdc)

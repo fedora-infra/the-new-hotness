@@ -114,21 +114,21 @@ Current version/release in %(repo_name)s: %(repo_version)s-%(repo_release)s
 URL: %(url)s
 
 
-    Please consult the package updates policy before you
+Please consult the package updates policy before you
 issue an update to a stable branch:
-    https://docs.fedoraproject.org/en-US/fesco/Updates_Policy
+https://docs.fedoraproject.org/en-US/fesco/Updates_Policy
 
 
 More information about the service that created this bug can be found at:
 
-    %(explanation_url)s
+%(explanation_url)s
 
 
-    Please keep in mind that with any upstream change, there may also be packaging
-    changes that need to be made. Specifically, please remember that it is your
-    responsibility to review the new version to ensure that the licensing is still
-    correct and that no non-free or legally problematic items have been added
-    upstream.
+Please keep in mind that with any upstream change, there may also be packaging
+changes that need to be made. Specifically, please remember that it is your
+responsibility to review the new version to ensure that the licensing is still
+correct and that no non-free or legally problematic items have been added
+upstream.
 
 Based on the information from anitya: https://release-monitoring.org/project/%(projectid)s/
 """
@@ -285,6 +285,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": False,
+            "stable_only": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -357,6 +358,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": True,
+            "stable_only": False,
             "scratch_build": False,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -417,6 +419,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": True,
+            "stable_only": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -479,6 +482,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": True,
+            "stable_only": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -542,6 +546,188 @@ class TestHotnessConsumerCall:
             package, "update.bug.file", exp_opts
         )
 
+    def test_call_anitya_update_stable_only(self):
+        """
+        Assert that update message is handled correctly, when stable only monitoring
+        is set.
+        """
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
+        self.consumer.validator_pagure.validate.return_value = {
+            "monitoring": True,
+            "all_versions": False,
+            "stable_only": True,
+            "scratch_build": True,
+        }
+        self.consumer.validator_pdc.validate.return_value = {
+            "retired": False,
+            "count": 1,
+        }
+        self.consumer.validator_mdapi.validate.return_value = {
+            "newer": True,
+            "version": "0.16.0",
+            "release": 1,
+        }
+        self.consumer.notifier_bugzilla.notify.return_value = {"bz_id": 100}
+        self.consumer.builder_koji.build.return_value = {
+            "build_id": 1000,
+            "patch": "Let's patch this heresy!",
+            "patch_filename": "patch_heresy.0001",
+            "message": "",
+        }
+
+        self.consumer.__call__(message)
+
+        package = Package(name="flatpak", version="1.0.4", distro="Fedora")
+
+        self.consumer.validator_pagure.validate.assert_called_with(package)
+        self.consumer.validator_pdc.validate.assert_called_with(package)
+        self.consumer.validator_mdapi.validate.assert_called_with(package)
+        self.consumer.notifier_bugzilla.notify.assert_called_with(
+            package,
+            self.consumer.description_template
+            % dict(
+                latest_upstream=package.version,
+                repo_name=self.consumer.repoid,
+                repo_version="0.16.0",
+                repo_release=1,
+                url=message.body["project"]["homepage"],
+                explanation_url=self.consumer.explanation_url,
+                projectid=message.body["project"]["id"],
+                retrieved_versions="1.0.4",
+            ),
+            {"bz_short_desc": "flatpak-1.0.4 is available"},
+        )
+        self.consumer.builder_koji.build.assert_called_with(package, {"bz_id": 100})
+        self.consumer.database_cache.insert.assert_called_with("1000", "100")
+        self.consumer.patcher_bugzilla.submit_patch.assert_called_with(
+            package,
+            "Let's patch this heresy!",
+            {"bz_id": 100, "patch_filename": "patch_heresy.0001"},
+        )
+
+        exp_opts = {
+            "body": {
+                "trigger": {"msg": message.body, "topic": message.topic},
+                "bug": {"bug_id": 100},
+                "package": package.name,
+            }
+        }
+
+        self.consumer.notifier_fedora_messaging.notify.assert_called_with(
+            package, "update.bug.file", exp_opts
+        )
+
+    def test_call_anitya_update_stable_only_mixed(self):
+        """
+        Assert that update message is handled correctly when stable only monitoring
+        is set. Notification only contains stable versions.
+        """
+        message = create_message(
+            "anitya.project.version.update.v2", "fedora_mapping_stable_multiple"
+        )
+        self.consumer.validator_pagure.validate.return_value = {
+            "monitoring": True,
+            "all_versions": False,
+            "stable_only": True,
+            "scratch_build": True,
+        }
+        self.consumer.validator_pdc.validate.return_value = {
+            "retired": False,
+            "count": 1,
+        }
+        self.consumer.validator_mdapi.validate.return_value = {
+            "newer": True,
+            "version": "0.16.0",
+            "release": 1,
+        }
+        self.consumer.notifier_bugzilla.notify.return_value = {"bz_id": 100}
+        self.consumer.builder_koji.build.return_value = {
+            "build_id": 1000,
+            "patch": "Let's patch this heresy!",
+            "patch_filename": "patch_heresy.0001",
+            "message": "",
+        }
+
+        self.consumer.__call__(message)
+
+        package = Package(name="flatpak", version="0.99.3", distro="Fedora")
+
+        self.consumer.validator_pagure.validate.assert_called_with(package)
+        self.consumer.validator_pdc.validate.assert_called_with(package)
+        self.consumer.validator_mdapi.validate.assert_called_with(package)
+        self.consumer.notifier_bugzilla.notify.assert_called_with(
+            package,
+            self.consumer.description_template
+            % dict(
+                latest_upstream=package.version,
+                repo_name=self.consumer.repoid,
+                repo_version="0.16.0",
+                repo_release=1,
+                url=message.body["project"]["homepage"],
+                explanation_url=self.consumer.explanation_url,
+                projectid=message.body["project"]["id"],
+                retrieved_versions="0.99.3, 0.99.2",
+            ),
+            {"bz_short_desc": "flatpak-0.99.3 is available"},
+        )
+        self.consumer.builder_koji.build.assert_called_with(package, {"bz_id": 100})
+        self.consumer.database_cache.insert.assert_called_with("1000", "100")
+        self.consumer.patcher_bugzilla.submit_patch.assert_called_with(
+            package,
+            "Let's patch this heresy!",
+            {"bz_id": 100, "patch_filename": "patch_heresy.0001"},
+        )
+
+        exp_opts = {
+            "body": {
+                "trigger": {"msg": message.body, "topic": message.topic},
+                "bug": {"bug_id": 100},
+                "package": package.name,
+            }
+        }
+
+        self.consumer.notifier_fedora_messaging.notify.assert_called_with(
+            package, "update.bug.file", exp_opts
+        )
+
+    def test_call_anitya_update_stable_only_pre_release(self):
+        """
+        Assert that update message is dropped when the stable only monitoring option is
+        set and the version retrieved is pre-release.
+        """
+        message = create_message(
+            "anitya.project.version.update.v2", "fedora_mapping_no_stable"
+        )
+        self.consumer.validator_pagure.validate.return_value = {
+            "monitoring": True,
+            "all_versions": False,
+            "stable_only": True,
+            "scratch_build": True,
+        }
+
+        self.consumer.__call__(message)
+
+        package = Package(name="flatpak", version="1.0.4", distro="Fedora")
+
+        self.consumer.validator_pagure.validate.assert_called_with(package)
+        self.consumer.validator_pdc.validate.assert_not_called()
+        self.consumer.validator_mdapi.validate.assert_not_called()
+        self.consumer.notifier_bugzilla.notify.assert_not_called()
+        self.consumer.builder_koji.build.assert_not_called()
+        self.consumer.database_cache.insert.assert_not_called()
+        self.consumer.patcher_bugzilla.submit_patch.assert_not_called()
+
+        exp_opts = {
+            "body": {
+                "trigger": {"msg": message.body, "topic": message.topic},
+                "reason": "monitoring settings",
+            }
+        }
+
+        self.consumer.notifier_fedora_messaging.notify.assert_called_with(
+            package, "update.drop", exp_opts
+        )
+
     def test_call_anitya_update_scratch_build_message(self):
         """
         Assert that update message and bugzilla ticket is updated correctly when builder
@@ -551,6 +737,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": False,
+            "stable_only": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -631,6 +818,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": False,
+            "stable_only": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -717,6 +905,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": False,
+            "stable_only": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -789,6 +978,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": False,
+            "stable_only": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -876,6 +1066,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": False,
             "all_versions": False,
+            "stable_only": False,
             "scratch_build": True,
         }
 
@@ -905,6 +1096,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": False,
+            "stable_only": False,
             "scratch_build": False,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -988,6 +1180,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": False,
+            "stable_only": False,
             "scratch_build": False,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -1021,6 +1214,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": False,
+            "stable_only": False,
             "scratch_build": False,
         }
         self.consumer.validator_pdc.validate.side_effect = Exception()
@@ -1052,6 +1246,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": False,
+            "stable_only": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -1091,6 +1286,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": False,
+            "stable_only": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {
@@ -1126,6 +1322,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_pagure.validate.return_value = {
             "monitoring": True,
             "all_versions": False,
+            "stable_only": False,
             "scratch_build": True,
         }
         self.consumer.validator_pdc.validate.return_value = {

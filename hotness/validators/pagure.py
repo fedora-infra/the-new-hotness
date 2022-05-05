@@ -31,6 +31,8 @@ MONITORING_STATUSES = [
     "monitoring-with-scratch",
     "monitoring-all",
     "monitoring-all-scratch",
+    "monitoring-stable",
+    "monitoring-stable-scratch",
     "no-monitoring",
 ]
 
@@ -38,6 +40,7 @@ MONITORING_STATUSES = [
 MONITORING_STATUSES_SCRATCH_BUILD = [
     "monitoring-with-scratch",
     "monitoring-all-scratch",
+    "monitoring-stable-scratch",
 ]
 
 _logger = logging.getLogger(__name__)
@@ -86,13 +89,20 @@ class Pagure(Validator):
                 "monitoring": True,  # If the packager wants to be notified or not
                 "all_versions": True,  # If the packager wants to be notified about every
                                        # version received by Anitya
+                "stable_only": True,  # If the packager wants to be notified only about
+                                      # stable versions received by Anitya
                 "scratch_build": False  # If the packager wants to run a scratch build or not
             }
 
         Raises:
             HTTPException: Is raised when HTTP status code of response isn't 200.
         """
-        output = {"monitoring": False, "scratch_build": False, "all_versions": False}
+        output = {
+            "monitoring": False,
+            "scratch_build": False,
+            "stable_only": False,
+            "all_versions": False,
+        }
         dist_git_url = "{0}/_dg/anitya/rpms/{1}".format(self.url, package.name)
         _logger.debug(
             "Checking {} to see if {} is monitored.".format(dist_git_url, package.name)
@@ -109,12 +119,21 @@ class Pagure(Validator):
         monitoring_value = data.get("monitoring", "no-monitoring")
 
         # Fill the output based on the monitoring value
-        # Invalid = monitoring: False; scrach_build: False; all_versions: False
-        # monitoring = monitoring: True; scrach_build: False; all_versions: False
-        # monitoring-with-scratch = monitoring: True; scrach_build: True; all_versions: False
-        # monitoring-all = monitoring: True; scrach_build: False; all_versions: True
-        # monitoring-all-scratch = monitoring: True; scrach_build: True; all_versions: True
-        # no-monitoring = monitoring: False; scrach_build: False
+        # Invalid = monitoring: False; scrach_build: False; all_versions: False; stable_only: False
+        # monitoring =
+        #   monitoring: True; scrach_build: False; all_versions: False; stable_only: False
+        # monitoring-with-scratch =
+        #   monitoring: True; scrach_build: True; all_versions: False; stable_only: False
+        # monitoring-all =
+        #   monitoring: True; scrach_build: False; all_versions: True; stable_only: False
+        # monitoring-all-scratch =
+        #   monitoring: True; scrach_build: True; all_versions: True; stable_only: False
+        # monitoring-stable =
+        #   monitoring: True; scrach_build: False; all_versions: True; stable_only: True
+        # monitoring-stable-scratch =
+        #   monitoring: True; scrach_build: True; all_versions: True; stable_only: True
+        # no-monitoring =
+        #   monitoring: False; scrach_build: False; all_versions: False; stable_only: False
         if monitoring_value not in MONITORING_STATUSES:
             _logger.info(
                 "Unknown status '{}' recovered from {}".format(
@@ -127,6 +146,9 @@ class Pagure(Validator):
 
         if monitoring_value.startswith("monitoring-all"):
             output["all_versions"] = True
+
+        if monitoring_value.startswith("monitoring-stable"):
+            output["stable_only"] = True
 
         if monitoring_value in MONITORING_STATUSES_SCRATCH_BUILD:
             output["scratch_build"] = True
