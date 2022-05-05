@@ -39,8 +39,18 @@ Following is the explanation of the `Monitoring status` options:
   `mdapi <https://pagure.io/mdapi>`_. This could cause issues with duplicates in case
   the version will be deleted and retrieved again in Anitya.
 
+* *Monitoring stable only* - Project will be monitored by The New Hotness and
+  Bugzilla ticket will be created each time a new stable version will be discovered
+  by Anitya. In case multiple versions are reported at once, newest stable will be used.
+
+* *Monitoring stable only and scratch builds* - Project will be monitored by The New
+  Hotness and Bugzilla notification will be created each time a new stable version will
+  be discovered by Anitya. In case multiple versions are reported at once, newest stable
+  will be used. Additionally a scratch build will be started for the new version.
+
 .. note::
-   The *Monitoring all* and *Monitoring all and scratch builds* options are supported by
+   The *Monitoring all*, *Monitoring all and scratch builds*, *Monitoring stable only*
+   and *Monitoring stable only and scratch builds* options are supported by
    The New Hotness, but not yet available on `dist git <https://src.fedoraproject.org>`_.
 
 Creating a project in Anitya
