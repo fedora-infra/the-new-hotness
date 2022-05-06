@@ -17,9 +17,7 @@
     name: [
       # Packages needed for running test in tox
       krb5-devel,
-      libcurl-devel,
       gcc,
-      openssl-devel,
       # Packages needed for the-new-hotness development
       python3-black,
       python3-flake8,
@@ -55,7 +53,6 @@
   pip:
     name: [
       "file:///home/{{ ansible_env.SUDO_USER }}/devel/",
-      "file:///home/{{ ansible_env.SUDO_USER }}/devel/hotness_schema/"
     ]
     extra_args: '-e'
     executable: pip-3

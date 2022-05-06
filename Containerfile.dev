@@ -33,7 +33,6 @@ ENV FEDORA_MESSAGING_CONF=/root/config.toml
 
 # Install local packages in editable mode
 RUN pip3 install -e /app
-RUN pip3 install -e /app/hotness_schema
 
 # Comment out the line that starts with 'default_ccache_name'
 # for preventing following error: `kinit: Invalid UID in persistent keyring name while getting default ccache`
