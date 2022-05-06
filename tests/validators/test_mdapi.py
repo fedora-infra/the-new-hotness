@@ -169,6 +169,37 @@ class TestMDAPIValidate:
         assert result["version"] == "1.0"
         assert result["release"] == "0.1.rc1.fc34"
 
+    def test_validate_dist_tag_in_release(self):
+        """
+        Assert that validation returns correct output when the release contains
+        dist tag.
+        """
+        url = "http://testing.url"
+        timeout = (5, 20)
+
+        # Mock requests_session
+        requests_session = mock.Mock()
+
+        response = mock.Mock()
+        response.status_code = 200
+        response.json.return_value = {"version": "1.0", "release": "1.fc34"}
+        requests_session.get.return_value = response
+
+        # Prepare package
+        package = Package(name="test", version="1.0-1", distro="Fedora")
+
+        validator = MDApi(url, requests_session, timeout)
+
+        result = validator.validate(package)
+
+        requests_session.get.assert_called_with(
+            url + "/koji/srcpkg/test", timeout=timeout
+        )
+
+        assert result["newer"] is False
+        assert result["version"] == "1.0"
+        assert result["release"] == "1.fc34"
+
     def test_validate_response_not_ok(self):
         """
         Assert that validation raises HTTPException when response code is not 200.

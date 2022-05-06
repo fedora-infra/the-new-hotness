@@ -44,9 +44,12 @@ class MDApi(Validator):
         requests_session: Session object which will be used for HTTP request
         timeout: Timeouts to HTTP request in seconds (connect timeout, read timeout)
         __rc_release_regex: Regex for parsing release field obtained from mdapi
+        __dist_tag_regex: Regex for matching dist tag in version
     """
 
     __rc_release_regex = re.compile(r"0\.[0-9]+\.(rc|pre|beta|alpha|dev)([0-9]*)", re.I)
+
+    __dist_tag_regex = re.compile("(.*?)-[0-9]+", re.I)
 
     def __init__(
         self,
@@ -93,6 +96,8 @@ class MDApi(Validator):
                 response.status_code,
                 "Error encountered on request {}".format(mdapi_url),
             )
+        # Remove dist tag from package before comparing with mdapi version
+        upstream_version = self._remove_dist_tag(package.version)
 
         js = response.json()
         output["version"] = js["version"]
@@ -107,7 +112,7 @@ class MDApi(Validator):
 
         mdapi_version = "{}{}{}".format(output["version"], rc_tuple[0], rc_tuple[1])
 
-        diff = RPM.compare(package.version, mdapi_version)
+        diff = RPM.compare(upstream_version, mdapi_version)
 
         if diff == 1:
             _logger.info(
@@ -140,3 +145,21 @@ class MDApi(Validator):
             return (match.group(1), match.group(2))
         else:
             return ("", "")
+
+    def _remove_dist_tag(self, version: str) -> str:
+        """
+        Remove dist tag from version when available.
+
+        Params:
+          version: Version to remove dist tag from
+
+        Returns:
+          Version without dist tag. If version doesn't contain dist tag
+          returns the original version.
+        """
+        result = version
+        if self.__dist_tag_regex.match(version):
+            version_array = version.split("-")[:-1]
+            result = "-".join(version_array)
+
+        return result
