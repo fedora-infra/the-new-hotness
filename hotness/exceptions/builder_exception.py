@@ -55,7 +55,7 @@ class BuilderException(BaseHotnessException):
         """
         message = ""
         if self.value:
-            if "build_id" in self.value:
+            if "build_id" in self.value and not self.value["build_id"] == 0:
                 message = (
                     "Build started, but failure happened "
                     "during post build operations:\n{}\n"

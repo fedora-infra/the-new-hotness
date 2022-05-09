@@ -83,6 +83,17 @@ class TestBuilderExceptionStr:
             "This error is a tech heresy!\n"
         )
 
+    def test_str_build_id_zero(self):
+        """
+        Assert that the string representation of exception is correct
+        when build id is available, but the value is still 0.
+        """
+        exception = BuilderException(
+            "This error is a tech heresy!", value={"build_id": 0}
+        )
+
+        assert str(exception) == ("Build failed:\n" "This error is a tech heresy!\n")
+
     def test_str_std_err_out(self):
         """
         Assert that the string representation of exception is correct
