@@ -74,6 +74,7 @@ class HotnessConsumer(object):
     Attributes:
         short_desc_template (str): Short description template for notifier
         description_template (str): Template for the message content
+        dist_git_url (str): URL for dist-git server
         distro (str): Distro to watch the updates for
         builder_koji (`Koji`): Koji builder to use for scratch builds
         database_cache (`Cache`): Database that will be used for holding key/value
@@ -117,6 +118,7 @@ class HotnessConsumer(object):
         # Initialize attributes
         self.short_desc_template = config["bugzilla"]["short_desc_template"]
         self.description_template = config["bugzilla"]["description_template"]
+        self.dist_git_url = config["dist_git_url"]
         self.explanation_url = config["bugzilla"]["explanation_url"]
         self.distro = config["distro"]
         self.repoid = config["repoid"]
@@ -597,6 +599,9 @@ class HotnessConsumer(object):
         upstream_versions = latest_upstream
         if retrieved_versions:
             upstream_versions = ", ".join(retrieved_versions)
+
+        # Prepare dist-git URL
+        dist_git_url = self.dist_git_url + "/rpms/" + package.name
         # Prepare message for bugzilla
         description = self.description_template % dict(
             latest_upstream=package.version,
@@ -607,6 +612,7 @@ class HotnessConsumer(object):
             url=project_homepage,
             explanation_url=self.explanation_url,
             projectid=project_id,
+            dist_git_url=dist_git_url,
         )
         notify_request = NotifyRequest(
             package=package,
