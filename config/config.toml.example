@@ -100,21 +100,15 @@ short_desc_template = "%(name)s-%(latest_upstream)s is available"
 # Description of the issue (first comment on the issue)
 description_template = """
 Releases retrieved: %(retrieved_versions)s
-
 Upstream release that is considered latest: %(latest_upstream)s
-
 Current version/release in %(repo_name)s: %(repo_version)s-%(repo_release)s
-
 URL: %(url)s
-
 
 Please consult the package updates policy before you
 issue an update to a stable branch:
 https://docs.fedoraproject.org/en-US/fesco/Updates_Policy
 
-
 More information about the service that created this bug can be found at:
-
 %(explanation_url)s
 
 
@@ -125,6 +119,9 @@ correct and that no non-free or legally problematic items have been added
 upstream.
 
 Based on the information from anitya: https://release-monitoring.org/project/%(projectid)s/
+
+To change the monitoring settings for the project, please visit:
+%(dist_git_url)s
 """
 
 # Configuration of Koji for the-new-hotness

@@ -102,27 +102,21 @@ class TestHotnessConsumerInit:
         assert (
             consumer.short_desc_template == "%(name)s-%(latest_upstream)s is available"
         )
+        assert consumer.dist_git_url == "https://src.fedoraproject.org"
         assert (
             consumer.description_template
             == """
 Releases retrieved: %(retrieved_versions)s
-
 Upstream release that is considered latest: %(latest_upstream)s
-
 Current version/release in %(repo_name)s: %(repo_version)s-%(repo_release)s
-
 URL: %(url)s
-
 
 Please consult the package updates policy before you
 issue an update to a stable branch:
 https://docs.fedoraproject.org/en-US/fesco/Updates_Policy
 
-
 More information about the service that created this bug can be found at:
-
 %(explanation_url)s
-
 
 Please keep in mind that with any upstream change, there may also be packaging
 changes that need to be made. Specifically, please remember that it is your
@@ -131,6 +125,9 @@ correct and that no non-free or legally problematic items have been added
 upstream.
 
 Based on the information from anitya: https://release-monitoring.org/project/%(projectid)s/
+
+To change the monitoring settings for the project, please visit:
+%(dist_git_url)s
 """
         )
         assert (
@@ -326,6 +323,7 @@ class TestHotnessConsumerCall:
                 retrieved_versions=", ".join(
                     message.body["message"]["upstream_versions"]
                 ),
+                dist_git_url=self.consumer.dist_git_url + "/rpms/" + package.name,
             ),
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
@@ -393,6 +391,7 @@ class TestHotnessConsumerCall:
                 retrieved_versions=", ".join(
                     message.body["message"]["upstream_versions"]
                 ),
+                dist_git_url=self.consumer.dist_git_url + "/rpms/" + package.name,
             ),
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
@@ -454,6 +453,7 @@ class TestHotnessConsumerCall:
                 retrieved_versions=", ".join(
                     message.body["message"]["upstream_versions"]
                 ),
+                dist_git_url=self.consumer.dist_git_url + "/rpms/" + package.name,
             ),
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
@@ -523,6 +523,7 @@ class TestHotnessConsumerCall:
                 retrieved_versions=", ".join(
                     message.body["message"]["upstream_versions"]
                 ),
+                dist_git_url=self.consumer.dist_git_url + "/rpms/" + package.name,
             ),
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
@@ -594,6 +595,7 @@ class TestHotnessConsumerCall:
                 explanation_url=self.consumer.explanation_url,
                 projectid=message.body["project"]["id"],
                 retrieved_versions="1.0.4",
+                dist_git_url=self.consumer.dist_git_url + "/rpms/" + package.name,
             ),
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
@@ -667,6 +669,7 @@ class TestHotnessConsumerCall:
                 explanation_url=self.consumer.explanation_url,
                 projectid=message.body["project"]["id"],
                 retrieved_versions="0.99.3, 0.99.2",
+                dist_git_url=self.consumer.dist_git_url + "/rpms/" + package.name,
             ),
             {"bz_short_desc": "flatpak-0.99.3 is available"},
         )
@@ -780,6 +783,9 @@ class TestHotnessConsumerCall:
                         retrieved_versions=", ".join(
                             message.body["message"]["upstream_versions"]
                         ),
+                        dist_git_url=self.consumer.dist_git_url
+                        + "/rpms/"
+                        + package.name,
                     ),
                     {"bz_short_desc": "flatpak-1.0.4 is available"},
                 ),
@@ -860,6 +866,9 @@ class TestHotnessConsumerCall:
                         retrieved_versions=", ".join(
                             message.body["message"]["upstream_versions"]
                         ),
+                        dist_git_url=self.consumer.dist_git_url
+                        + "/rpms/"
+                        + package.name,
                     ),
                     {"bz_short_desc": "flatpak-1.0.4 is available"},
                 ),
@@ -945,6 +954,9 @@ class TestHotnessConsumerCall:
                         retrieved_versions=", ".join(
                             message.body["message"]["upstream_versions"]
                         ),
+                        dist_git_url=self.consumer.dist_git_url
+                        + "/rpms/"
+                        + package.name,
                     ),
                     {"bz_short_desc": "flatpak-1.0.4 is available"},
                 ),
@@ -1021,6 +1033,9 @@ class TestHotnessConsumerCall:
                         retrieved_versions=", ".join(
                             message.body["message"]["upstream_versions"]
                         ),
+                        dist_git_url=self.consumer.dist_git_url
+                        + "/rpms/"
+                        + package.name,
                     ),
                     {"bz_short_desc": "flatpak-1.0.4 is available"},
                 ),
@@ -1131,6 +1146,7 @@ class TestHotnessConsumerCall:
                 retrieved_versions=", ".join(
                     message.body["message"]["upstream_versions"]
                 ),
+                dist_git_url=self.consumer.dist_git_url + "/rpms/" + package.name,
             ),
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
@@ -1357,6 +1373,7 @@ class TestHotnessConsumerCall:
                 retrieved_versions=", ".join(
                     message.body["message"]["upstream_versions"]
                 ),
+                dist_git_url=self.consumer.dist_git_url + "/rpms/" + package.name,
             ),
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
