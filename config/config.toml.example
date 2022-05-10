@@ -72,6 +72,18 @@ read_timeout = 15
 # that failed for any reason (e.g. read timeout, DNS error, etc)
 requests_retries = 3
 
+# Redis configuration for the-new-hotness
+[consumer_config.redis]
+# Hostname of the redis server
+hostname = "localhost"
+# Port of the redis server
+port = 6379
+# Password for redis server
+password = ""
+# Expiration time in seconds for entries put in redis database
+# Default: 1 day
+expiration = 86400
+
 # Bugzilla configuration for the-new-hotness
 [consumer_config.bugzilla]
 # If the bugzilla wrapper is enabled, currently ignored

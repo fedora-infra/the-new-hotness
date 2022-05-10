@@ -51,6 +51,13 @@ DEFAULTS = dict(
     # The number of times the-new-hotness should retry a network request
     # that failed for any reason (e.g. read timeout, DNS error, etc)
     requests_retries=3,
+    # Redis configuration
+    redis=dict(
+        hostname="localhost",
+        port=6379,
+        password="",
+        expiration=86400,
+    ),
     # Bugzilla configuration
     bugzilla=dict(
         enabled=True,
