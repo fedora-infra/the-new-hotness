@@ -35,6 +35,12 @@ full_config = {
         "connect_timeout": 30,
         "read_timeout": 30,
         "requests_retries": 1,
+        "redis": {
+            "hostname": "localhost",
+            "port": 6379,
+            "password": "",
+            "expiration": 86400,
+        },
         "bugzilla": {
             "enabled": False,
             "url": "https://partner-bugzilla.redhat.com_test",

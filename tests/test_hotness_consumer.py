@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright © 2021  Red Hat, Inc.
+# Copyright © 2021-2022 Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -59,7 +59,7 @@ class TestHotnessConsumerInit:
     """
 
     @mock.patch("hotness.hotness_consumer.Koji")
-    @mock.patch("hotness.hotness_consumer.Cache")
+    @mock.patch("hotness.hotness_consumer.Redis")
     @mock.patch("hotness.hotness_consumer.bz_notifier")
     @mock.patch("hotness.hotness_consumer.FedoraMessaging")
     @mock.patch("hotness.hotness_consumer.bz_patcher")
@@ -74,7 +74,7 @@ class TestHotnessConsumerInit:
         mock_bz_patcher_new,
         mock_fm_new,
         mock_bz_notifier_new,
-        mock_cache_new,
+        mock_redis_new,
         mock_koji_new,
     ):
         """
@@ -82,8 +82,8 @@ class TestHotnessConsumerInit:
         """
         mock_koji = mock.MagicMock()
         mock_koji_new.return_value = mock_koji
-        mock_cache = mock.MagicMock()
-        mock_cache_new.return_value = mock_cache
+        mock_redis = mock.MagicMock()
+        mock_redis_new.return_value = mock_redis
         mock_bugzilla_notifier = mock.Mock()
         mock_bz_notifier_new.return_value = mock_bugzilla_notifier
         mock_fedora_messaging = mock.Mock()
@@ -137,7 +137,7 @@ To change the monitoring settings for the project, please visit:
         assert consumer.distro == "Fedora"
         assert consumer.repoid == "rawhide"
         assert consumer.builder_koji == mock_koji
-        assert consumer.database_cache == mock_cache
+        assert consumer.database_redis == mock_redis
         assert consumer.notifier_bugzilla == mock_bugzilla_notifier
         assert consumer.notifier_fedora_messaging == mock_fedora_messaging
         assert consumer.patcher_bugzilla == mock_bugzilla_patcher
@@ -165,7 +165,9 @@ To change the monitoring settings for the project, please visit:
             target_tag="rawhide",
         )
 
-        mock_cache_new.assert_called_once()
+        mock_redis_new.assert_called_with(
+            hostname="localhost", port=6379, password="", expiration_time=86400
+        )
 
         mock_bz_notifier_new.assert_called_with(
             server_url="https://partner-bugzilla.redhat.com",
@@ -217,8 +219,8 @@ class TestHotnessConsumerCall:
         It is accessible as `self.consumer`.
         """
         with mock.patch("hotness.hotness_consumer.Koji") as mock_koji_new, mock.patch(
-            "hotness.hotness_consumer.Cache"
-        ) as mock_cache_new, mock.patch(
+            "hotness.hotness_consumer.Redis"
+        ) as mock_redis_new, mock.patch(
             "hotness.hotness_consumer.bz_notifier"
         ) as mock_bz_notifier_new, mock.patch(
             "hotness.hotness_consumer.FedoraMessaging"
@@ -233,8 +235,8 @@ class TestHotnessConsumerCall:
         ) as mock_pdc_new:
             mock_koji = mock.MagicMock()
             mock_koji_new.return_value = mock_koji
-            mock_cache = mock.MagicMock()
-            mock_cache_new.return_value = mock_cache
+            mock_redis = mock.MagicMock()
+            mock_redis_new.return_value = mock_redis
             mock_bugzilla_notifier = mock.Mock()
             mock_bz_notifier_new.return_value = mock_bugzilla_notifier
             mock_fedora_messaging = mock.Mock()
@@ -328,7 +330,7 @@ class TestHotnessConsumerCall:
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
         self.consumer.builder_koji.build.assert_called_with(package, {"bz_id": 100})
-        self.consumer.database_cache.insert.assert_called_with("1000", "100")
+        self.consumer.database_redis.insert.assert_called_with("1000", "100")
         self.consumer.patcher_bugzilla.submit_patch.assert_called_with(
             package,
             "Let's patch this heresy!",
@@ -458,7 +460,7 @@ class TestHotnessConsumerCall:
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
         self.consumer.builder_koji.build.assert_not_called()
-        self.consumer.database_cache.insert.assert_not_called()
+        self.consumer.database_redis.insert.assert_not_called()
         self.consumer.patcher_bugzilla.submit_patch.assert_not_called()
 
         exp_opts = {
@@ -528,7 +530,7 @@ class TestHotnessConsumerCall:
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
         self.consumer.builder_koji.build.assert_called_with(package, {"bz_id": 100})
-        self.consumer.database_cache.insert.assert_called_with("1000", "100")
+        self.consumer.database_redis.insert.assert_called_with("1000", "100")
         self.consumer.patcher_bugzilla.submit_patch.assert_called_with(
             package,
             "Let's patch this heresy!",
@@ -600,7 +602,7 @@ class TestHotnessConsumerCall:
             {"bz_short_desc": "flatpak-1.0.4 is available"},
         )
         self.consumer.builder_koji.build.assert_called_with(package, {"bz_id": 100})
-        self.consumer.database_cache.insert.assert_called_with("1000", "100")
+        self.consumer.database_redis.insert.assert_called_with("1000", "100")
         self.consumer.patcher_bugzilla.submit_patch.assert_called_with(
             package,
             "Let's patch this heresy!",
@@ -674,7 +676,7 @@ class TestHotnessConsumerCall:
             {"bz_short_desc": "flatpak-0.99.3 is available"},
         )
         self.consumer.builder_koji.build.assert_called_with(package, {"bz_id": 100})
-        self.consumer.database_cache.insert.assert_called_with("1000", "100")
+        self.consumer.database_redis.insert.assert_called_with("1000", "100")
         self.consumer.patcher_bugzilla.submit_patch.assert_called_with(
             package,
             "Let's patch this heresy!",
@@ -717,7 +719,7 @@ class TestHotnessConsumerCall:
         self.consumer.validator_mdapi.validate.assert_not_called()
         self.consumer.notifier_bugzilla.notify.assert_not_called()
         self.consumer.builder_koji.build.assert_not_called()
-        self.consumer.database_cache.insert.assert_not_called()
+        self.consumer.database_redis.insert.assert_not_called()
         self.consumer.patcher_bugzilla.submit_patch.assert_not_called()
 
         exp_opts = {
@@ -797,7 +799,7 @@ class TestHotnessConsumerCall:
             ]
         )
         self.consumer.builder_koji.build.assert_called_with(package, {"bz_id": 100})
-        self.consumer.database_cache.insert.assert_called_with("1000", "100")
+        self.consumer.database_redis.insert.assert_called_with("1000", "100")
         self.consumer.patcher_bugzilla.submit_patch.assert_called_with(
             package,
             "Let's patch this heresy!",
@@ -1071,7 +1073,7 @@ class TestHotnessConsumerCall:
         self.consumer.notifier_fedora_messaging.notify.assert_called_with(
             package, "update.bug.file", exp_opts
         )
-        self.consumer.database_cache.insert.assert_called_with("1000", "100")
+        self.consumer.database_redis.insert.assert_called_with("1000", "100")
 
     def test_call_anitya_update_no_monitoring(self):
         """
@@ -1399,7 +1401,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("buildsys.task.state.change", "build_completed")
 
-        self.consumer.database_cache.retrieve.return_value = {
+        self.consumer.database_redis.retrieve.return_value = {
             "key": "90100954",
             "value": "100",
         }
@@ -1408,7 +1410,7 @@ class TestHotnessConsumerCall:
 
         self.consumer.__call__(message)
 
-        self.consumer.database_cache.retrieve.assert_called_with("90100954")
+        self.consumer.database_redis.retrieve.assert_called_with("90100954")
 
         package = Package(name="globus-callout", version="4.0", distro="Fedora")
 
@@ -1430,7 +1432,7 @@ class TestHotnessConsumerCall:
         message = create_message("buildsys.task.state.change", "build_completed")
         message.topic = "org.fedoraproject.stg.buildsys.task.state.change"
 
-        self.consumer.database_cache.retrieve.return_value = {
+        self.consumer.database_redis.retrieve.return_value = {
             "key": "90100954",
             "value": "100",
         }
@@ -1439,7 +1441,7 @@ class TestHotnessConsumerCall:
 
         self.consumer.__call__(message)
 
-        self.consumer.database_cache.retrieve.assert_called_with("90100954")
+        self.consumer.database_redis.retrieve.assert_called_with("90100954")
 
         package = Package(name="globus-callout", version="4.0", distro="Fedora")
 
@@ -1461,7 +1463,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("buildsys.task.state.change", "build_multiple_targets")
 
-        self.consumer.database_cache.retrieve.return_value = {
+        self.consumer.database_redis.retrieve.return_value = {
             "key": "90100954",
             "value": "100",
         }
@@ -1470,7 +1472,7 @@ class TestHotnessConsumerCall:
 
         self.consumer.__call__(message)
 
-        self.consumer.database_cache.retrieve.assert_called_with("90100954")
+        self.consumer.database_redis.retrieve.assert_called_with("90100954")
 
         package = Package(name="globus-callout", version="4.0", distro="Fedora")
 
@@ -1492,7 +1494,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("buildsys.task.state.change", "build_no_target")
 
-        self.consumer.database_cache.retrieve.return_value = {
+        self.consumer.database_redis.retrieve.return_value = {
             "key": "90100954",
             "value": "100",
         }
@@ -1501,7 +1503,7 @@ class TestHotnessConsumerCall:
 
         self.consumer.__call__(message)
 
-        self.consumer.database_cache.retrieve.assert_called_with("90100954")
+        self.consumer.database_redis.retrieve.assert_called_with("90100954")
 
         package = Package(name="globus-callout", version="4.0", distro="Fedora")
 
@@ -1522,7 +1524,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("buildsys.task.state.change", "build_failed")
 
-        self.consumer.database_cache.retrieve.return_value = {
+        self.consumer.database_redis.retrieve.return_value = {
             "key": "90100954",
             "value": "100",
         }
@@ -1531,7 +1533,7 @@ class TestHotnessConsumerCall:
 
         self.consumer.__call__(message)
 
-        self.consumer.database_cache.retrieve.assert_called_with("90100954")
+        self.consumer.database_redis.retrieve.assert_called_with("90100954")
 
         package = Package(name="globus-callout", version="4.0", distro="Fedora")
 
@@ -1552,7 +1554,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("buildsys.task.state.change", "build_canceled")
 
-        self.consumer.database_cache.retrieve.return_value = {
+        self.consumer.database_redis.retrieve.return_value = {
             "key": "90100954",
             "value": "100",
         }
@@ -1561,7 +1563,7 @@ class TestHotnessConsumerCall:
 
         self.consumer.__call__(message)
 
-        self.consumer.database_cache.retrieve.assert_called_with("90100954")
+        self.consumer.database_redis.retrieve.assert_called_with("90100954")
 
         package = Package(name="globus-callout", version="4.0", distro="Fedora")
 
@@ -1582,14 +1584,14 @@ class TestHotnessConsumerCall:
         """
         message = create_message("buildsys.task.state.change", "build")
 
-        self.consumer.database_cache.retrieve.return_value = {
+        self.consumer.database_redis.retrieve.return_value = {
             "key": "90100954",
             "value": "100",
         }
 
         self.consumer.__call__(message)
 
-        self.consumer.database_cache.retrieve.assert_called_with("90100954")
+        self.consumer.database_redis.retrieve.assert_called_with("90100954")
 
         self.consumer.notifier_bugzilla.notify.assert_not_called()
 
@@ -1599,13 +1601,13 @@ class TestHotnessConsumerCall:
         """
         message = create_message("buildsys.task.state.change", "build")
 
-        self.consumer.database_cache.retrieve.side_effect = Exception(
+        self.consumer.database_redis.retrieve.side_effect = Exception(
             "This is tech heresy!"
         )
 
         self.consumer.__call__(message)
 
-        self.consumer.database_cache.retrieve.assert_called_with("90100954")
+        self.consumer.database_redis.retrieve.assert_called_with("90100954")
 
         self.consumer.notifier_bugzilla.notify.assert_not_called()
 
@@ -1615,14 +1617,14 @@ class TestHotnessConsumerCall:
         """
         message = create_message("buildsys.task.state.change", "build")
 
-        self.consumer.database_cache.retrieve.return_value = {
+        self.consumer.database_redis.retrieve.return_value = {
             "key": "90100954",
             "value": "",
         }
 
         self.consumer.__call__(message)
 
-        self.consumer.database_cache.retrieve.assert_called_with("90100954")
+        self.consumer.database_redis.retrieve.assert_called_with("90100954")
 
         self.consumer.notifier_bugzilla.notify.assert_not_called()
 
@@ -1635,7 +1637,7 @@ class TestHotnessConsumerCall:
         self.consumer.__call__(message)
 
         # Assert that nothing is called
-        self.consumer.database_cache.retrieve.assert_not_called()
+        self.consumer.database_redis.retrieve.assert_not_called()
 
     def test_call_buildsys_task_non_build(self):
         """
@@ -1646,4 +1648,4 @@ class TestHotnessConsumerCall:
         self.consumer.__call__(message)
 
         # Assert that nothing is called
-        self.consumer.database_cache.retrieve.assert_not_called()
+        self.consumer.database_redis.retrieve.assert_not_called()

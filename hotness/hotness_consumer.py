@@ -28,7 +28,7 @@ from fedora_messaging.message import Message  # type: ignore
 from hotness.config import config
 from hotness.domain import Package
 from hotness.builders import Koji
-from hotness.databases import Cache
+from hotness.databases import Redis
 from hotness.notifiers import Bugzilla as bz_notifier, FedoraMessaging
 from hotness.patchers import Bugzilla as bz_patcher
 from hotness.validators import MDApi, Pagure, PDC
@@ -77,7 +77,7 @@ class HotnessConsumer(object):
         dist_git_url (str): URL for dist-git server
         distro (str): Distro to watch the updates for
         builder_koji (`Koji`): Koji builder to use for scratch builds
-        database_cache (`Cache`): Database that will be used for holding key/value
+        database_redis (`Redis`): Database that will be used for holding key/value
                                   for build id/bug id
         notifier_bugzilla (`bz_notifier`): Bugzilla notifier for creating and updating
                                            tickets in Bugzilla
@@ -139,7 +139,12 @@ class HotnessConsumer(object):
             priority=config["koji"]["priority"],
             target_tag=config["koji"]["target_tag"],
         )
-        self.database_cache = Cache()
+        self.database_redis = Redis(
+            hostname=config["redis"]["hostname"],
+            port=config["redis"]["port"],
+            password=config["redis"]["password"],
+            expiration_time=config["redis"]["expiration"],
+        )
         self.notifier_bugzilla = bz_notifier(
             server_url=config["bugzilla"]["url"],
             reporter=config["bugzilla"]["reporter"],
@@ -213,13 +218,13 @@ class HotnessConsumer(object):
             return
 
         task_id = body["info"]["id"]
-        # Retrieve the build_id with bz_id from cache
+        # Retrieve the build_id with bz_id from redis
         retrieve_data_request = RetrieveDataRequest(key=str(task_id))
-        retrieve_data_cache_use_case = RetrieveDataUseCase(self.database_cache)
-        response = retrieve_data_cache_use_case.retrieve(retrieve_data_request)
+        retrieve_data_redis_use_case = RetrieveDataUseCase(self.database_redis)
+        response = retrieve_data_redis_use_case.retrieve(retrieve_data_request)
         if not response:
             _logger.error(
-                "Couldn't retrieve value for build %s from cache." % str(task_id)
+                "Couldn't retrieve value for build %s from redis." % str(task_id)
             )
             return
 
@@ -665,14 +670,14 @@ class HotnessConsumer(object):
             notifier_bugzilla_use_case = NotifyUserUseCase(self.notifier_bugzilla)
             notifier_bugzilla_use_case.notify(notify_request)
 
-            # Insert the build_id to cache if available
+            # Insert the build_id to redis if available
             if response.use_case_value and "build_id" in response.use_case_value:
                 build_id = response.use_case_value["build_id"]
                 insert_data_request = InsertDataRequest(
                     key=str(build_id), value=str(bz_id)
                 )
-                insert_data_cache_use_case = InsertDataUseCase(self.database_cache)
-                response = insert_data_cache_use_case.insert(insert_data_request)
+                insert_data_redis_use_case = InsertDataUseCase(self.database_redis)
+                response = insert_data_redis_use_case.insert(insert_data_request)
             return
 
         build_id = response.value["build_id"]
@@ -688,10 +693,10 @@ class HotnessConsumer(object):
             notifier_bugzilla_use_case = NotifyUserUseCase(self.notifier_bugzilla)
             notifier_bugzilla_use_case.notify(notify_request)
 
-        # Save the build_id with bz_id to cache
+        # Save the build_id with bz_id to redis
         insert_data_request = InsertDataRequest(key=str(build_id), value=str(bz_id))
-        insert_data_cache_use_case = InsertDataUseCase(self.database_cache)
-        response = insert_data_cache_use_case.insert(insert_data_request)
+        insert_data_redis_use_case = InsertDataUseCase(self.database_redis)
+        response = insert_data_redis_use_case.insert(insert_data_request)
 
         # Attach patch to Bugzilla
         submit_patch_request = SubmitPatchRequest(
