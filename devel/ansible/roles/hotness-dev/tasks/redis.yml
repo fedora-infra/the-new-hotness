@@ -1,0 +1,17 @@
+---
+
+- name: Install redis package
+  dnf:
+    name: redis
+    state: present
+
+- name: Update /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "127.0.0.1 redis"
+
+- name: Enable Redis server
+  systemd:
+    name: redis
+    state: started
+    enabled: yes
