@@ -14,6 +14,7 @@ callback = "hotness.hotness_consumer:HotnessConsumer"
 queue = "the-new-hotness"
 exchange = "amq.topic"
 routing_keys = [
+    "org.release-monitoring.prod.anitya.project.version.update.v2",
     "org.release-monitoring.prod.anitya.project.version.update",
     "org.fedoraproject.prod.buildsys.task.state.change",
 ]

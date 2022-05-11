@@ -21,6 +21,7 @@
       # Packages needed for the-new-hotness development
       python3-black,
       python3-flake8,
+      python3-redis,
       python3-sphinx,
       rabbitmq-server
     ]
@@ -87,3 +88,4 @@
   become_user: "{{ ansible_env.SUDO_USER }}"
   command: systemctl --user daemon-reload
 
+- import_tasks: redis.yml
