@@ -69,8 +69,18 @@ read_timeout = 15
 # The number of times the-new-hotness should retry a network request
 # that failed for any reason (e.g. read timeout, DNS error, etc)
 requests_retries = 3
-# If true, publish fedmsg messages instead of fedora-messaging messages
-legacy_messaging = false
+
+# Redis configuration for the-new-hotness
+[consumer_config.redis]
+# Hostname of the redis server
+hostname = "redis"
+# Port of the redis server
+port = 6379
+# Password for redis server
+password = ""
+# Expiration time in seconds for entries put in redis database
+# Default: 1 day
+expiration = 86400
 
 [consumer_config.bugzilla]
 enabled = true
@@ -127,16 +137,3 @@ user_email = [
 opts = {scratch = true}
 priority = 30
 target_tag = "rawhide"
-# These are errors that we won't scream about.
-passable_errors = [
-    # This is the packager's problem, not ours.
-    "unclosed macro or bad line continuation"
-]
-
-[consumer_config.anitya]
-url = "https://release-monitoring.org"
-
-[consumer_config.cache]
-backend = "dogpile.cache.dbm"
-expiration_time = 300
-arguments = {filename = "/var/tmp/the-new-hotness-cache.dbm"}
