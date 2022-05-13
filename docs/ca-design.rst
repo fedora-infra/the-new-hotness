@@ -296,11 +296,11 @@ defined in use cases layer.
 
   Directory containing external systems acting like a database for the-new-hotness.
 
-  * cache.py
+  * **cache.py**
 
     This class contains cache for storing key/value entries. Inherits from `database.py`.
 
-  * redis.py
+  * **redis.py**
 
     This class contains every method that is needed to insert, retrieve data from Redis database.
     Inherits from `database.py`.
