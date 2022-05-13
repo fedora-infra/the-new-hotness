@@ -41,15 +41,10 @@ external systems:
   The New Hotness is consuming fedora messages from Anitya and looking for updates
   of the packages that we want to process.
   
-* cache
+* `Redis <https://redis.io/>`_
 
-  This is not really an external system, but it's used as one by The New Hotness.
-  Local cache is used to store the information about build if we start a scratch build.
-  This will help us to keep track of the builds and correctly react to buildsys fedora
-  message.
-
-.. note::
-   Local cache will be replaced by Redis in future.
+  Redis is used as a cache for saving data that we would need later by the-new-hotness. For
+  example koji build id mapping to bugzilla ticket.
 
 * `koji <https://pagure.io/koji/>`_
 
