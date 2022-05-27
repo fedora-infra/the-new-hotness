@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Containerfile.dev
       args:
-        FEDORA_VERSION: 34
+        FEDORA_VERSION: 36
     container_name: "hotness"
     volumes:
       - ./:/app
