@@ -9,7 +9,7 @@ WORKDIR /app
 RUN dnf upgrade --refresh -y
 
 # Kerberos packages
-RUN dnf install -y krb5-devel
+RUN dnf install -y krb5-devel krb5-workstation fedora-packager-kerberos
 
 # Fedora Messaging
 RUN dnf install -y fedora-messaging
@@ -21,7 +21,7 @@ RUN dnf install -y python3 python3-pip python3-bugzilla \
     python3-redis
 
 # Development tools (for doing stuff inside of the container)
-RUN dnf install -y vim-enhanced tox python3-rpdb gcc
+RUN dnf install -y vim-enhanced tox python3-rpdb gcc git
 
 # Packages that are required for releasing
 RUN pip3 install wheel twine towncrier
