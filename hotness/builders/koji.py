@@ -292,7 +292,7 @@ class Koji(Builder):
         try:
             output = sp.check_output(["spectool", "-g", specfile_path], cwd=target_dir)
             for line in output.decode("utf-8").splitlines():
-                if line.startswith("Getting"):
+                if line.startswith("Downloaded"):
                     files.append(
                         os.path.realpath(os.path.join(target_dir, line.split()[-1]))
                     )

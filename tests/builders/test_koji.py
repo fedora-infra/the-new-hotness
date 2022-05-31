@@ -145,7 +145,7 @@ class TestKojiBuild:
             "git clone",
             "rpmdev-bumpspec",
             b"Downloading Lectitio_Divinitatus",
-            b"Getting Codex_Astartes",
+            b"Downloaded: Codex_Astartes",
             b"rpmbuild foobar.srpm",
             "git config",
             "git config",
@@ -269,7 +269,7 @@ class TestKojiBuild:
             "git clone",
             "rpmdev-bumpspec",
             (b"Fake line\n" b"Downloading Lectitio_Divinitatus"),
-            b"Getting Lectitio_Divinitatus",
+            b"Downloaded: Lectitio_Divinitatus",
             b"rpmbuild foobar.srpm",
             "git config",
             "git config",
@@ -329,7 +329,7 @@ class TestKojiBuild:
             "git clone",
             "rpmdev-bumpspec",
             (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
-            b"Getting Lectitio_Divinitatus\nGetting Lectitio_Divinitatus\n",
+            b"Downloaded: Lectitio_Divinitatus\nDownloaded: Lectitio_Divinitatus\n",
             b"rpmbuild foobar.srpm",
             "git config",
             "git config",
@@ -384,7 +384,7 @@ class TestKojiBuild:
             "git clone",
             "rpmdev-bumpspec",
             b"Downloading Lectitio_Divinitatus",
-            b"Getting Lectitio_Divinitatus",
+            b"Downloaded: Lectitio_Divinitatus",
             b"rpmbuild foobar.srpm",
         ]
 
@@ -683,7 +683,7 @@ class TestKojiBuild:
             "git clone",
             "rpmdev-bumpspec",
             (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
-            b"Getting Lectitio_Divinitatus\n",
+            b"Downloaded: Lectitio_Divinitatus\n",
             CalledProcessError(
                 1, "rpmdevbuild", output=b"Some output", stderr=b"Failed miserably"
             ),
@@ -728,7 +728,7 @@ class TestKojiBuild:
             "git clone",
             "rpmdev-bumpspec",
             (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
-            b"Getting Lectitio_Divinitatus\n",
+            b"Downloaded: Lectitio_Divinitatus\n",
             b"rpmbuild foobar.srpm",
             "git config",
             "git config",
