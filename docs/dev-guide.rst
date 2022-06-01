@@ -193,7 +193,7 @@ A preview of the release notes can be generated with ``towncrier --draft``.
 Release testing guide
 ---------------------
 
-Before releasing a new version it is good to try deployment in `staging environment <https://os.stg.fedoraproject.org>`_.
+Before releasing a new version it is good to try deployment in `staging environment <https://console-openshift-console.apps.ocp.stg.fedoraproject.org/>`_.
 To deploy the release candidate to staging follow these steps:
 
 1. Clone the-new-hotness repository::
@@ -212,7 +212,7 @@ To deploy the release candidate to staging follow these steps:
 
     $ git push origin staging
 
-The new staging branch will be automatically deployed in the `staging environment <https://os.stg.fedoraproject.org>`_.
+The new staging branch will be automatically deployed in the `staging environment <https://console-openshift-console.apps.ocp.stg.fedoraproject.org/>`_.
 
 .. note::
     This guide assumes that you have write permissions for the-new-hotness repository.
