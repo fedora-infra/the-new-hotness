@@ -4,6 +4,61 @@ Release notes
 
 .. towncrier release notes start
 
+1.2.0 (2022-06-01)
+==================
+
+Features
+--------
+
+* Support for stable versions only
+  (`#99 <https://github.com/fedora-infra/the-new-hotness/issues/99>`_)
+
+* Change in the-new-hotness to work with multiple versions notified at once
+  (`#230 <https://github.com/fedora-infra/the-new-hotness/issues/230>`_)
+
+* Add Redis as cache for builds we are watching
+  (`#323 <https://github.com/fedora-infra/the-new-hotness/issues/323>`_)
+
+* Add link to monitoring setting to Bugzilla notification
+  (`#324 <https://github.com/fedora-infra/the-new-hotness/issues/324>`_)
+
+
+Bug Fixes
+---------
+
+* Fix the parsing of spectool output to handle the correct lines
+  (`PR#473 <https://github.com/fedora-infra/the-new-hotness/pull/473>`_)
+
+* Notification is sent when the version contains dist tag even if it's not newer
+  (`#437 <https://github.com/fedora-infra/the-new-hotness/issues/437>`_)
+
+* Wrong error message when the build didn't started yet
+  (`#456 <https://github.com/fedora-infra/the-new-hotness/issues/456>`_)
+
+
+Development Changes
+-------------------
+
+* Move fedora messaging schema to https://github.com/fedora-infra/the-new-hotness-messages
+  (`PR#447 <https://github.com/fedora-infra/the-new-hotness/pull/447>`_)
+
+* Update podman dev environment to Fedora 36
+  (`PR#465 <https://github.com/fedora-infra/the-new-hotness/pull/465>`_)
+
+* Add missing packages to podman dev environment
+  (`PR#472 <https://github.com/fedora-infra/the-new-hotness/pull/472>`_)
+
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release:
+
+* dependabot[bot]
+* Michal Konečný
+* Peter Hutterer
+
+
 1.1.0 (2022-03-30)
 ==================
 
