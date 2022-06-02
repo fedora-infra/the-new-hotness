@@ -71,7 +71,11 @@ class Redis(Database):
         old_value = self.redis.set(key, value, ex=self.expiration_time, get=True)
 
         if old_value:
-            output["old_value"] = str(old_value)
+            # By default redis returns binary encoded string
+            # let's decode it before returning
+            # Redis SET returns type is Literal[True], which is false
+            # when get=True is set, ignore the error
+            output["old_value"] = old_value.decode()  # type: ignore
 
         return output
 
@@ -96,6 +100,8 @@ class Redis(Database):
         value = self.redis.get(key)
 
         if value:
-            output["value"] = str(value)
+            # By default redis returns binary encoded string
+            # let's decode it before returning
+            output["value"] = value.decode()
 
         return output
