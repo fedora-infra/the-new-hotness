@@ -95,7 +95,7 @@ class TestRedisInsert:
         """
         # Preparation
         key = "key"
-        old_value = "old_value"
+        old_value = b"old_value"
         value = "value"
 
         self.database.redis.set.return_value = old_value
@@ -104,7 +104,7 @@ class TestRedisInsert:
         output = self.database.insert(key, value)
 
         # Asserts
-        assert output == {"key": key, "value": value, "old_value": old_value}
+        assert output == {"key": key, "value": value, "old_value": old_value.decode()}
         self.database.redis.set.assert_called_with(
             key, value, ex=self.database.expiration_time, get=True
         )
@@ -133,7 +133,7 @@ class TestRedisRetrieve:
         """
         # Preparation
         key = "key"
-        value = "value"
+        value = b"value"
 
         self.database.redis.get.return_value = value
 
@@ -141,7 +141,7 @@ class TestRedisRetrieve:
         output = self.database.retrieve(key)
 
         # Asserts
-        assert output == {"key": key, "value": value}
+        assert output == {"key": key, "value": value.decode()}
         self.database.redis.get.assert_called_with(key)
 
     def test_retrieve_key_is_missing(self):
