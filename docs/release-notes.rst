@@ -4,6 +4,17 @@ Release notes
 
 .. towncrier release notes start
 
+
+1.2.1 (2022-06-02)
+==================
+
+Bug Fixes
+---------
+
+* Failure when converting the redis value to integer
+  (`PR#475 <https://github.com/fedora-infra/the-new-hotness/pull/475>`_)
+
+
 1.2.0 (2022-06-01)
 ==================
 
