@@ -11,6 +11,6 @@ pytest-cov==3.0.0
 sphinx==5.0.1
 
 # Mypy test requirements
-mypy==0.960
+mypy==0.961
 types-requests==2.27.30
 types-redis==4.2.6
