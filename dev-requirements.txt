@@ -13,4 +13,4 @@ sphinx==5.0.2
 # Mypy test requirements
 mypy==0.961
 types-requests==2.27.30
-types-redis==4.2.6
+types-redis==4.2.8
