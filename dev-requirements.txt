@@ -8,7 +8,7 @@ pytest==7.1.2
 pytest-cov==3.0.0
 
 # Required to test building the docs
-sphinx==5.1.0
+sphinx==5.1.1
 
 # Mypy test requirements
 mypy==0.971
