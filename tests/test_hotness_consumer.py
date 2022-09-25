@@ -132,7 +132,7 @@ To change the monitoring settings for the project, please visit:
         )
         assert (
             consumer.explanation_url
-            == "https://docs.fedoraproject.org/en-US/package-maintainers/Upstream_Release_Monitoring/"
+            == "https://docs.fedoraproject.org/en-US/package-maintainers/Upstream_Release_Monitoring/"  # noqa: #E501
         )
         assert consumer.distro == "Fedora"
         assert consumer.repoid == "rawhide"
