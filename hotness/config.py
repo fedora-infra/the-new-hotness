@@ -67,7 +67,10 @@ DEFAULTS = dict(
         version="rawhide",
         keywords="FutureFeature, Triaged",
         bug_status="NEW",
-        explanation_url="https://docs.fedoraproject.org/en-US/package-maintainers/Upstream_Release_Monitoring/",
+        explanation_url=(
+            "https://docs.fedoraproject.org/en-US/package-maintainers/"
+            "Upstream_Release_Monitoring/"
+        ),
         reporter="Upstream Release Monitoring",
         reporter_email="upstream-release-monitoring@fedoraproject.org",
         short_desc_template="%(name)s-%(latest_upstream)s is available",
