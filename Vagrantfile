@@ -4,7 +4,7 @@
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
- config.vm.box = "fedora/34-cloud-base"
+ config.vm.box = "fedora/36-cloud-base"
 
  # Forward traffic on the host to the development server on the guest
  # RabbitMQ
@@ -30,7 +30,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
  # bootstrap and run with ansible
  config.vm.provision "ansible" do |ansible|
      ansible.playbook = "devel/ansible/vagrant-playbook.yml"
-     ansible.raw_arguments = ["-e", "ansible_python_interpreter=/usr/bin/python3"]
  end
 
 

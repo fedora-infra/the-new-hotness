@@ -30,17 +30,17 @@ external systems:
 * `mdapi <https://pagure.io/mdapi>`_
 
   Metadata API hosted by Fedora. The New Hotness uses it to look for the newest build in koji.
-  
+
 * `bugzilla <https://www.bugzilla.org/>`_
 
   The New Hotness is looking for existing issue for the package in bugzilla and if
   none is found creates one.
-  
+
 * `anitya <https://github.com/fedora-infra/anitya>`_
 
   The New Hotness is consuming fedora messages from Anitya and looking for updates
   of the packages that we want to process.
-  
+
 * `Redis <https://redis.io/>`_
 
   Redis is used as a cache for saving data that we would need later by the-new-hotness. For
@@ -50,11 +50,11 @@ external systems:
 
   Koji is a build system used to start scratch builds. First we need to upload sources
   to lookaside cache and than we can start the build.
-  
+
 * `pdc <https://github.com/product-definition-center/product-definition-center>`_
 
   PDC (Product Definition Center) API is used to check if the package is retired or not.
-  
+
 * `pagure <https://pagure.io/pagure>`_
 
   Dist-git system used by Fedora containing notification settings for The New Hotness and is checked
