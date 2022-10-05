@@ -34,6 +34,19 @@ If you are unsure how to write unit tests for your code,
 we will be happy to help you during the code review process.
 
 
+CI (Continuous Integration)
+---------------------------
+
+Hotness has a CI set up to run on each PR. As a CI of choice Hotness is using
+`Fedora zuul <https://fedoraproject.org/wiki/Zuul-based-ci>`_ and the configuration
+could be found in `.zuul.yaml` in Hotness root directory.
+
+The CI runs unit tests for all supported python versions, code style test, coverage test,
+flake8 test (linter), documentation test build and bandit (to check for any security issue).
+
+The successful run of CI is a requirement for merge of the PR.
+
+
 Development environment
 -----------------------
 
@@ -122,6 +135,7 @@ Makefile scripts that provide easier container management:
 * ``make halt`` Stops and removes the containers
 * ``make bash`` Connects to hotness container
 * ``make logs`` Shows all logs of all containers
+* ``make clean`` Removes all images used by Anitya compose
 
 Project files are bound to each other with host and container. Whenever you change any project file from the host or the container, the same change will happen on the opposite side as well.
 
@@ -141,6 +155,10 @@ When using two-factor authentication, please follow `official fedora guide
 .. warning::
     Services will fail to start if you do not provide valid credentials.
 
+To apply changes run::
+    $ make restart
+
+This will restart the container, deploy the changes in code and start the development instance again.
 
 Simulating updates
 ^^^^^^^^^^^^^^^^^^
@@ -148,7 +166,7 @@ Simulating updates
 You can now replay actual messages the production deployment of Anitya has sent
 with ``fedora-messaging-replay.py``::
 
-    $ python3 devel/fedora-messaging-replay.py <msg-id>
+    $ python devel/fedora-messaging-replay.py <msg-id>
 
 There's a helpful script to retrieve message IDs. From the root of the repository::
 
@@ -176,7 +194,7 @@ News type can be one of the following:
 * ``dev``: for development-related changes
 * ``author``: for contributor names
 * ``other``: for other changes
-  
+
 For example:
 
 If this PR is solving issue #714 labeled as ``type.bug`` and named "Javascript error on add project page",
@@ -222,22 +240,23 @@ Release Guide
 
 To do the release you need following python packages installed::
 
-    wheel
-    twine
+    poetry
     towncrier
 
 If you are a maintainer and wish to make a release, follow these steps:
 
-1. Change the version in ``hotness.__init__.__version__``. This is used to set the
-   version in the documentation project and the setup.py file.
+1. Change the version using ``poetry version <version>``.
+   This is also used to set the version in the documentation.
 
-2. Get authors of commits by ``python get-authors.py``.
+2. Add any missing news fragments to the ``news`` folder.
+
+3. Get authors of commits by ``python get-authors.py``.
 
 .. note::
    This script must be executed in ``news`` folder, because it
    creates files in current working directory.
 
-3. Generate the changelog by running ``towncrier``.
+4. Generate the changelog by running ``towncrier``.
 
 .. note::
     If you added any news fragment in the previous step, you might see ``towncrier``
@@ -245,31 +264,30 @@ If you are a maintainer and wish to make a release, follow these steps:
     Just ignore this and remove all of them manually; release notes will be generated
     anyway.
 
-4. Remove every remaining news fragment from ``news`` folder.
+5. Remove every remaining news fragment from ``news`` folder.
 
-5. Commit your changes with message *the-new-hotness <version>*.
+6. Commit your changes with message *the-new-hotness <version>*.
 
-6. Tag a release with ``git tag -s <version>``.
+7. Tag a release with ``git tag -s <version>``.
 
-7. Don't forget to ``git push --tags``.
+8. Don't forget to ``git push --tags``.
 
-8. Build the Python packages with ``python setup.py sdist bdist_wheel``.
+9. Sometimes you need to also do ``git push``.
 
-9. Upload the packages with ``twine upload dist/<dists>``.
+10. Build the Python packages with ``poetry build``.
 
-11. Create new release on `GitHub releases <https://github.com/fedora-infra/the-new-hotness/releases>`_.
+11. Upload the packages with ``poetry publish``.
 
-12. Deploy the new version in staging::
+12. Create new release on `GitHub releases <https://github.com/fedora-infra/the-new-hotness/releases>`_.
+
+13. Deploy the new version in staging::
 
      $ git checkout staging
      $ git rebase master
      $ git push origin staging
 
-13. When successfully tested in staging deploy to production::
+14. When successfully tested in staging deploy to production::
 
      $ git checkout production
      $ git rebase staging
      $ git push origin production
-
-.. note::
-    Optional steps are required only if you want to release a new version of message schema.

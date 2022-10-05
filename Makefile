@@ -18,4 +18,5 @@ bash:
 	$(call container-tool) exec -it hotness bash -c "cat /app/.container/motd; bash;"
 logs:
 	$(call container-tool) logs -f hotness rabbitmq redis
-
+clean: halt
+	$(call container-tool) rmi "localhost/hotness:latest" "docker.io/library/redis:7.0.0-alpine" "docker.io/library/rabbitmq:3.8.16-management-alpine"

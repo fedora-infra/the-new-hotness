@@ -57,3 +57,59 @@ exclude = '''
   )/
 )
 '''
+
+[tool.poetry]
+name = "the-new-hotness"
+version = "1.2.1"
+description = "A fedora messaging consumer that files bugzilla bugs for upstream releases"
+authors = ["Ralph Bean <rbean@redhat.com>"]
+maintainers = ["Michal Konecny <mkonecny@redhat.com>"]
+readme = "README.rst"
+homepage = "https://github.com/fedora-infra/the-new-hotness"
+documentation = "https://the-new-hotness.readthedocs.io"
+repository = "https://github.com/fedora-infra/the-new-hotness"
+license = "GPL-2.0-or-later"
+classifiers = [
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10"
+]
+include = [
+  "LICENSE", "README.rst",
+  "config/config.toml.example"
+]
+packages = [
+  { include = "hotness" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+anitya-schema = "^2.0.1"
+fedora-messaging = "^3.1.0"
+fedora-messaging-the-new-hotness-schema = "^1.1.2"
+koji = "^1.30.0"
+python-bugzilla = "^3.2.0"
+redis = "^4.3.4"
+requests = "^2.28.1"
+
+[tool.poetry.dev-dependencies]
+bandit = "^1.7.4"
+black = "^22.8.0"
+coverage = "^6.4.4"
+diff-cover = "^7.0.1"
+flake8 = "^5.0.4"
+mock = "^4.0.3"
+pytest = "^7.1.3"
+pytest-cov = "^4.0.0"
+
+# Required to test building the docs
+Sphinx = "^5.2.3"
+
+# Mypy test requirements
+mypy = "^0.982"
+types-requests = "^2.28.11"
+types-redis = "^4.3.21"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -23,7 +23,6 @@
       python3-flake8,
       python3-redis,
       python3-sphinx,
-      rabbitmq-server
     ]
     state: present
 
@@ -56,19 +55,12 @@
       "file:///home/{{ ansible_env.SUDO_USER }}/devel/",
     ]
     extra_args: '-e'
-    executable: pip-3
 
 - name: Install fedora-messaging config to ~/
   become_user: "{{ ansible_env.SUDO_USER }}"
   copy:
     src: config.toml
     dest: /home/{{ ansible_env.SUDO_USER }}/
-
-- name: Enable RabbitMQ server
-  systemd:
-    name: rabbitmq-server
-    state: started
-    enabled: yes
 
 - name: Create systemd user unit directory
   become_user: "{{ ansible_env.SUDO_USER }}"
@@ -89,3 +81,4 @@
   command: systemctl --user daemon-reload
 
 - import_tasks: redis.yml
+- import_tasks: rabbitmq.yml

@@ -1,3 +1,0 @@
-graft fedmsg.d
-include *.rst
-include LICENSE requirements.txt dev-requirements.txt

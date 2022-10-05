@@ -2,6 +2,7 @@ version: "2.0"
 
 services:
   hotness:
+    image: hotness:latest
     build:
       context: .
       dockerfile: Containerfile.dev
@@ -9,7 +10,9 @@ services:
         FEDORA_VERSION: 36
     container_name: "hotness"
     volumes:
-      - ./:/app
+      - ./hotness/:/app/hotness:z
+      - ./docs/:/app/docs:z
+      - ./tests/:/app/tests:z
     privileged: true
     tty: true
     restart: unless-stopped

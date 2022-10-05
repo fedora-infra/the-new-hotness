@@ -27,19 +27,23 @@ RUN dnf install -y python3 python3-pip python3-bugzilla \
 RUN dnf install -y vim-enhanced tox python3-rpdb gcc git
 
 # Packages that are required for releasing
-RUN pip3 install wheel twine towncrier
+RUN dnf install -y poetry python3-towncrier
 
-COPY . .
+COPY hotness ./hotness
+COPY devel ./devel
+COPY .container ./.container
+COPY pyproject.toml poetry.lock tox.ini README.rst LICENSE .
 
 # Providing config.toml
 RUN cp /app/devel/ansible/roles/hotness-dev/files/config.toml ~
 ENV FEDORA_MESSAGING_CONF=/root/config.toml
 
 # Install local packages in editable mode
-RUN pip3 install -e /app
+RUN poetry build
+RUN pip install dist/*.whl
 
 # Comment out the line that starts with 'default_ccache_name'
 # for preventing following error: `kinit: Invalid UID in persistent keyring name while getting default ccache`
 RUN sed -i '/^[^#]/ s/\(^.*default_ccache_name.*$\)/#\1/' /etc/krb5.conf
 
-RUN python3 setup.py develop
+CMD ["sh","-c", "poetry build && pip install --force-reinstall dist/*.whl && while true; do sleep 60; done"]
