@@ -53,6 +53,7 @@ full_config = {
             "reporter": "",
             "reporter_email": "",
             "short_desc_template": "",
+            "short_desc_template_more_versions": "",
             "description_template": "",
         },
         "koji": {

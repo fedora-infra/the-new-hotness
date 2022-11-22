@@ -73,6 +73,8 @@ class HotnessConsumer(object):
 
     Attributes:
         short_desc_template (str): Short description template for notifier
+        short_desc_template_more_versions (str): Short description template for notifier
+                                                for more versions
         description_template (str): Template for the message content
         dist_git_url (str): URL for dist-git server
         distro (str): Distro to watch the updates for
@@ -117,6 +119,9 @@ class HotnessConsumer(object):
 
         # Initialize attributes
         self.short_desc_template = config["bugzilla"]["short_desc_template"]
+        self.short_desc_template_more_versions = config["bugzilla"][
+            "short_desc_template_more_versions"
+        ]
         self.description_template = config["bugzilla"]["description_template"]
         self.dist_git_url = config["dist_git_url"]
         self.explanation_url = config["bugzilla"]["explanation_url"]
@@ -601,7 +606,7 @@ class HotnessConsumer(object):
         bz_id = -1
         latest_upstream = package.version
 
-        upstream_versions = latest_upstream
+        upstream_versions = package.version
         if retrieved_versions:
             upstream_versions = ", ".join(retrieved_versions)
 
@@ -619,13 +624,23 @@ class HotnessConsumer(object):
             projectid=project_id,
             dist_git_url=dist_git_url,
         )
+        if len(retrieved_versions) > 1:
+            if latest_upstream in retrieved_versions:
+                short_desc = self.short_desc_template % dict(
+                    name=package.name, retrieved_version=latest_upstream
+                )
+            else:
+                short_desc = self.short_desc_template_more_versions % dict(
+                    name=package.name
+                )
+        elif retrieved_versions:
+            short_desc = self.short_desc_template % dict(
+                name=package.name, retrieved_version=retrieved_versions[0]
+            )
         notify_request = NotifyRequest(
             package=package,
             message=description,
-            opts={
-                "bz_short_desc": self.short_desc_template
-                % dict(name=package.name, latest_upstream=package.version)
-            },
+            opts={"bz_short_desc": short_desc},
         )
         notifier_bugzilla_use_case = NotifyUserUseCase(self.notifier_bugzilla)
         response = notifier_bugzilla_use_case.notify(notify_request)

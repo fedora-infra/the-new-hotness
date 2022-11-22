@@ -19,6 +19,7 @@
 # of Red Hat, Inc.
 import json
 import os
+import pytest
 import traceback
 from unittest import mock
 
@@ -100,7 +101,8 @@ class TestHotnessConsumerInit:
         consumer = HotnessConsumer()
 
         assert (
-            consumer.short_desc_template == "%(name)s-%(latest_upstream)s is available"
+            consumer.short_desc_template
+            == "%(name)s-%(retrieved_version)s is available"
         )
         assert consumer.dist_git_url == "https://src.fedoraproject.org"
         assert (
@@ -396,6 +398,74 @@ class TestHotnessConsumerCall:
                 dist_git_url=self.consumer.dist_git_url + "/rpms/" + package.name,
             ),
             {"bz_short_desc": "flatpak-1.0.4 is available"},
+        )
+
+        exp_opts = {
+            "body": {
+                "trigger": {"msg": message.body, "topic": message.topic},
+                "bug": {"bug_id": 100},
+                "package": package.name,
+            }
+        }
+
+        self.consumer.notifier_fedora_messaging.notify.assert_called_with(
+            package, "update.bug.file", exp_opts
+        )
+
+    @pytest.mark.parametrize(
+        "test_input,expected",
+        [
+            (["0.99.3"], "flatpak-0.99.3 is available"),
+            (["1.0.4"], "flatpak-1.0.4 is available"),
+            (["1.0.3", "0.99.3"], "New versions of flatpak available."),
+        ],
+    )
+    def test_bugzilla_notify_with_retrieved_versions(self, test_input, expected):
+        """
+        Assert that the bugzilla header uses:
+            - retrieved_versions and not package.version
+            - in case package.version is in retrieved_versions use package.version
+            - in case of more than one item in retrieved_versions use generic message.
+        """
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
+        message.body["message"]["upstream_versions"] = test_input
+        self.consumer.validator_pagure.validate.return_value = {
+            "monitoring": True,
+            "all_versions": True,
+            "stable_only": False,
+            "scratch_build": False,
+        }
+        self.consumer.validator_pdc.validate.return_value = {
+            "retired": False,
+            "count": 1,
+        }
+        self.consumer.validator_mdapi.validate.return_value = {
+            "newer": False,
+            "version": "1.0.5",
+            "release": 1,
+        }
+        self.consumer.notifier_bugzilla.notify.return_value = {"bz_id": 100}
+
+        self.consumer.__call__(message)
+
+        package = Package(name="flatpak", version="1.0.4", distro="Fedora")
+        self.consumer.notifier_bugzilla.notify.assert_called_with(
+            package,
+            self.consumer.description_template
+            % dict(
+                latest_upstream=package.version,
+                repo_name=self.consumer.repoid,
+                repo_version="1.0.5",
+                repo_release=1,
+                url=message.body["project"]["homepage"],
+                explanation_url=self.consumer.explanation_url,
+                projectid=message.body["project"]["id"],
+                retrieved_versions=", ".join(
+                    message.body["message"]["upstream_versions"]
+                ),
+                dist_git_url=self.consumer.dist_git_url + "/rpms/" + package.name,
+            ),
+            {"bz_short_desc": expected},
         )
 
         exp_opts = {
