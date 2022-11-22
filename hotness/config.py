@@ -70,7 +70,8 @@ DEFAULTS = dict(
         explanation_url="https://docs.fedoraproject.org/en-US/package-maintainers/Upstream_Release_Monitoring",  # noqa: E501
         reporter="Upstream Release Monitoring",
         reporter_email="upstream-release-monitoring@fedoraproject.org",
-        short_desc_template="%(name)s-%(latest_upstream)s is available",
+        short_desc_template="%(name)s-%(retrieved_version)s is available",
+        short_desc_template_more_versions="New versions of %(name)s available.",
         description_template="""
 Releases retrieved: %(retrieved_versions)s
 Upstream release that is considered latest: %(latest_upstream)s
