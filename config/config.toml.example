@@ -109,8 +109,8 @@ bug_status = "NEW"
 # Used in template
 explanation_url = "https://fedoraproject.org/wiki/upstream_release_monitoring"
 # Title for new issue in bugzilla
-short_desc_template="%(name)s-%(retrieved_version)s is available",
-short_desc_template_more_versions="New versions of %(name)s available.",
+short_desc_template="%(name)s-%(retrieved_version)s is available"
+short_desc_template_more_versions="New versions of %(name)s available"
 # Description of the issue (first comment on the issue)
 description_template = """
 Releases retrieved: %(retrieved_versions)s
