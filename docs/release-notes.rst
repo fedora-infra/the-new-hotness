@@ -4,6 +4,40 @@ Release notes
 
 .. towncrier release notes start
 
+1.2.2 (2023-02-08)
+==================
+
+Bug Fixes
+---------
+
+* GenericError: Invalid method: krb_login
+  (`#549 <https://github.com/fedora-infra/the-new-hotness/issues/549>`_)
+
+
+Other Changes
+-------------
+
+* Migrate from dependabot to renovate
+  (`PR#516 <https://github.com/fedora-infra/the-new-hotness/pull/516>`_)
+
+* Changed old explanation url with the new one.
+  Old: https://fedoraproject.org/wiki/upstream_release_monitoring
+  New: https://docs.fedoraproject.org/en-US/package-maintainers/Upstream_Release_Monitoring
+  (`PR#519 <https://github.com/fedora-infra/the-new-hotness/pull/519>`_)
+
+* Migrate from setuptools to poetry
+  (`PR#531 <https://github.com/fedora-infra/the-new-hotness/pull/531>`_)
+
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release:
+
+* Erol Keskin
+* Lenka Segura
+* Michal Konečný
+
 
 1.2.1 (2022-06-02)
 ==================
