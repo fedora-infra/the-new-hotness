@@ -137,7 +137,7 @@ class TestKojiBuild:
             f.write("This is a patch")
         mock_session = mock.Mock()
         mock_session.build.return_value = 1000
-        mock_session.krb_login.return_value = True
+        mock_session.gssapi_login.return_value = True
         mock_koji.ClientSession.return_value = mock_session
         mock_temp_dir.return_value.__enter__.return_value = tmpdir
 
@@ -170,7 +170,7 @@ class TestKojiBuild:
         mock_koji.ClientSession.assert_called_with(
             self.builder.server_url, self.builder.krb_sessionopts
         )
-        mock_session.krb_login.assert_called_with(
+        mock_session.gssapi_login.assert_called_with(
             principal=self.builder.krb_principal,
             keytab=self.builder.krb_keytab,
             ccache=self.builder.krb_ccache,
@@ -261,7 +261,7 @@ class TestKojiBuild:
             f.write("This is a patch")
         mock_session = mock.Mock()
         mock_session.build.return_value = 1000
-        mock_session.krb_login.return_value = True
+        mock_session.gssapi_login.return_value = True
         mock_koji.ClientSession.return_value = mock_session
         mock_temp_dir.return_value.__enter__.return_value = tmpdir
 
@@ -321,7 +321,7 @@ class TestKojiBuild:
             f.write("This is a patch")
         mock_session = mock.Mock()
         mock_session.build.return_value = 1000
-        mock_session.krb_login.return_value = True
+        mock_session.gssapi_login.return_value = True
         mock_koji.ClientSession.return_value = mock_session
         mock_temp_dir.return_value.__enter__.return_value = tmpdir
 
@@ -376,7 +376,7 @@ class TestKojiBuild:
             f.write("The Emperor is God")
 
         mock_session = mock.Mock()
-        mock_session.krb_login.return_value = None
+        mock_session.gssapi_login.return_value = None
         mock_koji.ClientSession.return_value = mock_session
         mock_temp_dir.return_value.__enter__.return_value = tmpdir
 
@@ -720,7 +720,7 @@ class TestKojiBuild:
 
         mock_session = mock.Mock()
         mock_session.build.return_value = 1000
-        mock_session.krb_login.return_value = True
+        mock_session.gssapi_login.return_value = True
         mock_koji.ClientSession.return_value = mock_session
         mock_temp_dir.return_value.__enter__.return_value = tmpdir
 
