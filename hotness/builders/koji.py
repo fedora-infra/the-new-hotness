@@ -419,7 +419,7 @@ class Koji(Builder):
         _logger.info("Creating a new Koji session to %s", self.server_url)
         with _koji_session_lock:
             koji_session = koji.ClientSession(self.server_url, self.krb_sessionopts)
-            result = koji_session.krb_login(
+            result = koji_session.gssapi_login(
                 principal=self.krb_principal,
                 keytab=self.krb_keytab,
                 ccache=self.krb_ccache,
