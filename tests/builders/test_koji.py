@@ -144,13 +144,13 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
-            b"Downloading Lectitio_Divinitatus",
-            b"Downloaded: Codex_Astartes",
-            b"rpmbuild foobar.srpm",
             "git config",
             "git config",
             "git commit",
             filename.encode(),
+            b"Downloading Lectitio_Divinitatus",
+            b"Downloaded: Codex_Astartes",
+            b"rpmbuild foobar.srpm",
         ]
 
         # Prepare package
@@ -197,6 +197,24 @@ class TestKojiBuild:
                     ],
                     stderr=mock.ANY,
                 ),
+                mock.call(
+                    ["git", "config", "user.name", self.builder.user_email[0]],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "config", "user.email", self.builder.user_email[1]],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "commit", "-a", "-m", "Update to 1.0 (#100)"],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "format-patch", "HEAD^"], cwd=tmpdir, stderr=mock.ANY
+                ),
                 mock.call(["fedpkg", "--user", "hotness", "sources"], cwd=tmpdir),
                 mock.call(
                     [
@@ -218,24 +236,6 @@ class TestKojiBuild:
                     ],
                     cwd=tmpdir,
                     stderr=mock.ANY,
-                ),
-                mock.call(
-                    ["git", "config", "user.name", self.builder.user_email[0]],
-                    cwd=tmpdir,
-                    stderr=mock.ANY,
-                ),
-                mock.call(
-                    ["git", "config", "user.email", self.builder.user_email[1]],
-                    cwd=tmpdir,
-                    stderr=mock.ANY,
-                ),
-                mock.call(
-                    ["git", "commit", "-a", "-m", "Update to 1.0 (#100)"],
-                    cwd=tmpdir,
-                    stderr=mock.ANY,
-                ),
-                mock.call(
-                    ["git", "format-patch", "HEAD^"], cwd=tmpdir, stderr=mock.ANY
                 ),
             ]
         )
@@ -268,13 +268,13 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
-            (b"Fake line\n" b"Downloading Lectitio_Divinitatus"),
-            b"Downloaded: Lectitio_Divinitatus",
-            b"rpmbuild foobar.srpm",
             "git config",
             "git config",
             "git commit",
             file.encode(),
+            (b"Fake line\n" b"Downloading Lectitio_Divinitatus"),
+            b"Downloaded: Lectitio_Divinitatus",
+            b"rpmbuild foobar.srpm",
         ]
 
         # Prepare package
@@ -328,13 +328,13 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
-            (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
-            b"Downloaded: Lectitio_Divinitatus\nDownloaded: Lectitio_Divinitatus\n",
-            b"rpmbuild foobar.srpm",
             "git config",
             "git config",
             "git commit",
             file.encode(),
+            (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
+            b"Downloaded: Lectitio_Divinitatus\nDownloaded: Lectitio_Divinitatus\n",
+            b"rpmbuild foobar.srpm",
         ]
 
         # Prepare package
@@ -383,6 +383,10 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            "git config",
+            "git config",
+            "git commit",
+            file.encode(),
             b"Downloading Lectitio_Divinitatus",
             b"Downloaded: Lectitio_Divinitatus",
             b"rpmbuild foobar.srpm",
@@ -416,6 +420,10 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            "git config",
+            "git config",
+            "git commit",
+            file.encode(),
             b"Downloading Lectitio_Divinitatus",
             CalledProcessError(1, None),
         ]
@@ -428,8 +436,8 @@ class TestKojiBuild:
             self.builder.build(package, opts)
 
         assert exc.value.message == (
-            "The specfile contains a Source URL with an unknown protocol; it should"
-            'be "https", "http", or "ftp".'
+            "There is a syntax error in updated specfile. "
+            "See attached diff for the changes."
         )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
@@ -451,6 +459,10 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            "git config",
+            "git config",
+            "git commit",
+            file.encode(),
             b"Downloading Lectitio_Divinitatus",
             CalledProcessError(5, None),
         ]
@@ -485,6 +497,10 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            "git config",
+            "git config",
+            "git commit",
+            file.encode(),
             b"Downloading Lectitio_Divinitatus",
             CalledProcessError(7, None),
         ]
@@ -519,6 +535,10 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            "git config",
+            "git config",
+            "git commit",
+            file.encode(),
             b"Downloading Lectitio_Divinitatus",
             CalledProcessError(22, None, output=(b"URL1\nURL2")),
         ]
@@ -553,6 +573,10 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            "git config",
+            "git config",
+            "git commit",
+            file.encode(),
             b"Downloading Lectitio_Divinitatus",
             CalledProcessError(60, None),
         ]
@@ -588,6 +612,10 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            "git config",
+            "git config",
+            "git commit",
+            file.encode(),
             b"Downloading Lectitio_Divinitatus",
             CalledProcessError(100, "spectool -g", output=b"Some output"),
         ]
@@ -682,6 +710,10 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            "git config",
+            "git config",
+            "git commit",
+            file.encode(),
             (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
             b"Downloaded: Lectitio_Divinitatus\n",
             CalledProcessError(
@@ -718,24 +750,20 @@ class TestKojiBuild:
         with open(file, "w") as f:
             f.write("The Emperor is God")
 
-        mock_session = mock.Mock()
-        mock_session.build.return_value = 1000
-        mock_session.gssapi_login.return_value = True
-        mock_koji.ClientSession.return_value = mock_session
         mock_temp_dir.return_value.__enter__.return_value = tmpdir
 
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
-            (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
-            b"Downloaded: Lectitio_Divinitatus\n",
-            b"rpmbuild foobar.srpm",
             "git config",
             "git config",
             CalledProcessError(
                 1, "git commit", output=b"Some output", stderr=b"Failed miserably"
             ),
             file.encode(),
+            (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
+            b"Downloaded: Lectitio_Divinitatus\n",
+            b"rpmbuild foobar.srpm",
         ]
 
         # Prepare package
@@ -748,6 +776,5 @@ class TestKojiBuild:
         assert (
             exc.value.message == "Command 'git commit' returned non-zero exit status 1."
         )
-        assert exc.value.value["build_id"] == 1000
         assert exc.value.std_out == "Some output"
         assert exc.value.std_err == "Failed miserably"

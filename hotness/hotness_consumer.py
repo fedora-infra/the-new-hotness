@@ -685,14 +685,36 @@ class HotnessConsumer(object):
             notifier_bugzilla_use_case = NotifyUserUseCase(self.notifier_bugzilla)
             notifier_bugzilla_use_case.notify(notify_request)
 
+            # Read the values from use case when available
+            build_id = None
+            patch = None
+            patch_filename = None
+            if response.use_case_value:
+                build_id = response.use_case_value.get("build_id", None)
+                patch = response.use_case_value.get("patch", None)
+                patch_filename = response.use_case_value.get("patch_filename", None)
+
             # Insert the build_id to redis if available
-            if response.use_case_value and "build_id" in response.use_case_value:
-                build_id = response.use_case_value["build_id"]
+            if build_id:
                 insert_data_request = InsertDataRequest(
                     key=str(build_id), value=str(bz_id)
                 )
                 insert_data_redis_use_case = InsertDataUseCase(self.database_redis)
                 response = insert_data_redis_use_case.insert(insert_data_request)
+
+            # Attach patch to Bugzilla
+            if patch and patch_filename:
+                submit_patch_request = SubmitPatchRequest(
+                    package=package,
+                    patch=patch,
+                    opts={"bz_id": bz_id, "patch_filename": patch_filename},
+                )
+                submit_patch_bugzilla_use_case = SubmitPatchUseCase(
+                    self.patcher_bugzilla
+                )
+                response = submit_patch_bugzilla_use_case.submit_patch(
+                    submit_patch_request
+                )
             return
 
         build_id = response.value["build_id"]

@@ -156,6 +156,43 @@ class Koji(Builder):
                     std_err = exc.stderr.decode()
                 raise BuilderException(str(exc), std_out=std_out, std_err=std_err)
 
+            # Now, craft a patch to attach to the ticket
+            try:
+                sp.check_output(
+                    ["git", "config", "user.name", self.user_email[0]],
+                    cwd=tmp,
+                    stderr=sp.STDOUT,
+                )
+                sp.check_output(
+                    ["git", "config", "user.email", self.user_email[1]],
+                    cwd=tmp,
+                    stderr=sp.STDOUT,
+                )
+                sp.check_output(
+                    ["git", "commit", "-a", "-m", comment], cwd=tmp, stderr=sp.STDOUT
+                )
+                filename = sp.check_output(
+                    ["git", "format-patch", "HEAD^"], cwd=tmp, stderr=sp.STDOUT
+                )
+                filename_str = filename.decode("utf-8").strip()
+            except sp.CalledProcessError as exc:
+                std_out = ""
+                std_err = ""
+                if exc.stdout:
+                    std_out = exc.stdout.decode()
+                if exc.stderr:
+                    std_err = exc.stderr.decode()
+                raise BuilderException(
+                    str(exc), value=output, std_out=std_out, std_err=std_err
+                )
+
+            output["patch_filename"] = filename_str
+
+            # Copy the content of file to output
+            patch = os.path.join(tmp, filename_str)
+            with open(patch) as f:
+                output["patch"] = f.read()
+
             # We compare the old sources to the new ones to make sure we download
             # new sources from bumping the specfile version. Some packages don't
             # use macros in the source URL(s). We want to detect these and notify
@@ -196,43 +233,6 @@ class Koji(Builder):
             if not session:
                 raise BuilderException("Can't authenticate with Koji!")
             output["build_id"] = self._scratch_build(session, package.name, srpm)
-
-            # Now, craft a patch to attach to the ticket
-            try:
-                sp.check_output(
-                    ["git", "config", "user.name", self.user_email[0]],
-                    cwd=tmp,
-                    stderr=sp.STDOUT,
-                )
-                sp.check_output(
-                    ["git", "config", "user.email", self.user_email[1]],
-                    cwd=tmp,
-                    stderr=sp.STDOUT,
-                )
-                sp.check_output(
-                    ["git", "commit", "-a", "-m", comment], cwd=tmp, stderr=sp.STDOUT
-                )
-                filename = sp.check_output(
-                    ["git", "format-patch", "HEAD^"], cwd=tmp, stderr=sp.STDOUT
-                )
-                filename_str = filename.decode("utf-8").strip()
-            except sp.CalledProcessError as exc:
-                std_out = ""
-                std_err = ""
-                if exc.stdout:
-                    std_out = exc.stdout.decode()
-                if exc.stderr:
-                    std_err = exc.stderr.decode()
-                raise BuilderException(
-                    str(exc), value=output, std_out=std_out, std_err=std_err
-                )
-
-            output["patch_filename"] = filename_str
-
-            # Copy the content of file to output
-            patch = os.path.join(tmp, filename_str)
-            with open(patch) as f:
-                output["patch"] = f.read()
 
             return output
 
@@ -301,8 +301,8 @@ class Koji(Builder):
             if e.returncode == 1:
                 # Unknown protocol (e.g. not ftp, http, or https)
                 msg = (
-                    "The specfile contains a Source URL with an unknown protocol; it should"
-                    'be "https", "http", or "ftp".'
+                    "There is a syntax error in updated specfile. "
+                    "See attached diff for the changes."
                 )
             elif e.returncode in (5, 6):
                 msg = "Unable to resolve the hostname for one of the package's Source URLs"
