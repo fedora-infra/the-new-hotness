@@ -1078,7 +1078,11 @@ class TestHotnessConsumerCall:
             "This is heresy!",
             std_out="This is a standard output",
             std_err="This is an error output",
-            value={"build_id": 1000},
+            value={
+                "build_id": 1000,
+                "patch": "This is a patch",
+                "patch_filename": "patch.txt",
+            },
         )
         self.consumer.notifier_bugzilla.notify.return_value = {"bz_id": 100}
         self.consumer.builder_koji.build.side_effect = builder_exception
@@ -1144,6 +1148,9 @@ class TestHotnessConsumerCall:
             package, "update.bug.file", exp_opts
         )
         self.consumer.database_redis.insert.assert_called_with("1000", "100")
+        self.consumer.patcher_bugzilla.submit_patch.assert_called_with(
+            package, "This is a patch", {"bz_id": 100, "patch_filename": "patch.txt"}
+        )
 
     def test_call_anitya_update_no_monitoring(self):
         """
