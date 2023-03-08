@@ -624,19 +624,11 @@ class HotnessConsumer(object):
             projectid=project_id,
             dist_git_url=dist_git_url,
         )
-        if len(retrieved_versions) > 1:
-            if latest_upstream in retrieved_versions:
-                short_desc = self.short_desc_template % dict(
-                    name=package.name, retrieved_version=latest_upstream
-                )
-            else:
-                short_desc = self.short_desc_template_more_versions % dict(
-                    name=package.name
-                )
-        elif retrieved_versions:
-            short_desc = self.short_desc_template % dict(
-                name=package.name, retrieved_version=retrieved_versions[0]
-            )
+        # Don't change the title of bug if the new version received is
+        # older than the latest upstream
+        short_desc = self.short_desc_template % dict(
+            name=package.name, retrieved_version=latest_upstream
+        )
         notify_request = NotifyRequest(
             package=package,
             message=description,

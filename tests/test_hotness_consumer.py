@@ -415,9 +415,9 @@ class TestHotnessConsumerCall:
     @pytest.mark.parametrize(
         "test_input,expected",
         [
-            (["0.99.3"], "flatpak-0.99.3 is available"),
+            (["0.99.3"], "flatpak-1.0.4 is available"),
             (["1.0.4"], "flatpak-1.0.4 is available"),
-            (["1.0.3", "0.99.3"], "New versions of flatpak available."),
+            (["1.0.3", "0.99.3"], "flatpak-1.0.4 is available"),
         ],
     )
     def test_bugzilla_notify_with_retrieved_versions(self, test_input, expected):
@@ -426,6 +426,8 @@ class TestHotnessConsumerCall:
             - retrieved_versions and not package.version
             - in case package.version is in retrieved_versions use package.version
             - in case of more than one item in retrieved_versions use generic message.
+            - in case the latest upstream is newer than the retrieved version don't
+              update the header
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         message.body["message"]["upstream_versions"] = test_input
