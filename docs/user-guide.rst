@@ -60,3 +60,15 @@ For The New Hotness to function properly there have to be a project in
 `Anitya <https://release-monitoring.org>`_. For the information how to create
 a new project, look at the
 `user guide in Anitya documentation <https://anitya.readthedocs.io/en/stable/user-guide.html>`_.
+
+Opening pull requests in dist-git
+---------------------------------
+
+Thanks to the work of `Packit <https://packit.dev/>`_ Team it is now possible to have
+pull requests filed directly in `dist git <https://src.fedoraproject.org>`_ when a new
+update is detected by The New Hotness for a monitored project.
+
+The process is described in
+`Packit documentation <https://packit.dev/docs/fedora-releases-guide/#pull-from-upstream-job>`_
+and needs the package to have monitoring enabled and be set up in
+`Anitya <https://release-monitoring.org>`_.
