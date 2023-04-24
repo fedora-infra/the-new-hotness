@@ -4,6 +4,36 @@ Release notes
 
 .. towncrier release notes start
 
+1.2.3 (2023-04-24)
+==================
+
+Bug Fixes
+---------
+
+* Bug title being rewritten when older version is obtained by Anitya and not packaged in Fedora yet
+  (`#533 <https://github.com/fedora-infra/the-new-hotness/issues/533>`_)
+
+* Error message from koji module is wrong
+  (`#547 <https://github.com/fedora-infra/the-new-hotness/issues/547>`_)
+
+
+Other Changes
+-------------
+
+* Document the way to file pull requests with the-new-hotness
+  (`#558 <https://github.com/fedora-infra/the-new-hotness/issues/558>`_)
+
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release:
+
+* Erol Keskin
+* Lenka Segura
+* Michal Konečný
+
+
 1.2.2 (2023-02-08)
 ==================
 
