@@ -23,6 +23,7 @@
       python3-flake8,
       python3-redis,
       python3-sphinx,
+      poetry
     ]
     state: present
 
