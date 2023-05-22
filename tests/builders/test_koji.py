@@ -150,7 +150,142 @@ class TestKojiBuild:
             filename.encode(),
             b"Downloading Lectitio_Divinitatus",
             b"Downloaded: Codex_Astartes",
-            b"rpmbuild foobar.srpm",
+            b"Wrote: foobar.srpm",
+        ]
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        opts = {"bz_id": 100}
+
+        output = self.builder.build(package, opts)
+
+        assert output == {
+            "build_id": 1000,
+            "patch": "This is a patch",
+            "patch_filename": filename,
+            "message": "",
+        }
+
+        mock_temp_dir.assert_called_with(prefix="thn-", dir="/var/tmp")
+        mock_koji.ClientSession.assert_called_with(
+            self.builder.server_url, self.builder.krb_sessionopts
+        )
+        mock_session.gssapi_login.assert_called_with(
+            principal=self.builder.krb_principal,
+            keytab=self.builder.krb_keytab,
+            ccache=self.builder.krb_ccache,
+            proxyuser=self.builder.krb_proxyuser,
+        )
+        mock_session.uploadWrapper.assert_called_once()
+        mock_session.build.assert_called_once()
+
+        mock_check_output.assert_has_calls(
+            [
+                mock.call(
+                    ["git", "clone", self.builder.git_url, tmpdir], stderr=mock.ANY
+                ),
+                mock.call(
+                    [
+                        "/usr/bin/rpmdev-bumpspec",
+                        "--new",
+                        "1.0",
+                        "-c",
+                        "Update to 1.0 (#100)",
+                        "-u",
+                        self.builder.user_email[0] + " " + self.builder.user_email[1],
+                        tmpdir + "/test.spec",
+                    ],
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "config", "user.name", self.builder.user_email[0]],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "config", "user.email", self.builder.user_email[1]],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "commit", "-a", "-m", "Update to 1.0 (#100)"],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "format-patch", "HEAD^"], cwd=tmpdir, stderr=mock.ANY
+                ),
+                mock.call(["fedpkg", "--user", "hotness", "sources"], cwd=tmpdir),
+                mock.call(
+                    [
+                        "spectool",
+                        "-g",
+                        str(tmpdir + "/test.spec"),
+                    ],
+                    cwd=tmpdir,
+                ),
+                mock.call(
+                    [
+                        "rpmbuild",
+                        "-D",
+                        "_sourcedir .",
+                        "-D",
+                        "_topdir .",
+                        "-bs",
+                        tmpdir + "/test.spec",
+                    ],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+            ]
+        )
+
+    @mock.patch("hotness.builders.koji.sp.check_output")
+    @mock.patch("hotness.builders.koji.koji")
+    @mock.patch("hotness.builders.koji.TemporaryDirectory")
+    def test_build_rpmbuild_warning(
+        self, mock_temp_dir, mock_koji, mock_check_output, tmpdir
+    ):
+        """
+        Assert that build is run correctly when the rpmbuild output contains warning.
+        """
+        # Create temporary file
+        file = os.path.join(tmpdir, "Lectitio_Divinitatus")
+        with open(file, "w") as f:
+            f.write("The Emperor is God")
+        file = os.path.join(tmpdir, "Codex_Astartes")
+        with open(file, "w") as f:
+            f.write("Adeptus Astartes")
+
+        # Mock patch file
+        filename = "patch"
+        file = os.path.join(tmpdir, filename)
+        with open(file, "w") as f:
+            f.write("This is a patch")
+        mock_session = mock.Mock()
+        mock_session.build.return_value = 1000
+        mock_session.gssapi_login.return_value = True
+        mock_koji.ClientSession.return_value = mock_session
+        mock_temp_dir.return_value.__enter__.return_value = tmpdir
+
+        mock_check_output.side_effect = [
+            "git clone",
+            "rpmdev-bumpspec",
+            "git config",
+            "git config",
+            "git commit",
+            filename.encode(),
+            b"Downloading Lectitio_Divinitatus",
+            b"Downloaded: Codex_Astartes",
+            b"".join(
+                (
+                    b"warning: source_date_epoch_from_changelog set but %changelog is missing\n",
+                    b"Wrote: ./SRPMS/uncrustify-0.77.1-1.fc38.src.rpm\n",
+                    b"\n",
+                    b"RPM build warnings:\n",
+                    b"    source_date_epoch_from_changelog set but %changelog is missing\n",
+                )
+            ),
         ]
 
         # Prepare package
@@ -274,7 +409,7 @@ class TestKojiBuild:
             file.encode(),
             (b"Fake line\n" b"Downloading Lectitio_Divinitatus"),
             b"Downloaded: Lectitio_Divinitatus",
-            b"rpmbuild foobar.srpm",
+            b"Wrote: foobar.srpm",
         ]
 
         # Prepare package
@@ -334,7 +469,7 @@ class TestKojiBuild:
             file.encode(),
             (b"Fake line\n" b"Downloading Lectitio_Divinitatus\n"),
             b"Downloaded: Lectitio_Divinitatus\nDownloaded: Lectitio_Divinitatus\n",
-            b"rpmbuild foobar.srpm",
+            b"Wrote: foobar.srpm",
         ]
 
         # Prepare package
@@ -389,7 +524,7 @@ class TestKojiBuild:
             file.encode(),
             b"Downloading Lectitio_Divinitatus",
             b"Downloaded: Lectitio_Divinitatus",
-            b"rpmbuild foobar.srpm",
+            b"Wrote: foobar.srpm",
         ]
 
         # Prepare package

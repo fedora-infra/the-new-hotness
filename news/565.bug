@@ -1,0 +1,1 @@
+Fix for scratch build if rpmbuild returns warning
