@@ -26,6 +26,10 @@
               dependencies:
                 - krb5-devel
                 - python3.10-devel
+        - fi-tox-python311:
+            vars:
+              dependencies:
+                - krb5-devel
         - fi-tox-docs:
             vars:
               dependencies:
