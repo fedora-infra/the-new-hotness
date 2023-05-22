@@ -226,7 +226,20 @@ class Koji(Builder):
                     str(exc), value=output, std_out=std_out, std_err=std_err
                 )
 
-            srpm = os.path.join(tmp, cmd_output.decode("utf-8").strip().split()[-1])
+            # The output from rpmbuild looks like this
+            # warning: source_date_epoch_from_changelog set but %changelog is missing
+            # Wrote: ./SRPMS/uncrustify-0.77.1-1.fc38.src.rpm
+            #
+            # RPM build warnings:
+            #     source_date_epoch_from_changelog set but %changelog is missing
+            #
+            # We need to separate just the source RPM
+            srpm = ""
+            for line in cmd_output.decode("utf-8").splitlines():
+                if line.startswith("Wrote"):
+                    srpm = os.path.join(tmp, line.split()[-1])
+                    break
+
             _logger.debug("Got srpm %r" % srpm)
 
             session = self._session_maker()
