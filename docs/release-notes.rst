@@ -4,6 +4,37 @@ Release notes
 
 .. towncrier release notes start
 
+1.2.4 (2023-05-23)
+==================
+
+Bug Fixes
+---------
+
+* Retry upload to koji sideload cache when it fails
+  (`#557 <https://github.com/fedora-infra/the-new-hotness/issues/557>`_)
+
+* Spec file diff not attached when `DownloadException` is thrown
+  (`#564 <https://github.com/fedora-infra/the-new-hotness/issues/564>`_)
+
+* Fix for scratch build if rpmbuild returns warning
+  (`#565 <https://github.com/fedora-infra/the-new-hotness/issues/565>`_)
+
+
+Development Changes
+-------------------
+
+* Add towncrier and tox to dev dependencies
+  (`PR#574 <https://github.com/fedora-infra/the-new-hotness/pull/574>`_)
+
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release:
+
+* Michal Konečný
+
+
 1.2.3 (2023-04-24)
 ==================
 
