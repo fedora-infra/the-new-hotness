@@ -21,7 +21,7 @@ from subprocess import CalledProcessError
 from unittest import mock
 
 from hotness.domain import Package
-from hotness.exceptions import DownloadException, BuilderException
+from hotness.exceptions import BuilderException
 from hotness.builders import Koji
 
 
@@ -567,12 +567,16 @@ class TestKojiBuild:
         package = Package(name="test", version="1.0", distro="Fedora")
         opts = {"bz_id": 100}
 
-        with pytest.raises(DownloadException) as exc:
+        with pytest.raises(BuilderException) as exc:
             self.builder.build(package, opts)
 
         assert exc.value.message == (
             "There is a syntax error in updated specfile. "
             "See attached diff for the changes."
+        )
+        assert exc.value.value["patch"] == "The Emperor is God"
+        assert exc.value.value["patch_filename"] == os.path.join(
+            tmpdir, "Lectitio_Divinitatus"
         )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
@@ -606,11 +610,15 @@ class TestKojiBuild:
         package = Package(name="test", version="1.0", distro="Fedora")
         opts = {"bz_id": 100}
 
-        with pytest.raises(DownloadException) as exc:
+        with pytest.raises(BuilderException) as exc:
             self.builder.build(package, opts)
 
         assert exc.value.message == (
             "Unable to resolve the hostname for one of the package's Source URLs"
+        )
+        assert exc.value.value["patch"] == "The Emperor is God"
+        assert exc.value.value["patch_filename"] == os.path.join(
+            tmpdir, "Lectitio_Divinitatus"
         )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
@@ -644,11 +652,15 @@ class TestKojiBuild:
         package = Package(name="test", version="1.0", distro="Fedora")
         opts = {"bz_id": 100}
 
-        with pytest.raises(DownloadException) as exc:
+        with pytest.raises(BuilderException) as exc:
             self.builder.build(package, opts)
 
         assert exc.value.message == (
             "Unable to connect to the host for one of the package's Source URLs"
+        )
+        assert exc.value.value["patch"] == "The Emperor is God"
+        assert exc.value.value["patch_filename"] == os.path.join(
+            tmpdir, "Lectitio_Divinitatus"
         )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
@@ -682,11 +694,15 @@ class TestKojiBuild:
         package = Package(name="test", version="1.0", distro="Fedora")
         opts = {"bz_id": 100}
 
-        with pytest.raises(DownloadException) as exc:
+        with pytest.raises(BuilderException) as exc:
             self.builder.build(package, opts)
 
         assert exc.value.message == (
             "An HTTP error occurred downloading the package's new Source URLs: URL2"
+        )
+        assert exc.value.value["patch"] == "The Emperor is God"
+        assert exc.value.value["patch_filename"] == os.path.join(
+            tmpdir, "Lectitio_Divinitatus"
         )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
@@ -720,12 +736,16 @@ class TestKojiBuild:
         package = Package(name="test", version="1.0", distro="Fedora")
         opts = {"bz_id": 100}
 
-        with pytest.raises(DownloadException) as exc:
+        with pytest.raises(BuilderException) as exc:
             self.builder.build(package, opts)
 
         assert exc.value.message == (
             "Unable to validate the TLS certificate for one of the package's "
             "Source URLs"
+        )
+        assert exc.value.value["patch"] == "The Emperor is God"
+        assert exc.value.value["patch_filename"] == os.path.join(
+            tmpdir, "Lectitio_Divinitatus"
         )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
@@ -759,7 +779,7 @@ class TestKojiBuild:
         package = Package(name="test", version="1.0", distro="Fedora")
         opts = {"bz_id": 100}
 
-        with pytest.raises(DownloadException) as exc:
+        with pytest.raises(BuilderException) as exc:
             self.builder.build(package, opts)
 
         assert exc.value.message == (
@@ -767,6 +787,10 @@ class TestKojiBuild:
             "please report this as a bug on the-new-hotness issue tracker.\n"
             "Error output:\n"
             "None"
+        )
+        assert exc.value.value["patch"] == "The Emperor is God"
+        assert exc.value.value["patch_filename"] == os.path.join(
+            tmpdir, "Lectitio_Divinitatus"
         )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
