@@ -198,7 +198,11 @@ class Koji(Builder):
             # use macros in the source URL(s). We want to detect these and notify
             # the packager on the bug we filed about the new version.
             old_sources = self._dist_git_sources(tmp)
-            new_sources = self._spec_sources(specfile, tmp)
+            try:
+                new_sources = self._spec_sources(specfile, tmp)
+            except DownloadException as exc:
+                # Attach the patch if DownloadException is thrown
+                raise BuilderException(str(exc), value=output)
             output["message"] = self._compare_sources(old_sources, new_sources)
 
             try:
@@ -262,9 +266,6 @@ class Koji(Builder):
 
         Returns:
             A list of absolute paths to source files downloaded
-
-        Raises:
-            subprocess.CalledProcessError: When downloading the sources fails.
         """
         files = []
         # The output format is:
