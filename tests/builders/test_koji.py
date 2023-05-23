@@ -20,6 +20,8 @@ import pytest
 from subprocess import CalledProcessError
 from unittest import mock
 
+from koji import GenericError
+
 from hotness.domain import Package
 from hotness.exceptions import BuilderException
 from hotness.builders import Koji
@@ -535,6 +537,56 @@ class TestKojiBuild:
             self.builder.build(package, opts)
 
         assert exc.value.message == ("Can't authenticate with Koji!")
+
+    @mock.patch("hotness.builders.koji.sp.check_output")
+    @mock.patch("hotness.builders.koji.koji.ClientSession")
+    @mock.patch("hotness.builders.koji.TemporaryDirectory")
+    @mock.patch("hotness.builders.koji.time.sleep")
+    def test_build_koji_upload_error(
+        self,
+        mock_time_sleep,
+        mock_temp_dir,
+        mock_koji_client,
+        mock_check_output,
+        tmpdir,
+    ):
+        """
+        Assert that build fails when we can't upload source to Koji.
+        """
+        # Create temporary file
+        file = os.path.join(tmpdir, "Lectitio_Divinitatus")
+        with open(file, "w") as f:
+            f.write("The Emperor is God")
+
+        mock_session = mock.Mock()
+        mock_session.uploadWrapper.side_effect = GenericError("File upload failed!")
+        mock_koji_client.return_value = mock_session
+        mock_temp_dir.return_value.__enter__.return_value = tmpdir
+
+        mock_check_output.side_effect = [
+            "git clone",
+            "rpmdev-bumpspec",
+            "git config",
+            "git config",
+            "git commit",
+            file.encode(),
+            b"Downloading Lectitio_Divinitatus",
+            b"Downloaded: Lectitio_Divinitatus",
+            b"Wrote: foobar.srpm",
+        ]
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        opts = {"bz_id": 100}
+
+        with pytest.raises(BuilderException) as exc:
+            self.builder.build(package, opts)
+
+        assert exc.value.message == (
+            "Couldn't upload source {} to koji.".format(
+                os.path.join(tmpdir, "foobar.srpm")
+            )
+        )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
     @mock.patch("hotness.builders.koji.koji")

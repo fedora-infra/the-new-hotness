@@ -462,7 +462,19 @@ class Koji(Builder):
         _logger.info("Uploading {source} to koji".format(source=source))
         suffix = "".join([random.choice(string.ascii_letters) for i in range(8)])
         serverdir = "%s/%r.%s" % ("cli-build", time.time(), suffix)
-        session.uploadWrapper(source, serverdir)
+        retry_counter = 0
+        upload_successful = False
+        while retry_counter < 3 and not upload_successful:
+            try:
+                session.uploadWrapper(source, serverdir)
+                upload_successful = True
+            except koji.GenericError:
+                # Wait for 5 seconds and retry the upload
+                time.sleep(5)
+                retry_counter += 1
+
+        if not upload_successful:
+            raise BuilderException("Couldn't upload source {} to koji.".format(source))
 
         remote = "%s/%s" % (serverdir, os.path.basename(source))
         _logger.info(
