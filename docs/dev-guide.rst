@@ -33,6 +33,8 @@ Any bugfix should be accompanied by one or more unit tests to demonstrate the fi
 If you are unsure how to write unit tests for your code,
 we will be happy to help you during the code review process.
 
+You can run them by running ``poetry run tox``.
+
 
 CI (Continuous Integration)
 ---------------------------
@@ -241,7 +243,6 @@ Release Guide
 To do the release you need following python packages installed::
 
     poetry
-    towncrier
 
 If you are a maintainer and wish to make a release, follow these steps:
 
@@ -256,7 +257,9 @@ If you are a maintainer and wish to make a release, follow these steps:
    This script must be executed in ``news`` folder, because it
    creates files in current working directory.
 
-4. Generate the changelog by running ``towncrier``.
+4. Install the-new-hotness in virtual environment ``poetry install``
+
+5. Generate the changelog by running ``poetry run towncrier``.
 
 .. note::
     If you added any news fragment in the previous step, you might see ``towncrier``
@@ -264,29 +267,29 @@ If you are a maintainer and wish to make a release, follow these steps:
     Just ignore this and remove all of them manually; release notes will be generated
     anyway.
 
-5. Remove every remaining news fragment from ``news`` folder.
+6. Remove every remaining news fragment from ``news`` folder.
 
-6. Commit your changes with message *the-new-hotness <version>*.
+7. Commit your changes with message *the-new-hotness <version>*.
 
-7. Tag a release with ``git tag -s <version>``.
+8. Tag a release with ``git tag -s <version>``.
 
-8. Don't forget to ``git push --tags``.
+9. Don't forget to ``git push --tags``.
 
-9. Sometimes you need to also do ``git push``.
+10. Sometimes you need to also do ``git push``.
 
-10. Build the Python packages with ``poetry build``.
+11. Build the Python packages with ``poetry build``.
 
-11. Upload the packages with ``poetry publish``.
+12. Upload the packages with ``poetry publish``.
 
-12. Create new release on `GitHub releases <https://github.com/fedora-infra/the-new-hotness/releases>`_.
+13. Create new release on `GitHub releases <https://github.com/fedora-infra/the-new-hotness/releases>`_.
 
-13. Deploy the new version in staging::
+14. Deploy the new version in staging::
 
      $ git checkout staging
      $ git rebase master
      $ git push origin staging
 
-14. When successfully tested in staging deploy to production::
+15. When successfully tested in staging deploy to production::
 
      $ git checkout production
      $ git rebase staging
