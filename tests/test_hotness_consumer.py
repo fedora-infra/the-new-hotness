@@ -66,10 +66,8 @@ class TestHotnessConsumerInit:
     @mock.patch("hotness.hotness_consumer.bz_patcher")
     @mock.patch("hotness.hotness_consumer.MDApi")
     @mock.patch("hotness.hotness_consumer.Pagure")
-    @mock.patch("hotness.hotness_consumer.PDC")
     def test_init(
         self,
-        mock_pdc_new,
         mock_pagure_new,
         mock_mdapi_new,
         mock_bz_patcher_new,
@@ -95,8 +93,6 @@ class TestHotnessConsumerInit:
         mock_mdapi_new.return_value = mock_mdapi
         mock_pagure = mock.Mock()
         mock_pagure_new.return_value = mock_pagure
-        mock_pdc = mock.Mock()
-        mock_pdc_new.return_value = mock_pdc
 
         consumer = HotnessConsumer()
 
@@ -145,7 +141,6 @@ To change the monitoring settings for the project, please visit:
         assert consumer.patcher_bugzilla == mock_bugzilla_patcher
         assert consumer.validator_mdapi == mock_mdapi
         assert consumer.validator_pagure == mock_pagure
-        assert consumer.validator_pdc == mock_pdc
 
         mock_koji_new.assert_called_with(
             server_url="https://koji.fedoraproject.org/kojihub",
@@ -199,12 +194,6 @@ To change the monitoring settings for the project, please visit:
             url="https://src.fedoraproject.org",
             requests_session=mock.ANY,
             timeout=(15, 15),
-        )
-
-        mock_pdc_new.assert_called_with(
-            url="https://pdc.fedoraproject.org",
-            requests_session=mock.ANY,
-            timeout=(15, 15),
             branch="rawhide",
             package_type="rpm",
         )
@@ -232,9 +221,7 @@ class TestHotnessConsumerCall:
             "hotness.hotness_consumer.MDApi"
         ) as mock_mdapi_new, mock.patch(
             "hotness.hotness_consumer.Pagure"
-        ) as mock_pagure_new, mock.patch(
-            "hotness.hotness_consumer.PDC"
-        ) as mock_pdc_new:
+        ) as mock_pagure_new:
             mock_koji = mock.MagicMock()
             mock_koji_new.return_value = mock_koji
             mock_redis = mock.MagicMock()
@@ -249,14 +236,9 @@ class TestHotnessConsumerCall:
             mock_mdapi_new.return_value = mock_mdapi
             mock_pagure = mock.Mock()
             mock_pagure_new.return_value = mock_pagure
-            mock_pdc = mock.Mock()
-            mock_pdc_new.return_value = mock_pdc
 
             self.consumer = HotnessConsumer()
 
-    #
-    #  anitya.project.version.update topic
-    #
     def test_call_anitya_update_no_distro_mapping(self):
         """
         Assert that message is handled correctly when there is no distribution mapping
@@ -288,10 +270,7 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": False,
             "scratch_build": True,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": True,
@@ -309,9 +288,7 @@ class TestHotnessConsumerCall:
         self.consumer.__call__(message)
 
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
-
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
         self.consumer.notifier_bugzilla.notify.assert_called_with(
             package,
@@ -362,10 +339,7 @@ class TestHotnessConsumerCall:
             "all_versions": True,
             "stable_only": False,
             "scratch_build": False,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": False,
@@ -379,7 +353,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
         self.consumer.notifier_bugzilla.notify.assert_called_with(
             package,
@@ -436,10 +409,7 @@ class TestHotnessConsumerCall:
             "all_versions": True,
             "stable_only": False,
             "scratch_build": False,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": False,
@@ -494,10 +464,7 @@ class TestHotnessConsumerCall:
             "all_versions": True,
             "stable_only": False,
             "scratch_build": True,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": False,
@@ -511,7 +478,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
         self.consumer.notifier_bugzilla.notify.assert_called_with(
             package,
@@ -558,10 +524,7 @@ class TestHotnessConsumerCall:
             "all_versions": True,
             "stable_only": False,
             "scratch_build": True,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": True,
@@ -581,7 +544,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
         self.consumer.notifier_bugzilla.notify.assert_called_with(
             package,
@@ -632,10 +594,7 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": True,
             "scratch_build": True,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": True,
@@ -655,7 +614,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
         self.consumer.notifier_bugzilla.notify.assert_called_with(
             package,
@@ -706,10 +664,7 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": True,
             "scratch_build": True,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": True,
@@ -729,7 +684,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="0.99.3", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
         self.consumer.notifier_bugzilla.notify.assert_called_with(
             package,
@@ -787,7 +741,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_not_called()
         self.consumer.validator_mdapi.validate.assert_not_called()
         self.consumer.notifier_bugzilla.notify.assert_not_called()
         self.consumer.builder_koji.build.assert_not_called()
@@ -816,10 +769,7 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": False,
             "scratch_build": True,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": True,
@@ -839,7 +789,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
         self.consumer.notifier_bugzilla.notify.assert_has_calls(
             [
@@ -900,10 +849,7 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": False,
             "scratch_build": True,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": True,
@@ -922,7 +868,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
         self.consumer.notifier_bugzilla.notify.assert_has_calls(
             [
@@ -990,10 +935,7 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": False,
             "scratch_build": True,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": True,
@@ -1010,7 +952,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
         self.consumer.notifier_bugzilla.notify.assert_has_calls(
             [
@@ -1066,10 +1007,7 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": False,
             "scratch_build": True,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": True,
@@ -1093,7 +1031,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
         self.consumer.notifier_bugzilla.notify.assert_has_calls(
             [
@@ -1194,10 +1131,7 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": False,
             "scratch_build": False,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": True,
@@ -1211,7 +1145,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
         self.consumer.notifier_bugzilla.notify.assert_called_with(
             package,
@@ -1279,10 +1212,7 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": False,
             "scratch_build": False,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": True,
-            "count": 0,
         }
 
         self.consumer.__call__(message)
@@ -1290,7 +1220,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
 
         exp_opts = {
             "body": {
@@ -1303,9 +1232,9 @@ class TestHotnessConsumerCall:
             package, "update.drop", exp_opts
         )
 
-    def test_call_anitya_update_pdc_exception(self):
+    def test_call_anitya_update_retired_exception(self):
         """
-        Assert that update message is handled correctly, when pdc raises exception.
+        Assert that update message is handled correctly, when retired raises exception.
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
@@ -1313,20 +1242,18 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": False,
             "scratch_build": False,
+            "retired": True,
         }
-        self.consumer.validator_pdc.validate.side_effect = Exception()
 
         self.consumer.__call__(message)
 
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
-
         exp_opts = {
             "body": {
                 "trigger": {"msg": message.body, "topic": message.topic},
-                "reason": "pdc",
+                "reason": "retired",
             }
         }
 
@@ -1345,10 +1272,7 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": False,
             "scratch_build": True,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": False,
@@ -1361,7 +1285,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
 
         exp_opts = {
@@ -1385,10 +1308,7 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": False,
             "scratch_build": True,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.side_effect = Exception()
 
@@ -1397,7 +1317,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
 
         exp_opts = {
@@ -1421,10 +1340,7 @@ class TestHotnessConsumerCall:
             "all_versions": False,
             "stable_only": False,
             "scratch_build": True,
-        }
-        self.consumer.validator_pdc.validate.return_value = {
             "retired": False,
-            "count": 1,
         }
         self.consumer.validator_mdapi.validate.return_value = {
             "newer": True,
@@ -1438,7 +1354,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
         self.consumer.validator_pagure.validate.assert_called_with(package)
-        self.consumer.validator_pdc.validate.assert_called_with(package)
         self.consumer.validator_mdapi.validate.assert_called_with(package)
         self.consumer.notifier_bugzilla.notify.assert_called_with(
             package,

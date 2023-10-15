@@ -18,4 +18,3 @@
 from .validator import Validator  # noqa: F401
 from .mdapi import MDApi  # noqa: F401
 from .pagure import Pagure  # noqa: F401
-from .pdc import PDC  # noqa: F401

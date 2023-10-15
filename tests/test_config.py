@@ -26,7 +26,6 @@ from hotness import config as hotness_config
 
 full_config = {
     "consumer_config": {
-        "pdc_url": "https://pdc.stg.fedoraproject.org",
         "dist_git_url": "https://src.stg.fedoraproject.org",
         "mdapi_url": "https://apps.fedoraproject.org/mdapi_test",
         "repoid": "",

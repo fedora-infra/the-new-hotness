@@ -31,7 +31,7 @@ from hotness.builders import Koji
 from hotness.databases import Redis
 from hotness.notifiers import Bugzilla as bz_notifier, FedoraMessaging
 from hotness.patchers import Bugzilla as bz_patcher
-from hotness.validators import MDApi, Pagure, PDC
+from hotness.validators import MDApi, Pagure
 from hotness.responses import ResponseFailure
 from hotness.requests import (
     BuildRequest,
@@ -88,8 +88,8 @@ class HotnessConsumer(object):
         patcher_bugzilla (`bz_patcher`): Bugzilla patcher for attaching patcher to tickets
                                          in Bugzilla
         validator_mdapi (`MDApi`): MDApi validator to retrieve the metadata for package
-        validator_pagure (`Pagure`): Pagure dist git for retrieval of notification settings
-        validator_pdc (`PDC`): PDC validator to check if package is retired
+        validator_pagure (`Pagure`): Pagure dist git for retrieval of notification
+                                    settings and to check if a package is retired
     """
 
     def __init__(self):
@@ -170,11 +170,6 @@ class HotnessConsumer(object):
         )
         self.validator_pagure = Pagure(
             url=config["dist_git_url"],
-            requests_session=requests_session,
-            timeout=timeout,
-        )
-        self.validator_pdc = PDC(
-            url=config["pdc_url"],
             requests_session=requests_session,
             timeout=timeout,
             branch=config["repoid"],
@@ -467,8 +462,8 @@ class HotnessConsumer(object):
         """
         Validates the package with every external validator.
         Used validators:
-            * Pagure (dist-git): To retrieve monitoring settings
-            * PDC: To check if package is retired or not
+            * Pagure (dist-git): To retrieve monitoring settings and check
+                               if a package is retired or not
             * MDAPI: To check if the package is newer
 
         Params:
@@ -507,7 +502,8 @@ class HotnessConsumer(object):
         # We encountered an issue during retrieving of monitoring settings
         if not response:
             _logger.error(
-                "Couldn't retrieve monitoring settings for %r. Dropping." % package.name
+                "Couldn't retrieve monitoring settings or retirement information for %r. Dropping."
+                % package.name
             )
             output["reason"] = "dist-git"
             return output
@@ -535,18 +531,6 @@ class HotnessConsumer(object):
                 return output
             if package.version not in stable_versions:
                 package.version = stable_versions[0]
-
-        # Check if the package is retired in PDC
-        validate_pdc_use_case = PackageCheckUseCase(self.validator_pdc)
-        response = validate_pdc_use_case.validate(validate_request)
-
-        # We encountered an issue with PDC
-        if not response:
-            _logger.error(
-                "Couldn't retrieve retired information for %r. Dropping." % package.name
-            )
-            output["reason"] = "pdc"
-            return output
 
         # Package is retired
         if response.value["retired"]:

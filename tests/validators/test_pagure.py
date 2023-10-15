@@ -35,12 +35,16 @@ class TestPagureInit:
         url = "http://testing.url"
         timeout = (5, 20)
         requests_session = mock.Mock()
+        branch = "rawhide"
+        package_type = "rpm"
 
-        validator = Pagure(url, requests_session, timeout)
+        validator = Pagure(url, requests_session, timeout, branch, package_type)
 
         assert validator.url == url
         assert validator.requests_session == requests_session
         assert validator.timeout == timeout
+        assert validator.branch == branch
+        assert validator.package_type == package_type
 
 
 class TestPagureValidate:
@@ -52,12 +56,14 @@ class TestPagureValidate:
         """
         Setup phase before test.
         """
-        # Initialize PDC wrapper
+        # Initialize Retired wrapper
         url = "http://testing.url"
         timeout = (5, 20)
         requests_session = mock.Mock()
+        branch = "rawhide"
+        package_type = "rpm"
 
-        self.validator = Pagure(url, requests_session, timeout)
+        self.validator = Pagure(url, requests_session, timeout, branch, package_type)
 
     def test_validate_monitoring(self):
         """
@@ -79,15 +85,28 @@ class TestPagureValidate:
         # Parameters for requests get call
         timeout = (5, 20)
 
-        self.validator.requests_session.get.assert_called_with(
+        self.validator.requests_session.get.assert_any_call(
             self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
             timeout=timeout,
         )
+
+        self.validator.requests_session.get.assert_any_call(
+            self.validator.url
+            + "/rpms/"
+            + package.name
+            + "/blob/"
+            + self.validator.branch
+            + "/f/dead.package",
+            timeout=timeout,
+        )
+
+        assert 2 == self.validator.requests_session.get.call_count
 
         assert result["monitoring"] is True
         assert result["all_versions"] is False
         assert result["stable_only"] is False
         assert result["scratch_build"] is False
+        assert result["retired"] is True
 
     def test_validate_no_monitoring(self):
         """
@@ -109,7 +128,7 @@ class TestPagureValidate:
         # Parameters for requests get call
         timeout = (5, 20)
 
-        self.validator.requests_session.get.assert_called_with(
+        self.validator.requests_session.get.assert_any_call(
             self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
             timeout=timeout,
         )
@@ -139,7 +158,7 @@ class TestPagureValidate:
         # Parameters for requests get call
         timeout = (5, 20)
 
-        self.validator.requests_session.get.assert_called_with(
+        self.validator.requests_session.get.assert_any_call(
             self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
             timeout=timeout,
         )
@@ -170,7 +189,7 @@ class TestPagureValidate:
         # Parameters for requests get call
         timeout = (5, 20)
 
-        self.validator.requests_session.get.assert_called_with(
+        self.validator.requests_session.get.assert_any_call(
             self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
             timeout=timeout,
         )
@@ -201,7 +220,7 @@ class TestPagureValidate:
         # Parameters for requests get call
         timeout = (5, 20)
 
-        self.validator.requests_session.get.assert_called_with(
+        self.validator.requests_session.get.assert_any_call(
             self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
             timeout=timeout,
         )
@@ -232,7 +251,7 @@ class TestPagureValidate:
         # Parameters for requests get call
         timeout = (5, 20)
 
-        self.validator.requests_session.get.assert_called_with(
+        self.validator.requests_session.get.assert_any_call(
             self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
             timeout=timeout,
         )
@@ -263,7 +282,7 @@ class TestPagureValidate:
         # Parameters for requests get call
         timeout = (5, 20)
 
-        self.validator.requests_session.get.assert_called_with(
+        self.validator.requests_session.get.assert_any_call(
             self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
             timeout=timeout,
         )
@@ -291,7 +310,7 @@ class TestPagureValidate:
         # Parameters for requests get call
         timeout = (5, 20)
 
-        self.validator.requests_session.get.assert_called_with(
+        self.validator.requests_session.get.assert_any_call(
             self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
             timeout=timeout,
         )
@@ -321,7 +340,7 @@ class TestPagureValidate:
         # Parameters for requests get call
         timeout = (5, 20)
 
-        self.validator.requests_session.get.assert_called_with(
+        self.validator.requests_session.get.assert_any_call(
             self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
             timeout=timeout,
         )
@@ -331,13 +350,14 @@ class TestPagureValidate:
         assert result["stable_only"] is False
         assert result["scratch_build"] is False
 
-    def test_validate_response_not_ok(self):
+    @pytest.mark.parametrize("statuscode", (500, 404))
+    def test_validate_response_monitoring_not_ok(self, statuscode):
         """
-        Assert that validation raises HTTPException when response code is not 200.
+        Assert that validation raises HTTPException when response code is 500 or 404.
         """
-        # Mock requests_session
         response = mock.Mock()
-        response.status_code = 500
+        response.status_code = statuscode
+
         self.validator.requests_session.get.return_value = response
 
         # Prepare package
@@ -346,13 +366,18 @@ class TestPagureValidate:
         with pytest.raises(HTTPException) as ex:
             self.validator.validate(package)
 
-        assert ex.value.error_code == 500
-        assert (
-            ex.value.message
-            == "Error encountered on request {}/_dg/anitya/rpms/{}".format(
-                self.validator.url, package.name
+        if statuscode == 500:
+            assert ex.value.error_code == 500
+            assert (
+                ex.value.message
+                == "Error encountered on request http://testing.url/_dg/anitya/rpms/test"
             )
-        )
+        else:
+            assert ex.value.error_code == 404
+            assert (
+                ex.value.message
+                == "Error encountered on request http://testing.url/_dg/anitya/rpms/test"
+            )
 
         # Parameters for requests get call
         timeout = (5, 20)
@@ -361,3 +386,81 @@ class TestPagureValidate:
             self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
             timeout=timeout,
         )
+
+        assert 1 == self.validator.requests_session.get.call_count
+
+    def test_validate_response_monitoring_ok_retired_not_ok(self):
+        """
+        Assert that validation raises HTTPException when response code is 200
+        for the monitoring call, but 500 for the retirement call.
+        """
+        response = mock.Mock()
+
+        self.validator.requests_session.get.return_value = response
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        response200 = mock.Mock()
+        response200.status_code = 200
+        response500 = mock.Mock()
+        response500.status_code = 500
+        self.validator.requests_session.get.side_effect = [response200, response500]
+
+        with pytest.raises(HTTPException) as ex:
+            self.validator.validate(package)
+
+        assert ex.value.error_code == 500
+        assert (
+            ex.value.message == "Error encountered on request http://testing.url"
+            "/rpms/test/blob/rawhide/f/dead.package"
+        )
+
+        # Parameters for requests get call
+        timeout = (5, 20)
+        branch = "rawhide"
+
+        self.validator.requests_session.get.assert_any_call(
+            self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
+            timeout=timeout,
+        )
+        self.validator.requests_session.get.assert_called_with(
+            self.validator.url
+            + "/rpms/{0}/blob/{1}/f/dead.package".format(package.name, branch),
+            timeout=timeout,
+        )
+
+        assert 2 == self.validator.requests_session.get.call_count
+
+    def test_validate_not_retired(self):
+        """
+        Assert that Pagure returns correct output when package is retired.
+        """
+        response = mock.Mock()
+
+        self.validator.requests_session.get.return_value = response
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        response200 = mock.Mock()
+        response200.status_code = 200
+        response404 = mock.Mock()
+        response404.status_code = 404
+        self.validator.requests_session.get.side_effect = [response200, response404]
+        result = self.validator.validate(package)
+
+        # Parameters for requests get call
+        timeout = (5, 20)
+        branch = "rawhide"
+
+        self.validator.requests_session.get.assert_any_call(
+            self.validator.url + "/_dg/anitya/rpms/{}".format(package.name),
+            timeout=timeout,
+        )
+        self.validator.requests_session.get.assert_called_with(
+            self.validator.url
+            + "/rpms/{0}/blob/{1}/f/dead.package".format(package.name, branch),
+            timeout=timeout,
+        )
+
+        assert 2 == self.validator.requests_session.get.call_count
+        assert result["retired"] is False
