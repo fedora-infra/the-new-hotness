@@ -2,7 +2,7 @@
 # For complete details on all configuration options, see the documentation
 # https://fedora-messaging.readthedocs.io/en/latest/configuration.html.
 
-amqp_url = "amqp://hotness:hotness@localhost:5672"
+amqp_url = "amqp://guest:guest@localhost:5672"
 
 publish_exchange = "amq.topic"
 
