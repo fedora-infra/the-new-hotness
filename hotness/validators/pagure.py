@@ -56,7 +56,7 @@ class Pagure(Validator):
     about new version and optionally run a scratch build.
 
     Attributes:
-        url: URL of the PDC server
+        url: URL of the dist-git server
         requests_session: Session object which will be used for HTTP request
         timeout: Timeouts to HTTP request in seconds (connect timeout, read timeout)
     """
@@ -66,6 +66,8 @@ class Pagure(Validator):
         url: str,
         requests_session: Session,
         timeout: Optional[Union[float, Tuple[float, float], Tuple[float, None]]],
+        branch: str,
+        package_type: str,
     ) -> None:
         """
         Class constructor.
@@ -73,6 +75,8 @@ class Pagure(Validator):
         self.url = url
         self.requests_session = requests_session
         self.timeout = timeout
+        self.branch = branch
+        self.package_type = package_type
 
     def validate(self, package: Package) -> dict:
         """
@@ -91,7 +95,8 @@ class Pagure(Validator):
                                        # version received by Anitya
                 "stable_only": True,  # If the packager wants to be notified only about
                                       # stable versions received by Anitya
-                "scratch_build": False  # If the packager wants to run a scratch build or not
+                "scratch_build": False,  # If the packager wants to run a scratch build or not
+                "retired": False,  # True if the pakage is retired, False if it isn't
             }
 
         Raises:
@@ -114,7 +119,6 @@ class Pagure(Validator):
                 response.status_code,
                 "Error encountered on request {}".format(dist_git_url),
             )
-
         data = response.json()
         monitoring_value = data.get("monitoring", "no-monitoring")
 
@@ -152,5 +156,32 @@ class Pagure(Validator):
 
         if monitoring_value in MONITORING_STATUSES_SCRATCH_BUILD:
             output["scratch_build"] = True
+
+        # Check if the package is retired
+        dead_package_url = "{0}/rpms/{1}/blob/{2}/f/dead.package".format(
+            self.url, package.name, self.branch
+        )
+        params = (
+            ("name", self.branch),
+            ("global_component", package.name),
+            ("type", self.package_type),
+            ("active", True),
+        )
+        ""
+        _logger.debug(
+            "Checking {} to see if {} is retired, {}".format(
+                dead_package_url, package, params
+            )
+        )
+        response = self.requests_session.get(dead_package_url, timeout=self.timeout)
+
+        if response.status_code not in [200, 404]:
+            raise HTTPException(
+                response.status_code,
+                "Error encountered on request {}".format(dead_package_url),
+            )
+
+        # If there is dead.package found, package is retired
+        output["retired"] = response.status_code == 200
 
         return output

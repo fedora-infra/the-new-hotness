@@ -51,14 +51,10 @@ external systems:
   Koji is a build system used to start scratch builds. First we need to upload sources
   to lookaside cache and than we can start the build.
 
-* `pdc <https://github.com/product-definition-center/product-definition-center>`_
-
-  PDC (Product Definition Center) API is used to check if the package is retired or not.
-
 * `pagure <https://pagure.io/pagure>`_
 
   Dist-git system used by Fedora containing notification settings for The New Hotness and is checked
-  if the package even exists. 
+  if the package even exists and also if it is retired.
 
 Configuration
 -------------

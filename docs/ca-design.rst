@@ -253,14 +253,9 @@ defined in use cases layer.
     Class that is checking if the package is newer or not than the package currently available
     in Fedora using mdapi system. Inherits from `validator.py`.
 
-  * **pdc.py**
-
-    Class that is checking if the package is retired or not in Fedora using PDC API.
-    Inherits from `validator.py`.
-
   * **pagure.py**
 
-    Class that retrieves the notification settings from Pagure. Inherits from `validator.py`.
+    Class that retrieves the notification settings  and retirement status from Pagure. Inherits from `validator.py`.
 
 * builders
 

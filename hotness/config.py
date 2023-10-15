@@ -30,8 +30,6 @@ _log = logging.getLogger(__name__)
 
 # A dictionary of application defaults
 DEFAULTS = dict(
-    # PDC URL
-    pdc_url="https://pdc.fedoraproject.org",
     # dist-git URL
     dist_git_url="https://src.fedoraproject.org",
     # mdapi URL
