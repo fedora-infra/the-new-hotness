@@ -84,7 +84,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8.1"
+python = "^3.8.10"
 anitya-schema = "^2.0.1"
 fedora-messaging = "^3.1.0"
 fedora-messaging-the-new-hotness-schema = "^1.1.2"
