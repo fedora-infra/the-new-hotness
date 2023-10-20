@@ -56,7 +56,7 @@ class Pagure(Validator):
     about new version and optionally run a scratch build.
 
     Attributes:
-        url: URL of the dist-git server
+        url: URL of the pagure dist-git server
         requests_session: Session object which will be used for HTTP request
         timeout: Timeouts to HTTP request in seconds (connect timeout, read timeout)
     """
