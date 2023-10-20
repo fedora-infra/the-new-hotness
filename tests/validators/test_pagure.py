@@ -52,7 +52,7 @@ class TestPagureValidate:
     Test class for `hotness.validators.Pagure.validate` method.
     """
 
-    def setup(self):
+    def setup_method(self):
         """
         Setup phase before test.
         """

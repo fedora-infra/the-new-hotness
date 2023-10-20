@@ -204,7 +204,7 @@ class TestHotnessConsumerCall:
     Test class for `hotness.hotness_consumer.HotnessConsumer.__call__`.
     """
 
-    def setup(self):
+    def setup_method(self):
         """
         Create hotness consumer for tests.
         It is accessible as `self.consumer`.

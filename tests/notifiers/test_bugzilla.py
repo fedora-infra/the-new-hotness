@@ -114,7 +114,7 @@ class TestBugzillaNotify:
     Test class for `hotness.notifiers.Bugzilla.notify` method.
     """
 
-    def setup(self):
+    def setup_method(self):
         """
         Create notifier instance for tests.
         """

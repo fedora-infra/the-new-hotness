@@ -48,7 +48,7 @@ class TestFedoraMessagingNotify:
     Test class for `hotness.notifiers.FedoraMessaging.notify` method.
     """
 
-    def setup(self):
+    def setup_method(self):
         """
         Create notifier instance for tests.
         """

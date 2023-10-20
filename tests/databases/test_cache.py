@@ -37,7 +37,7 @@ class TestCacheInsert:
     Test class for `hotness.databases.Cache.insert` method.
     """
 
-    def setup(self):
+    def setup_method(self):
         """
         Create database instance for tests.
         """
@@ -76,7 +76,7 @@ class TestCacheRetrieve:
     Test class for `hotness.databases.Cache.retrieve` method.
     """
 
-    def setup(self):
+    def setup_method(self):
         """
         Create database instance for tests.
         """

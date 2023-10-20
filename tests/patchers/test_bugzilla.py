@@ -72,7 +72,7 @@ class TestBugzillaSubmitPatch:
     Test class for `hotness.patchers.Bugzilla.submit_patch` method.
     """
 
-    def setup(self):
+    def setup_method(self):
         """
         Create patcher instance for tests.
         """

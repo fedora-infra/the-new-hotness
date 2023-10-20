@@ -58,7 +58,7 @@ class TestRedisInsert:
     Test class for `hotness.databases.Redis.insert` method.
     """
 
-    def setup(self):
+    def setup_method(self):
         """
         Create database instance for tests.
         """
@@ -115,7 +115,7 @@ class TestRedisRetrieve:
     Test class for `hotness.databases.Redis.retrieve` method.
     """
 
-    def setup(self):
+    def setup_method(self):
         """
         Create database instance for tests.
         """

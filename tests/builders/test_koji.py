@@ -84,7 +84,7 @@ class TestKojiBuild:
     Test class for `hotness.builders.Koji.build` method.
     """
 
-    def setup(self):
+    def setup_method(self):
         """
         Create builder instance for tests.
         """
