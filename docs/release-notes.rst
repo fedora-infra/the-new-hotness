@@ -4,6 +4,25 @@ Release notes
 
 .. towncrier release notes start
 
+1.3.0 (2023-12-05)
+==================
+
+API Changes
+-----------
+
+* Remove pdc calls and call dist-git instead
+  (`#581 <https://github.com/fedora-infra/the-new-hotness/issues/581>`_)
+
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release:
+
+* Lenka Segura
+* Michal Konecny
+
+
 1.2.4 (2023-05-23)
 ==================
 
