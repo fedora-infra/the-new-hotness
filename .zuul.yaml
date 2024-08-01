@@ -13,14 +13,6 @@
             vars:
               dependencies:
                 - krb5-devel
-        - fi-tox-python38:
-            vars:
-              dependencies:
-                - krb5-devel
-        - fi-tox-python39:
-            vars:
-              dependencies:
-                - krb5-devel
         - fi-tox-python310:
             vars:
               dependencies:
@@ -30,6 +22,11 @@
             vars:
               dependencies:
                 - krb5-devel
+        - fi-tox-python312:
+            vars:
+              dependencies:
+                - krb5-devel
+                - python3.12-devel
         - fi-tox-docs:
             vars:
               dependencies:
@@ -42,3 +39,6 @@
             vars:
               dependencies:
                 - krb5-devel
+                - python3.12-devel
+              tox_envlist: "py312,diff-cover"
+              job_dependencies: "python312"

@@ -70,10 +70,9 @@ documentation = "https://the-new-hotness.readthedocs.io"
 repository = "https://github.com/fedora-infra/the-new-hotness"
 license = "GPL-2.0-or-later"
 classifiers = [
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11"
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12"
 ]
 include = [
   "LICENSE", "README.rst",
@@ -84,7 +83,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8.10"
+python = "^3.10"
 anitya-schema = "^2.0.1"
 fedora-messaging = "^3.1.0"
 fedora-messaging-the-new-hotness-schema = "^1.1.2"
