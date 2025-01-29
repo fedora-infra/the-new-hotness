@@ -94,7 +94,7 @@ requests = "^2.28.1"
 
 [tool.poetry.dev-dependencies]
 bandit = "^1.7.4"
-black = "^24.0.0"
+black = "^25.0.0"
 coverage = "^7.0.0"
 diff-cover = "^9.0.0"
 flake8 = "^7.0.0"
