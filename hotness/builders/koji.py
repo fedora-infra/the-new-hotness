@@ -132,7 +132,7 @@ class Koji(Builder):
 
             specfile = os.path.join(tmp, package.name + ".spec")
 
-            comment = "Update to %s (#%d)" % (package.version, bz_id)
+            comment = "Update to %s (rhbz#%d)" % (package.version, bz_id)
 
             # This requires rpmdevtools-8.5 or greater
             cmd = [
