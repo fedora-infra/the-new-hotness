@@ -104,7 +104,7 @@ pytest = "^9.0.0"
 pytest-cov = "^7.0.0"
 
 # Required to test building the docs
-Sphinx = "^8.0.0"
+Sphinx = "^9.0.0"
 
 # Mypy test requirements
 mypy = "^1.0"
