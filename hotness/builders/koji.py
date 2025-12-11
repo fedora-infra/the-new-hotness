@@ -168,6 +168,35 @@ class Koji(Builder):
                     cwd=tmp,
                     stderr=sp.STDOUT,
                 )
+                
+                # --- FIX FOR ISSUE #605 ---
+                # Check if there are changes to commit before trying to commit.
+                # If rpmdev-bumpspec didn't change anything, git status will be clean.
+                try:
+                    status_output = sp.check_output(
+                        ["git", "status", "--porcelain"],
+                        cwd=tmp,
+                        stderr=sp.STDOUT
+                    )
+                    
+                    # Handle both bytes and string (for tests vs real execution)
+                    if isinstance(status_output, bytes):
+                        status_text = status_output.decode().strip()
+                    else:
+                        status_text = str(status_output).strip()
+                    
+                    if not status_text:
+                        _logger.info(
+                            f"Repo for {package.name} is already up to date (nothing to commit). Skipping build."
+                        )
+                        # Return early with a message indicating the repo is up to date
+                        output["message"] = "Package is already up to date in the repository"
+                        return output
+                except sp.CalledProcessError:
+                    # If git status fails, continue with the normal flow
+                    pass
+                
+                # Proceed with commit if changes exist or if git status failed
                 sp.check_output(
                     ["git", "commit", "-a", "-m", comment], cwd=tmp, stderr=sp.STDOUT
                 )
@@ -370,35 +399,53 @@ class Koji(Builder):
         source_checksum: typing.Dict = {}
         for sources, checksums in ((old_sources, old_checksums),):
             for file_path in sources:
-                with open(file_path, "rb") as fd:
-                    h = hashlib.sha512()
-                    h.update(fd.read())
-                    checksum = h.hexdigest()
-                    checksums.add(checksum)
-                    if checksum not in source_checksum:
-                        source_checksum[checksum] = {
-                            "old_sources": [],
-                            "new_sources": [],
-                        }
-                    source_checksum[checksum]["old_sources"].append(
-                        os.path.basename(file_path)
-                    )
+                # Check if the file exists before trying to open it
+                if not os.path.exists(file_path):
+                    _logger.warning(f"Source file not found: {file_path}. Skipping checksum calculation.")
+                    continue
+                    
+                try:
+                    with open(file_path, "rb") as fd:
+                        h = hashlib.sha512()
+                        h.update(fd.read())
+                        checksum = h.hexdigest()
+                        checksums.add(checksum)
+                        if checksum not in source_checksum:
+                            source_checksum[checksum] = {
+                                "old_sources": [],
+                                "new_sources": [],
+                            }
+                        source_checksum[checksum]["old_sources"].append(
+                            os.path.basename(file_path)
+                        )
+                except IOError as e:
+                    _logger.warning(f"Failed to read source file {file_path}: {e}. Skipping checksum calculation.")
+                    continue
 
         for sources, checksums in ((new_sources, new_checksums),):
             for file_path in sources:
-                with open(file_path, "rb") as fd:
-                    h = hashlib.sha512()
-                    h.update(fd.read())
-                    checksum = h.hexdigest()
-                    checksums.add(checksum)
-                    if checksum not in source_checksum:
-                        source_checksum[checksum] = {
-                            "old_sources": [],
-                            "new_sources": [],
-                        }
-                    source_checksum[checksum]["new_sources"].append(
-                        os.path.basename(file_path)
-                    )
+                # Check if the file exists before trying to open it
+                if not os.path.exists(file_path):
+                    _logger.warning(f"Source file not found: {file_path}. Skipping checksum calculation.")
+                    continue
+                    
+                try:
+                    with open(file_path, "rb") as fd:
+                        h = hashlib.sha512()
+                        h.update(fd.read())
+                        checksum = h.hexdigest()
+                        checksums.add(checksum)
+                        if checksum not in source_checksum:
+                            source_checksum[checksum] = {
+                                "old_sources": [],
+                                "new_sources": [],
+                            }
+                        source_checksum[checksum]["new_sources"].append(
+                            os.path.basename(file_path)
+                        )
+                except IOError as e:
+                    _logger.warning(f"Failed to read source file {file_path}: {e}. Skipping checksum calculation.")
+                    continue
 
         intersection_checksums = old_checksums.intersection(new_checksums)
         if intersection_checksums:
