@@ -156,6 +156,50 @@ class Koji(Builder):
                     std_err = exc.stderr.decode()
                 raise BuilderException(str(exc), std_out=std_out, std_err=std_err)
 
+            # --- FIX FOR ISSUE #600 ---
+            try:
+                list_out = sp.check_output(
+                    ["spectool", "-l", "-R", specfile],
+                    cwd=tmp,
+                    text=True,
+                )
+
+                new_sources = []
+                for line in list_out.splitlines():
+                    if ": " in line:
+                        url = line.split(": ", 1)[1].strip()
+                        new_sources.append(os.path.basename(url))
+
+                if new_sources:
+                    _logger.info(
+                        "Downloading sources for %s: %s",
+                        package.name,
+                        new_sources,
+                    )
+
+                    sp.check_output(
+                        ["spectool", "-g", "-R", specfile],
+                        cwd=tmp,
+                        stderr=sp.STDOUT,
+                        text=True,
+                    )
+
+                    sp.check_output(
+                        ["fedpkg", "new-sources", "--offline"] + new_sources,
+                        cwd=tmp,
+                        stderr=sp.STDOUT,
+                        text=True,
+                    )
+
+                    _logger.info("Updated sources file for %s", package.name)
+
+            except Exception as exc:
+                _logger.warning(
+                    "Failed to update 'sources' file: %s",
+                    exc,
+                )
+            # --- END FIX FOR ISSUE #600 ---
+
             # Now, craft a patch to attach to the ticket
             try:
                 sp.check_output(
