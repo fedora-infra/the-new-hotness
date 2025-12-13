@@ -38,7 +38,7 @@ template = "news/_template.rst"
 
 [tool.black]
 line-length = 88
-target-version = ['py36']
+target-version = ['py311']
 include = '\.pyi?$'
 exclude = '''
 (
