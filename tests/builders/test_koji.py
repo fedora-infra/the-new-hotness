@@ -989,3 +989,53 @@ class TestKojiBuild:
         )
         assert exc.value.std_out == "Some output"
         assert exc.value.std_err == "Failed miserably"
+
+    @mock.patch("hotness.builders.koji.sp.check_output")
+    @mock.patch("hotness.builders.koji.koji")
+    @mock.patch("hotness.builders.koji.TemporaryDirectory")
+    def test_build_updates_sources_file_issue_600(
+        self, mock_temp_dir, mock_koji, mock_check_output, tmpdir
+    ):
+        """
+        Assert that sources file is updated when spectool lists new sources (issue #600).
+        """
+        # Patch file
+        filename = "patch"
+        with open(os.path.join(tmpdir, filename), "w") as f:
+            f.write("This is a patch")
+
+        session = mock.Mock()
+        session.build.return_value = 1000
+        session.gssapi_login.return_value = True
+        mock_koji.ClientSession.return_value = session
+        mock_temp_dir.return_value.__enter__.return_value = tmpdir
+
+        mock_check_output.side_effect = [
+            "git clone",
+            "rpmdev-bumpspec",
+            # --- FIX #600 ---
+            "Source0: https://example.com/test-1.0.tar.gz\n",  # spectool -l -R
+            "Downloaded: test-1.0.tar.gz\n",                  # spectool -g -R
+            "Updated sources file\n",                          # fedpkg new-sources
+            # --- existing flow ---
+            "git config",
+            "git config",
+            "git commit",
+            filename.encode(),
+            b"Downloading test-1.0.tar.gz",
+            b"Downloaded: test-1.0.tar.gz",
+            b"Wrote: foobar.srpm",
+        ]
+
+        package = Package(name="test", version="1.0", distro="Fedora")
+        opts = {"bz_id": 100}
+
+        output = self.builder.build(package, opts)
+
+        assert output["build_id"] == 1000
+        assert output["patch_filename"] == filename
+
+        # Verify FIX #600 commands were invoked
+        calls = [c.args[0] for c in mock_check_output.call_args_list]
+        assert ["spectool", "-l", "-R", tmpdir + "/test.spec"] in calls
+        assert ["fedpkg", "new-sources", "--offline", "test-1.0.tar.gz"] in calls
