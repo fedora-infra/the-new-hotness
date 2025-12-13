@@ -22,7 +22,7 @@ To see recent messages from the-new-hotness:
 * Check Fedora's `datagrepper
   <https://apps.fedoraproject.org/datagrepper/raw?category=hotness&delta=2592000>`_
 
-* Or join #fedora-fedmsg IRC channel on `libera <https://libera.chat/>`_ and watch for ``hotness``
+* Or join #fedora-apps IRC channel on `libera <https://libera.chat/>`_ and watch for ``hotness``
   messages.
 
 To see recent koji builds started by the-new-hotness:
