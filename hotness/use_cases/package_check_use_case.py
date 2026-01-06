@@ -61,8 +61,8 @@ class PackageCheckUseCase:
         try:
             result = self.validator.validate(request.package)
             return responses.ResponseSuccess(result)
-        except requests.exceptions.RequestException:
-            # Re-raise transient network exceptions so they can be retried
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            # Re-raise only connectivity/timeouts so they can be retried
             raise
         except Exception as exc:
             logger.exception("Package check use case failure", exc_info=True)

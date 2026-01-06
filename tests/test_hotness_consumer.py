@@ -1684,26 +1684,6 @@ class TestHotnessConsumerCall:
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
         self.consumer.validator_pagure.validate.assert_called_with(package)
 
-    def test_call_transient_request_exception_raises_nack(self):
-        """
-        Assert that general request exceptions raise Nack to retry the message.
-        """
-        import requests
-        from fedora_messaging import exceptions as fm_exceptions
-
-        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
-        # Simulate a general request error (transient)
-        self.consumer.validator_pagure.validate.side_effect = (
-            requests.exceptions.RequestException("Service temporarily unavailable")
-        )
-
-        # Should raise Nack for retry
-        with pytest.raises(fm_exceptions.Nack):
-            self.consumer.__call__(message)
-
-        package = Package(name="flatpak", version="1.0.4", distro="Fedora")
-        self.consumer.validator_pagure.validate.assert_called_with(package)
-
     def test_call_permanent_error_drops_message(self):
         """
         Assert that permanent errors (non-network exceptions) drop the message.

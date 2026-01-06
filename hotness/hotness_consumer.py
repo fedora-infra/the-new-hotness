@@ -197,8 +197,8 @@ class HotnessConsumer(object):
                 self._handle_anitya_version_update(message)
             elif topic.endswith("buildsys.task.state.change"):
                 self._handle_buildsys_scratch(msg)
-        except requests.exceptions.RequestException as e:
-            # This catches Timeout, ConnectionError, and other transient network issues
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            # This catches Timeout and ConnectionError (transient network issues)
             _logger.warning(
                 "Transient network error processing message %s: %s. "
                 "Message will be retried.",
