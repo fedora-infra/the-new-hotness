@@ -5,7 +5,6 @@ development in the-new-hotness.
 
 import requests
 
-
 UPDATE_URL = (
     "https://apps.fedoraproject.org/datagrepper/raw?topic=org."
     "release-monitoring.prod.anitya.project.version.update&"

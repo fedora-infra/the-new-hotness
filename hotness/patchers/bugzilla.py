@@ -25,7 +25,6 @@ from hotness.exceptions import PatcherException
 from hotness.domain.package import Package
 from .patcher import Patcher
 
-
 _logger = logging.getLogger(__name__)
 
 

@@ -32,7 +32,6 @@ from . import Builder
 from hotness.domain.package import Package
 from hotness.exceptions import DownloadException, BuilderException
 
-
 _logger = logging.getLogger(__name__)
 
 # Thread lock for koji session

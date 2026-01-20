@@ -23,7 +23,6 @@ from hotness.exceptions import NotifierException
 from hotness.domain.package import Package
 from .notifier import Notifier
 
-
 _logger = logging.getLogger(__name__)
 
 

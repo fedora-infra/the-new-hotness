@@ -20,6 +20,7 @@
 """
 Tests for the `hotness.config` module.
 """
+
 import unittest
 
 from hotness import config as hotness_config

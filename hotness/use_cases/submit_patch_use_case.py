@@ -21,7 +21,6 @@ from hotness.patchers import Patcher
 from hotness.requests import SubmitPatchRequest
 from hotness import responses
 
-
 logger = logging.getLogger(__name__)
 
 

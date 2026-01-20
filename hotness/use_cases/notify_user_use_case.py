@@ -21,7 +21,6 @@ from hotness.notifiers import Notifier
 from hotness.requests import NotifyRequest
 from hotness import responses
 
-
 logger = logging.getLogger(__name__)
 
 

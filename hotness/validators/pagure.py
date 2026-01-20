@@ -24,7 +24,6 @@ from hotness.exceptions import HTTPException
 
 from requests import Session
 
-
 # Accepted monitoring statuses
 MONITORING_STATUSES = [
     "monitoring",

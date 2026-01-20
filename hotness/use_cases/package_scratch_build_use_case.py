@@ -21,7 +21,6 @@ from hotness.builders import Builder
 from hotness.requests import BuildRequest
 from hotness import responses
 
-
 logger = logging.getLogger(__name__)
 
 
