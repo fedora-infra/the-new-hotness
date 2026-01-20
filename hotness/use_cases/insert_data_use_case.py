@@ -21,7 +21,6 @@ from hotness.databases import Database
 from hotness.requests import InsertDataRequest
 from hotness import responses
 
-
 logger = logging.getLogger(__name__)
 
 

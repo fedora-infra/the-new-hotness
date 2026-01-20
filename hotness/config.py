@@ -20,11 +20,11 @@
 """
 This module is responsible for loading application configuration.
 """
+
 import logging
 import copy
 
 from fedora_messaging.config import conf  # type: ignore
-
 
 _log = logging.getLogger(__name__)
 

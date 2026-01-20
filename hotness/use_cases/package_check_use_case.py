@@ -21,7 +21,6 @@ from hotness.validators import Validator
 from hotness.requests.package_request import PackageRequest
 from hotness import responses
 
-
 logger = logging.getLogger(__name__)
 
 

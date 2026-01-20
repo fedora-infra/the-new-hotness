@@ -26,7 +26,6 @@ from hotness.common import RPM
 
 from requests import Session
 
-
 _logger = logging.getLogger(__name__)
 
 

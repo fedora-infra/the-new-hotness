@@ -101,9 +101,7 @@ class TestHotnessConsumerInit:
             == "%(name)s-%(retrieved_version)s is available"
         )
         assert consumer.dist_git_url == "https://src.fedoraproject.org"
-        assert (
-            consumer.description_template
-            == """
+        assert consumer.description_template == """
 Releases retrieved: %(retrieved_versions)s
 Upstream release that is considered latest: %(latest_upstream)s
 Current version/release in %(repo_name)s: %(repo_version)s-%(repo_release)s
@@ -127,7 +125,6 @@ Based on the information from anitya: https://release-monitoring.org/project/%(p
 To change the monitoring settings for the project, please visit:
 %(dist_git_url)s
 """
-        )
         assert (
             consumer.explanation_url
             == "https://docs.fedoraproject.org/en-US/package-maintainers/Upstream_Release_Monitoring"  # noqa: #E501
