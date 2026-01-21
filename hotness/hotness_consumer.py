@@ -24,6 +24,7 @@ import requests
 from requests.packages.urllib3.util import retry  # type: ignore
 from anitya_schema.project_messages import ProjectVersionUpdatedV2  # type: ignore
 from fedora_messaging.message import Message  # type: ignore
+from fedora_messaging import exceptions as fm_exceptions  # type: ignore
 
 from hotness.config import config
 from hotness.domain import Package
@@ -182,15 +183,36 @@ class HotnessConsumer(object):
 
         Params:
             msg: The message we received from the queue.
+
+        Raises:
+            Nack: For transient failures (network issues, timeouts, service unavailable)
+                  to retry the message later.
         """
         topic, body, msg_id = msg.topic, msg.body, msg.id
         _logger.debug("Received %r" % msg_id)
 
-        if topic.endswith("anitya.project.version.update.v2"):
-            message = ProjectVersionUpdatedV2(topic=topic, body=body)
-            self._handle_anitya_version_update(message)
-        elif topic.endswith("buildsys.task.state.change"):
-            self._handle_buildsys_scratch(msg)
+        try:
+            if topic.endswith("anitya.project.version.update.v2"):
+                message = ProjectVersionUpdatedV2(topic=topic, body=body)
+                self._handle_anitya_version_update(message)
+            elif topic.endswith("buildsys.task.state.change"):
+                self._handle_buildsys_scratch(msg)
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            # This catches Timeout and ConnectionError (transient network issues)
+            _logger.warning(
+                "Transient network error processing message %s: %s. "
+                "Message will be retried.",
+                msg_id,
+                str(e),
+            )
+            raise fm_exceptions.Nack() from e
+        except Exception:
+            # For permanent errors (bugs in code, invalid data), log and drop
+            _logger.exception(
+                "Permanent error processing message %s. Message will be dropped.",
+                msg_id,
+            )
+            # By not raising anything, fedora-messaging acknowledges and drops the message
 
     def _handle_buildsys_scratch(self, message: Message) -> None:
         """

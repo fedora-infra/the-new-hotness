@@ -17,6 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import logging
 
+import requests
+
 from hotness.validators import Validator
 from hotness.requests.package_request import PackageRequest
 from hotness import responses
@@ -48,12 +50,19 @@ class PackageCheckUseCase:
 
         Return:
            Output of the validation.
+
+        Raises:
+            requests.exceptions.RequestException: For transient network errors
+                that should be retried.
         """
         if not request:
             return responses.ResponseFailure.invalid_request_error(request)
         try:
             result = self.validator.validate(request.package)
             return responses.ResponseSuccess(result)
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            # Re-raise only connectivity/timeouts so they can be retried
+            raise
         except Exception as exc:
             logger.exception("Package check use case failure", exc_info=True)
             return responses.ResponseFailure.validator_error(exc)

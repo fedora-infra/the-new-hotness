@@ -1640,3 +1640,64 @@ class TestHotnessConsumerCall:
 
         # Assert that nothing is called
         self.consumer.database_redis.retrieve.assert_not_called()
+
+    def test_call_transient_network_error_raises_nack(self):
+        """
+        Assert that transient network errors raise Nack to retry the message.
+        """
+        import requests
+        from fedora_messaging import exceptions as fm_exceptions
+
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
+        # Simulate a network connection error (transient)
+        self.consumer.validator_pagure.validate.side_effect = (
+            requests.exceptions.ConnectionError("Network unreachable")
+        )
+
+        # Should raise Nack for retry
+        with pytest.raises(fm_exceptions.Nack):
+            self.consumer.__call__(message)
+
+        package = Package(name="flatpak", version="1.0.4", distro="Fedora")
+        self.consumer.validator_pagure.validate.assert_called_with(package)
+
+    def test_call_transient_timeout_error_raises_nack(self):
+        """
+        Assert that timeout errors raise Nack to retry the message.
+        """
+        import requests
+        from fedora_messaging import exceptions as fm_exceptions
+
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
+        # Simulate a timeout error (transient)
+        self.consumer.validator_pagure.validate.side_effect = (
+            requests.exceptions.Timeout("Request timed out")
+        )
+
+        # Should raise Nack for retry
+        with pytest.raises(fm_exceptions.Nack):
+            self.consumer.__call__(message)
+
+        package = Package(name="flatpak", version="1.0.4", distro="Fedora")
+        self.consumer.validator_pagure.validate.assert_called_with(package)
+
+    def test_call_permanent_error_drops_message(self):
+        """
+        Assert that permanent errors (non-network exceptions) drop the message.
+        """
+        from unittest import mock
+
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
+        # Simulate a permanent error (e.g., ValueError, TypeError, AttributeError)
+        # by making _handle_anitya_version_update raise a non-network exception
+        with mock.patch.object(
+            self.consumer,
+            "_handle_anitya_version_update",
+            side_effect=ValueError("Invalid data structure"),
+        ):
+            # Should NOT raise Nack - message will be dropped silently
+            # No exception should propagate to the caller
+            self.consumer.__call__(message)
+
+            # Verify the handler was called
+            self.consumer._handle_anitya_version_update.assert_called_once()
