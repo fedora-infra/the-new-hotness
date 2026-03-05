@@ -154,6 +154,29 @@ class Koji(Builder):
                 if exc.stderr:
                     std_err = exc.stderr.decode()
                 raise BuilderException(str(exc), std_out=std_out, std_err=std_err)
+            # Check if there are changes to commit before trying to commit.
+            # If rpmdev-bumpspec didn't change anything, git status will be clean.
+            try:
+                status_output = sp.check_output(
+                    ["git", "status", "--porcelain"], cwd=tmp, stderr=sp.STDOUT
+                )
+
+                # Output is in bytes, let's convert it
+                status_text = status_output.decode().strip()
+
+                if not status_text:
+                    _logger.info(
+                        f"Repo for {package.name} is already up to date (nothing to commit). "
+                        "Skipping build."
+                    )
+                    # Return early with a message indicating the repo is up to date
+                    output["message"] = (
+                        "Package is already up to date in the repository"
+                    )
+                    return output
+            except sp.CalledProcessError:
+                # If git status fails, continue with the normal flow
+                pass
 
             # Now, craft a patch to attach to the ticket
             try:
