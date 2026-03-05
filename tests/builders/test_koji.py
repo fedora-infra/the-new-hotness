@@ -146,6 +146,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
@@ -197,6 +198,11 @@ class TestKojiBuild:
                         self.builder.user_email[0] + " " + self.builder.user_email[1],
                         tmpdir + "/test.spec",
                     ],
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "status", "--porcelain"],
+                    cwd=tmpdir,
                     stderr=mock.ANY,
                 ),
                 mock.call(
@@ -273,13 +279,14 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
             filename.encode(),
             b"Downloading Lectitio_Divinitatus",
             b"Downloaded: Codex_Astartes",
-            b"".join(
+            b"git status".join(
                 (
                     b"warning: source_date_epoch_from_changelog set but %changelog is missing\n",
                     b"Wrote: ./SRPMS/uncrustify-0.77.1-1.fc38.src.rpm\n",
@@ -332,6 +339,11 @@ class TestKojiBuild:
                         self.builder.user_email[0] + " " + self.builder.user_email[1],
                         tmpdir + "/test.spec",
                     ],
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "status", "--porcelain"],
+                    cwd=tmpdir,
                     stderr=mock.ANY,
                 ),
                 mock.call(
@@ -405,6 +417,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
@@ -465,6 +478,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
@@ -520,6 +534,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
@@ -566,6 +581,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
@@ -607,6 +623,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
@@ -650,6 +667,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
@@ -692,6 +710,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
@@ -734,6 +753,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
@@ -776,6 +796,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
@@ -819,6 +840,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
@@ -921,6 +943,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             "git commit",
@@ -966,6 +989,7 @@ class TestKojiBuild:
         mock_check_output.side_effect = [
             "git clone",
             "rpmdev-bumpspec",
+            b"git status",
             "git config",
             "git config",
             CalledProcessError(
@@ -989,3 +1013,188 @@ class TestKojiBuild:
         )
         assert exc.value.std_out == "Some output"
         assert exc.value.std_err == "Failed miserably"
+
+    @mock.patch("hotness.builders.koji.sp.check_output")
+    @mock.patch("hotness.builders.koji.koji")
+    @mock.patch("hotness.builders.koji.TemporaryDirectory")
+    def test_build_git_status_error(
+        self, mock_temp_dir, mock_koji, mock_check_output, tmpdir
+    ):
+        """
+        Assert that build process will continue when git status fails.
+        """
+        # Create temporary file
+        file = os.path.join(tmpdir, "Lectitio_Divinitatus")
+        with open(file, "w") as f:
+            f.write("The Emperor is God")
+        file = os.path.join(tmpdir, "Codex_Astartes")
+        with open(file, "w") as f:
+            f.write("Adeptus Astartes")
+
+        # Mock patch file
+        filename = "patch"
+        file = os.path.join(tmpdir, filename)
+        with open(file, "w") as f:
+            f.write("This is a patch")
+        mock_session = mock.Mock()
+        mock_session.build.return_value = 1000
+        mock_session.gssapi_login.return_value = True
+        mock_koji.ClientSession.return_value = mock_session
+        mock_temp_dir.return_value.__enter__.return_value = tmpdir
+
+        mock_check_output.side_effect = [
+            "git clone",
+            "rpmdev-bumpspec",
+            CalledProcessError(
+                1, "git status", output=b"Some output", stderr=b"Failed miserably"
+            ),
+            "git config",
+            "git config",
+            "git commit",
+            filename.encode(),
+            b"Downloading Lectitio_Divinitatus",
+            b"Downloaded: Codex_Astartes",
+            b"Wrote: foobar.srpm",
+        ]
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        opts = {"bz_id": 100}
+
+        output = self.builder.build(package, opts)
+
+        assert output == {
+            "build_id": 1000,
+            "patch": "This is a patch",
+            "patch_filename": filename,
+            "message": "",
+        }
+
+        mock_temp_dir.assert_called_with(prefix="thn-", dir="/var/tmp")
+        mock_koji.ClientSession.assert_called_with(
+            self.builder.server_url, self.builder.krb_sessionopts
+        )
+        mock_session.gssapi_login.assert_called_with(
+            principal=self.builder.krb_principal,
+            keytab=self.builder.krb_keytab,
+            ccache=self.builder.krb_ccache,
+            proxyuser=self.builder.krb_proxyuser,
+        )
+        mock_session.uploadWrapper.assert_called_once()
+        mock_session.build.assert_called_once()
+
+        mock_check_output.assert_has_calls(
+            [
+                mock.call(
+                    ["git", "clone", self.builder.git_url, tmpdir], stderr=mock.ANY
+                ),
+                mock.call(
+                    [
+                        "/usr/bin/rpmdev-bumpspec",
+                        "--new",
+                        "1.0",
+                        "-c",
+                        "Update to 1.0 (#100)",
+                        "-u",
+                        self.builder.user_email[0] + " " + self.builder.user_email[1],
+                        tmpdir + "/test.spec",
+                    ],
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "status", "--porcelain"],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "config", "user.name", self.builder.user_email[0]],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "config", "user.email", self.builder.user_email[1]],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "commit", "-a", "-m", "Update to 1.0 (#100)"],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "format-patch", "HEAD^"], cwd=tmpdir, stderr=mock.ANY
+                ),
+                mock.call(["fedpkg", "--user", "hotness", "sources"], cwd=tmpdir),
+                mock.call(
+                    [
+                        "spectool",
+                        "-g",
+                        str(tmpdir + "/test.spec"),
+                    ],
+                    cwd=tmpdir,
+                ),
+                mock.call(
+                    [
+                        "rpmbuild",
+                        "-D",
+                        "_sourcedir .",
+                        "-D",
+                        "_topdir .",
+                        "-bs",
+                        tmpdir + "/test.spec",
+                    ],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+            ]
+        )
+
+    @mock.patch("hotness.builders.koji.sp.check_output")
+    @mock.patch("hotness.builders.koji.TemporaryDirectory")
+    def test_build_nothing_to_commit(self, mock_temp_dir, mock_check_output, tmpdir):
+        """
+        Assert that build will not start when there are no changes to commit.
+        """
+        mock_temp_dir.return_value.__enter__.return_value = tmpdir
+        mock_check_output.side_effect = ["git clone", "rpmdev-bumpspec", b""]
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        opts = {"bz_id": 100}
+
+        output = self.builder.build(package, opts)
+
+        assert output == {
+            "build_id": 0,
+            "patch": "",
+            "patch_filename": "",
+            "message": "Package is already up to date in the repository",
+        }
+
+        mock_temp_dir.assert_called_with(prefix="thn-", dir="/var/tmp")
+
+        mock_check_output.assert_has_calls(
+            [
+                mock.call(
+                    ["git", "clone", self.builder.git_url, tmpdir], stderr=mock.ANY
+                ),
+                mock.call(
+                    [
+                        "/usr/bin/rpmdev-bumpspec",
+                        "--new",
+                        "1.0",
+                        "-c",
+                        "Update to 1.0 (#100)",
+                        "-u",
+                        self.builder.user_email[0] + " " + self.builder.user_email[1],
+                        tmpdir + "/test.spec",
+                    ],
+                    stderr=mock.ANY,
+                ),
+                mock.call(
+                    ["git", "status", "--porcelain"],
+                    cwd=tmpdir,
+                    stderr=mock.ANY,
+                ),
+            ]
+        )

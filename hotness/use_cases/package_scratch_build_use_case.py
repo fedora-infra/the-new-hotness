@@ -53,7 +53,12 @@ class PackageScratchBuildUseCase:
             return responses.ResponseFailure.invalid_request_error(request)
         try:
             result = self.builder.build(request.package, request.opts)
-            return responses.ResponseSuccess(result)
+            # Build didn't started and there was no exception
+            # This could happen when there is nothing to build (no changes)
+            if result["build_id"] == 0:
+                return responses.ResponseFailure.builder_error(result["message"])
+            else:
+                return responses.ResponseSuccess(result)
         except Exception as exc:
             logger.exception("Package scratch build use case failure", exc_info=True)
             return responses.ResponseFailure.builder_error(exc)

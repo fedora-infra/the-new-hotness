@@ -68,6 +68,29 @@ class TestPackageScratchBuildUseCaseBuild:
         assert bool(result) is True
         assert result.value == {"build_id": 1}
 
+    def test_build_nothing_to_build(self):
+        """
+        Assert that when the build doesn't start the response failure is
+        correctly returned.
+        """
+        builder = mock.Mock()
+        builder.build.return_value = {"build_id": 0, "message": "Nothing to build."}
+
+        package = mock.Mock()
+        opts = {}
+        request = mock.Mock()
+        request.package = package
+        request.opts = opts
+
+        use_case = PackageScratchBuildUseCase(builder=builder)
+
+        result = use_case.build(request)
+
+        builder.build.assert_called_with(package, opts)
+        assert type(result) is responses.ResponseFailure
+        assert bool(result) is False
+        assert result.message == "Nothing to build."
+
     def test_build_invalid_request(self):
         """
         Assert that the build fails when request validation fails.
