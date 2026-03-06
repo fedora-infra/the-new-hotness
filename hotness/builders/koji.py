@@ -291,16 +291,16 @@ class Koji(Builder):
         """
         files = []
         # The output format is:
-        # Downloading requests-2.12.4.tar.gz
+        # Downloading requests-2.12.4.tar.gz from https://src.fedoraproject.org/repo/pkgs
         # ####################################################################### 100.0%
-        # Downloading requests-2.12.4-tests.tar.gz
+        # Downloading requests-2.12.4-tests.tar.gz from https://src.fedoraproject.org/repo/pkgs
         # ####################################################################### 100.0%
         output = sp.check_output(
             ["fedpkg", "--user", "hotness", "sources"], cwd=dist_git_path
         )
         for line in output.decode("utf-8").splitlines():
             if line.startswith("Downloading"):
-                files.append(os.path.join(dist_git_path, line.split()[-1]))
+                files.append(os.path.join(dist_git_path, line.split()[1]))
 
         return files
 
