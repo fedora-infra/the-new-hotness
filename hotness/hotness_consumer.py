@@ -353,8 +353,10 @@ class HotnessConsumer(object):
 
         This handler deals with new versions found by Anitya. A new upstream
         release can map to several downstream packages, so each package in
-        Rawhide (if any) are checked against the newly released version. If
-        they are older than the new version, a bug is filed.
+        Rawhide (if any) are checked against the newly released version.
+
+        It checks the monitoring setting of packager and works with the update
+        according to packager preferences.
 
         Topic: `org.release-monitoring.prod.anitya.project.version.update`
 
@@ -429,6 +431,7 @@ class HotnessConsumer(object):
                     return
 
                 scratch_build = validation_output["scratch_build"]
+                bugzilla = validation_output["bugzilla"]
 
                 current_version = validation_output["version"]
                 current_release = validation_output["release"]
@@ -437,32 +440,38 @@ class HotnessConsumer(object):
                 if validation_output["stable_only"]:
                     retrieved_versions = retrieved_stable_versions
 
-                # Comment on bugzilla
-                bz_id = self._comment_on_bugzilla_with_template(
-                    package=package,
-                    current_version=current_version,
-                    current_release=current_release,
-                    project_homepage=message.project_homepage,
-                    project_id=message.project_id,
-                    retrieved_versions=retrieved_versions,
-                )
-
-                # Failure happened when communicating with bugzilla
-                if bz_id == -1:
-                    opts = {
-                        "body": {
-                            "trigger": {"msg": message.body, "topic": message.topic},
-                            "reason": "bugzilla",
-                        }
-                    }
-
-                    notify_request = NotifyRequest(
-                        package=package, message="update.drop", opts=opts
+                bz_id = -1
+                if bugzilla:
+                    # Comment on bugzilla
+                    bz_id = self._comment_on_bugzilla_with_template(
+                        package=package,
+                        current_version=current_version,
+                        current_release=current_release,
+                        project_homepage=message.project_homepage,
+                        project_id=message.project_id,
+                        retrieved_versions=retrieved_versions,
                     )
-                    fedora_messaging_use_case.notify(notify_request)
-                    return
+
+                    # Failure happened when communicating with bugzilla
+                    if bz_id == -1:
+                        opts = {
+                            "body": {
+                                "trigger": {
+                                    "msg": message.body,
+                                    "topic": message.topic,
+                                },
+                                "reason": "bugzilla",
+                            }
+                        }
+
+                        notify_request = NotifyRequest(
+                            package=package, message="update.drop", opts=opts
+                        )
+                        fedora_messaging_use_case.notify(notify_request)
+                        return
 
                 # Send Fedora messaging notification
+                # This will have bz_id = -1 if there isn't any bugzilla ticket filled
                 opts = {
                     "body": {
                         "trigger": {"msg": message.body, "topic": message.topic},
@@ -477,7 +486,7 @@ class HotnessConsumer(object):
                 fedora_messaging_use_case.notify(notify_request)
 
                 # Do a scratch build
-                if scratch_build:
+                if scratch_build and bugzilla:
                     self._handle_scratch_build(package, bz_id)
 
     def _validate_package(self, package: Package, stable_versions: List[str]) -> dict:
@@ -497,6 +506,8 @@ class HotnessConsumer(object):
             Dictionary containing output from the validators.
             Example:
             {
+                # Fill in the bugzilla issue
+                "bugzilla": True,
                 # Monitoring setting for scratch build
                 "scratch_build": True,
                 # Monitoring setting for stable versions
@@ -510,6 +521,7 @@ class HotnessConsumer(object):
             }
         """
         output = {
+            "bugzilla": True,
             "scratch_build": False,
             "stable_only": False,
             "version": "",
@@ -536,6 +548,7 @@ class HotnessConsumer(object):
             output["reason"] = "monitoring settings"
             return output
 
+        output["bugzilla"] = response.value["bugzilla"]
         output["scratch_build"] = response.value["scratch_build"]
         output["stable_only"] = response.value["stable_only"]
         all_versions = response.value["all_versions"]
