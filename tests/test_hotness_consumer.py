@@ -263,6 +263,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": False,
@@ -332,6 +333,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": True,
             "stable_only": False,
@@ -402,6 +404,7 @@ class TestHotnessConsumerCall:
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         message.body["message"]["upstream_versions"] = test_input
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": True,
             "stable_only": False,
@@ -457,6 +460,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": True,
             "stable_only": False,
@@ -517,6 +521,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": True,
             "stable_only": False,
@@ -587,6 +592,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": True,
@@ -657,6 +663,7 @@ class TestHotnessConsumerCall:
             "anitya.project.version.update.v2", "fedora_mapping_stable_multiple"
         )
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": True,
@@ -727,6 +734,7 @@ class TestHotnessConsumerCall:
             "anitya.project.version.update.v2", "fedora_mapping_no_stable"
         )
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": True,
@@ -762,6 +770,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": False,
@@ -842,6 +851,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": False,
@@ -928,6 +938,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": False,
@@ -1000,6 +1011,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": False,
@@ -1094,6 +1106,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": False,
             "all_versions": False,
             "stable_only": False,
@@ -1124,6 +1137,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": False,
@@ -1205,6 +1219,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": False,
@@ -1235,6 +1250,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": False,
@@ -1265,6 +1281,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": False,
@@ -1301,6 +1318,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": False,
@@ -1333,6 +1351,7 @@ class TestHotnessConsumerCall:
         """
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": True,
             "monitoring": True,
             "all_versions": False,
             "stable_only": False,
@@ -1380,6 +1399,44 @@ class TestHotnessConsumerCall:
 
         self.consumer.notifier_fedora_messaging.notify.assert_called_with(
             package, "update.drop", exp_opts
+        )
+
+    def test_call_anitya_update_no_bugzilla(self):
+        """
+        Assert that update message is handled correctly, when bugzilla is not filled.
+        """
+        message = create_message("anitya.project.version.update.v2", "fedora_mapping")
+        self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": False,
+            "monitoring": True,
+            "all_versions": False,
+            "stable_only": False,
+            "scratch_build": False,
+            "retired": False,
+        }
+        self.consumer.validator_mdapi.validate.return_value = {
+            "newer": True,
+            "version": "0.16.0",
+            "release": 1,
+        }
+        self.consumer.__call__(message)
+
+        package = Package(name="flatpak", version="1.0.4", distro="Fedora")
+
+        self.consumer.validator_pagure.validate.assert_called_with(package)
+        self.consumer.validator_mdapi.validate.assert_called_with(package)
+        self.consumer.notifier_bugzilla.notify.assert_not_called()
+
+        exp_opts = {
+            "body": {
+                "trigger": {"msg": message.body, "topic": message.topic},
+                "bug": {"bug_id": -1},
+                "package": package.name,
+            }
+        }
+
+        self.consumer.notifier_fedora_messaging.notify.assert_called_with(
+            package, "update.bug.file", exp_opts
         )
 
     #

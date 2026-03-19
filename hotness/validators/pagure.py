@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import logging
+import tomllib as toml
 from typing import Optional, Tuple, Union
 
 from . import Validator
@@ -90,6 +91,7 @@ class Pagure(Validator):
             Example:
             {
                 "monitoring": True,  # If the packager wants to be notified or not
+                "bugzilla": True, # If the packager wants bugzilla tickets to be filled
                 "all_versions": True,  # If the packager wants to be notified about every
                                        # version received by Anitya
                 "stable_only": True,  # If the packager wants to be notified only about
@@ -103,59 +105,12 @@ class Pagure(Validator):
         """
         output = {
             "monitoring": False,
+            "bugzilla": True,
             "scratch_build": False,
             "stable_only": False,
             "all_versions": False,
+            "retired": False,
         }
-        dist_git_url = "{0}/_dg/anitya/rpms/{1}".format(self.url, package.name)
-        _logger.debug(
-            "Checking {} to see if {} is monitored.".format(dist_git_url, package.name)
-        )
-        response = self.requests_session.get(dist_git_url, timeout=self.timeout)
-
-        if not response.status_code == 200:
-            raise HTTPException(
-                response.status_code,
-                "Error encountered on request {}".format(dist_git_url),
-            )
-        data = response.json()
-        monitoring_value = data.get("monitoring", "no-monitoring")
-
-        # Fill the output based on the monitoring value
-        # Invalid = monitoring: False; scrach_build: False; all_versions: False; stable_only: False
-        # monitoring =
-        #   monitoring: True; scrach_build: False; all_versions: False; stable_only: False
-        # monitoring-with-scratch =
-        #   monitoring: True; scrach_build: True; all_versions: False; stable_only: False
-        # monitoring-all =
-        #   monitoring: True; scrach_build: False; all_versions: True; stable_only: False
-        # monitoring-all-scratch =
-        #   monitoring: True; scrach_build: True; all_versions: True; stable_only: False
-        # monitoring-stable =
-        #   monitoring: True; scrach_build: False; all_versions: True; stable_only: True
-        # monitoring-stable-scratch =
-        #   monitoring: True; scrach_build: True; all_versions: True; stable_only: True
-        # no-monitoring =
-        #   monitoring: False; scrach_build: False; all_versions: False; stable_only: False
-        if monitoring_value not in MONITORING_STATUSES:
-            _logger.info(
-                "Unknown status '{}' recovered from {}".format(
-                    dist_git_url, monitoring_value
-                )
-            )
-
-        if monitoring_value.startswith("monitoring"):
-            output["monitoring"] = True
-
-        if monitoring_value.startswith("monitoring-all"):
-            output["all_versions"] = True
-
-        if monitoring_value.startswith("monitoring-stable"):
-            output["stable_only"] = True
-
-        if monitoring_value in MONITORING_STATUSES_SCRATCH_BUILD:
-            output["scratch_build"] = True
-
         # Check if the package is retired
         dead_package_url = "{0}/rpms/{1}/blob/{2}/f/dead.package".format(
             self.url, package.name, self.branch
@@ -166,7 +121,7 @@ class Pagure(Validator):
             ("type", self.package_type),
             ("active", True),
         )
-        ""
+
         _logger.debug(
             "Checking {} to see if {} is retired, {}".format(
                 dead_package_url, package, params
@@ -182,5 +137,82 @@ class Pagure(Validator):
 
         # If there is dead.package found, package is retired
         output["retired"] = response.status_code == 200
+
+        # Only check monitoring if the package is not retired
+        if not output["retired"]:
+            # Check for monitoring config file in repository first
+            monitoring_config_url = "{0}/rpms/{1}/raw/{2}/f/monitoring.toml".format(
+                self.url, package.name, self.branch
+            )
+            _logger.debug(
+                "Checking {} to see if {} is using monitoring config".format(
+                    monitoring_config_url, package
+                )
+            )
+            response = self.requests_session.get(
+                monitoring_config_url, timeout=self.timeout
+            )
+
+            if response.status_code == 200:
+                config = toml.loads(response.text)
+                output["monitoring"] = config.get("monitoring", True)
+                output["bugzilla"] = config.get("bugzilla", True)
+                output["all_versions"] = config.get("all_versions", False)
+                output["stable_only"] = config.get("stable_only", False)
+                output["scratch_build"] = config.get("scratch_build", False)
+
+            # If the configuration file is not available check the old monitoring setting
+            else:
+                dist_git_url = "{0}/_dg/anitya/rpms/{1}".format(self.url, package.name)
+                _logger.debug(
+                    "Checking {} to see if {} is monitored.".format(
+                        dist_git_url, package.name
+                    )
+                )
+                response = self.requests_session.get(dist_git_url, timeout=self.timeout)
+
+                if not response.status_code == 200:
+                    raise HTTPException(
+                        response.status_code,
+                        "Error encountered on request {}".format(dist_git_url),
+                    )
+                data = response.json()
+                monitoring_value = data.get("monitoring", "no-monitoring")
+
+                # Fill the output based on the monitoring value
+                # Invalid =
+                #   monitoring: False; scrach_build: False; all_versions: False; stable_only: False
+                # monitoring =
+                #   monitoring: True; scrach_build: False; all_versions: False; stable_only: False
+                # monitoring-with-scratch =
+                #   monitoring: True; scrach_build: True; all_versions: False; stable_only: False
+                # monitoring-all =
+                #   monitoring: True; scrach_build: False; all_versions: True; stable_only: False
+                # monitoring-all-scratch =
+                #   monitoring: True; scrach_build: True; all_versions: True; stable_only: False
+                # monitoring-stable =
+                #   monitoring: True; scrach_build: False; all_versions: True; stable_only: True
+                # monitoring-stable-scratch =
+                #   monitoring: True; scrach_build: True; all_versions: True; stable_only: True
+                # no-monitoring =
+                #   monitoring: False; scrach_build: False; all_versions: False; stable_only: False
+                if monitoring_value not in MONITORING_STATUSES:
+                    _logger.info(
+                        "Unknown status '{}' recovered from {}".format(
+                            dist_git_url, monitoring_value
+                        )
+                    )
+
+                if monitoring_value.startswith("monitoring"):
+                    output["monitoring"] = True
+
+                if monitoring_value.startswith("monitoring-all"):
+                    output["all_versions"] = True
+
+                if monitoring_value.startswith("monitoring-stable"):
+                    output["stable_only"] = True
+
+                if monitoring_value in MONITORING_STATUSES_SCRATCH_BUILD:
+                    output["scratch_build"] = True
 
         return output

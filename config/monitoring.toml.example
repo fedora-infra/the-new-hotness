@@ -1,0 +1,13 @@
+# Enable/disable monitoring
+monitoring = false
+# Enable/disable filling bugzilla ticket for new release
+# When disabled it will also disable scratch builds
+bugzilla = true
+# Enable/disable reporting only stable versions
+# Stable versions are recognized based on release-monitoring.org project settings
+stable_only = false
+# Enable/disable reporting all new versions instead of the latest one
+# Enabling this will disable scratch builds
+all_versions = false
+# Enable/disable scratch build for newly opened version
+scratch_build = false
