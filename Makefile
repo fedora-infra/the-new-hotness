@@ -13,10 +13,11 @@ up:
 restart:
 	$(MAKE) halt && $(MAKE) up
 halt:
-	$(call compose-tool) down -t1
+	$(call compose-tool) stop
 bash:
 	$(call container-tool) exec -it hotness bash -c "cat /app/.container/motd; bash;"
 logs:
 	$(call container-tool) logs -f hotness rabbitmq redis
 clean: halt
+	$(call compose-tool) down -t1
 	$(call container-tool) rmi "localhost/hotness:latest" "docker.io/library/redis:7.0.0-alpine" "docker.io/library/rabbitmq:3.8.16-management-alpine"
