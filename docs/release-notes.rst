@@ -4,6 +4,41 @@ Release notes
 
 .. towncrier release notes start
 
+1.4.1 (2026-03-23)
+==================
+
+Features
+--------
+
+* Implemented a retry mechanism for transient network failures. Messages encountering timeouts or connection errors will now be retried instead of lost.
+  (`#322 <https://github.com/fedora-infra/the-new-hotness/issues/322>`_)
+
+* Support monitoring config in dist-git repository
+  (`#628 <https://github.com/fedora-infra/the-new-hotness/issues/628>`_)
+
+
+Bug Fixes
+---------
+
+* Fix for failing scratch build
+  (`#605 <https://github.com/fedora-infra/the-new-hotness/issues/605>`_)
+
+
+Development Changes
+-------------------
+
+* Add support for python 3.13,3.14
+  (`PR#617 <https://github.com/fedora-infra/the-new-hotness/pull/617>`_)
+
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release:
+
+* Michal Konecny
+* Prachi194agrawal
+
 1.3.0 (2023-12-05)
 ==================
 

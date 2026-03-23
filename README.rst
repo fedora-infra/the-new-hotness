@@ -1,9 +1,9 @@
 .. image:: https://img.shields.io/pypi/v/the-new-hotness.svg
-  :target: https://pypi.org/project/the-new-hotness/
+   :target: https://pypi.org/project/the-new-hotness/
 
 .. image:: https://readthedocs.org/projects/the-new-hotness/badge/?version=latest
-  :alt: Documentation Status
-  :target: https://the-new-hotness.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+   :target: https://the-new-hotness.readthedocs.io/en/latest/?badge=latest
 
 the-new-hotness
 ---------------
@@ -21,13 +21,11 @@ To see recent messages from the-new-hotness:
 
 * Check Fedora's `datagrepper
   <https://apps.fedoraproject.org/datagrepper/raw?category=hotness&delta=2592000>`_
+* Or join the `Fedora Apps room <https://matrix.to/#/#apps:fedoraproject.org>`_ on Matrix and watch for ``hotness`` messages.
 
-* Or join the `Fedora Apps room <https://matrix.to/#/#apps:fedoraproject.org>`_ on Matrix and watch for ``hotness``
-  messages.
 To see recent koji builds started by the-new-hotness:
 
-* Check Fedora's `koji builds
-  <https://koji.fedoraproject.org/koji/tasks?owner=the-new-hotness/release-monitoring.org&state=all>`_
+* Check Fedora's `koji builds  <https://koji.fedoraproject.org/koji/tasks?owner=the-new-hotness/release-monitoring.org&state=all>`_
 
 Development
 ^^^^^^^^^^^
