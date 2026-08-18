@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2021 Red Hat, Inc.
+# Copyright (C) 2026 Red Hat, Inc.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,10 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-from .base_exception import BaseHotnessException  # noqa: F401
-from .builder_exception import BuilderException  # noqa: F401
-from .connection_exception import ConnectionException  # noqa: F401
-from .download_exception import DownloadException  # noqa: F401
-from .http_exception import HTTPException  # noqa: F401
-from .notifier_exception import NotifierException  # noqa: F401
-from .patcher_exception import PatcherException  # noqa: F401
+from . import BaseHotnessException
+
+
+class ConnectionException(BaseHotnessException):
+    """
+    Class representing connection exception.
+    This exception is raised when temporary
+    connection error happens. It is being used
+    to recognize that the message should be put
+    back in the queue till the error is resolved.
+
+    Attributes:
+        message: Error message.
+    """
+
+    def __init__(self):
+        """
+        Class constructor.
+        """
+        self.message = ""
+        super(ConnectionException, self).__init__(self.message)

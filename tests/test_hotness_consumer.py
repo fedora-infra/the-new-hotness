@@ -24,6 +24,8 @@ import traceback
 from unittest import mock
 
 from fedora_messaging.message import Message
+from fedora_messaging import exceptions as fm_exceptions
+
 
 from hotness.hotness_consumer import HotnessConsumer
 from hotness.domain import Package
@@ -1365,7 +1367,8 @@ class TestHotnessConsumerCall:
         }
         self.consumer.notifier_bugzilla.notify.side_effect = Exception()
 
-        self.consumer.__call__(message)
+        with pytest.raises(fm_exceptions.Nack):
+            self.consumer.__call__(message)
 
         package = Package(name="flatpak", version="1.0.4", distro="Fedora")
 
@@ -1388,17 +1391,6 @@ class TestHotnessConsumerCall:
                 dist_git_url=self.consumer.dist_git_url + "/rpms/" + package.name,
             ),
             {"bz_short_desc": "flatpak-1.0.4 is available"},
-        )
-
-        exp_opts = {
-            "body": {
-                "trigger": {"msg": message.body, "topic": message.topic},
-                "reason": "bugzilla",
-            }
-        }
-
-        self.consumer.notifier_fedora_messaging.notify.assert_called_with(
-            package, "update.drop", exp_opts
         )
 
     def test_call_anitya_update_no_bugzilla(self):
@@ -1703,7 +1695,6 @@ class TestHotnessConsumerCall:
         Assert that transient network errors raise Nack to retry the message.
         """
         import requests
-        from fedora_messaging import exceptions as fm_exceptions
 
         message = create_message("anitya.project.version.update.v2", "fedora_mapping")
         # Simulate a network connection error (transient)

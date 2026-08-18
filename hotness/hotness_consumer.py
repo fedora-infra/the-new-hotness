@@ -30,6 +30,7 @@ from hotness.config import config
 from hotness.domain import Package
 from hotness.builders import Koji
 from hotness.databases import Redis
+from hotness.exceptions import ConnectionException
 from hotness.notifiers import Bugzilla as bz_notifier, FedoraMessaging
 from hotness.patchers import Bugzilla as bz_patcher
 from hotness.validators import MDApi, Pagure
@@ -197,7 +198,7 @@ class HotnessConsumer(object):
                 self._handle_anitya_version_update(message)
             elif topic.endswith("buildsys.task.state.change"):
                 self._handle_buildsys_scratch(msg)
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        except ConnectionException as e:
             # This catches Timeout and ConnectionError (transient network issues)
             _logger.warning(
                 "Transient network error processing message %s: %s. "
@@ -453,22 +454,9 @@ class HotnessConsumer(object):
                     )
 
                     # Failure happened when communicating with bugzilla
+                    # Don't drop the message just raise the exception
                     if bz_id == -1:
-                        opts = {
-                            "body": {
-                                "trigger": {
-                                    "msg": message.body,
-                                    "topic": message.topic,
-                                },
-                                "reason": "bugzilla",
-                            }
-                        }
-
-                        notify_request = NotifyRequest(
-                            package=package, message="update.drop", opts=opts
-                        )
-                        fedora_messaging_use_case.notify(notify_request)
-                        return
+                        raise ConnectionException()
 
                 # Send Fedora messaging notification
                 # This will have bz_id = -1 if there isn't any bugzilla ticket filled

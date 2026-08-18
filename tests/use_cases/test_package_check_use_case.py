@@ -15,8 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+import pytest
+import requests
 from unittest import mock
 
+from hotness.exceptions import ConnectionException
 from hotness.use_cases.package_check_use_case import PackageCheckUseCase
 from hotness import responses
 
@@ -136,3 +139,22 @@ class TestPackageCheckUseCaseValidate:
             "message": "Exception: This is heresy!",
             "use_case_value": None,
         }
+
+    def test_validate_connection_error(self):
+        """
+        Assert that the validation is called correctly and exception is
+        raised when connection error happens.
+        """
+        validator = mock.Mock()
+        validator.validate.side_effect = requests.exceptions.ConnectionError()
+
+        package = mock.Mock()
+        request = mock.Mock()
+        request.package = package
+
+        use_case = PackageCheckUseCase(validator=validator)
+
+        with pytest.raises(ConnectionException):
+            use_case.validate(request)
+
+        validator.validate.assert_called_with(package)
