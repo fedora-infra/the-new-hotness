@@ -19,6 +19,7 @@ import logging
 
 import requests
 
+from hotness.exceptions import ConnectionException
 from hotness.validators import Validator
 from hotness.requests.package_request import PackageRequest
 from hotness import responses
@@ -62,7 +63,7 @@ class PackageCheckUseCase:
             return responses.ResponseSuccess(result)
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
             # Re-raise only connectivity/timeouts so they can be retried
-            raise
+            raise ConnectionException()
         except Exception as exc:
             logger.exception("Package check use case failure", exc_info=True)
             return responses.ResponseFailure.validator_error(exc)
