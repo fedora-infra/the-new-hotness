@@ -4,6 +4,17 @@ Release notes
 
 .. towncrier release notes start
 
+1.5.0 (2026-08-25)
+==================
+
+Features
+--------
+
+* Make the-new-hotness more reliable by re-queuing received message when temporary error happens
+  (`#229 <https://github.com/fedora-infra/the-new-hotness/issues/229>`_)
+
+
+
 1.4.1 (2026-03-23)
 ==================
 
