@@ -224,7 +224,9 @@ class TestKojiBuild:
                     ["git", "format-patch", "HEAD^"], cwd=tmpdir, stderr=mock.ANY
                 ),
                 mock.call(
-                    ["fedpkg", "--user", "hotness", "sources"], timeout=300, cwd=tmpdir
+                    ["fedpkg", "--user", "hotness", "sources", "--offline"],
+                    timeout=300,
+                    cwd=tmpdir,
                 ),
                 mock.call(
                     [
@@ -368,7 +370,9 @@ class TestKojiBuild:
                     ["git", "format-patch", "HEAD^"], cwd=tmpdir, stderr=mock.ANY
                 ),
                 mock.call(
-                    ["fedpkg", "--user", "hotness", "sources"], timeout=300, cwd=tmpdir
+                    ["fedpkg", "--user", "hotness", "sources", "--offline"],
+                    timeout=300,
+                    cwd=tmpdir,
                 ),
                 mock.call(
                     [
@@ -1212,7 +1216,9 @@ class TestKojiBuild:
                     ["git", "format-patch", "HEAD^"], cwd=tmpdir, stderr=mock.ANY
                 ),
                 mock.call(
-                    ["fedpkg", "--user", "hotness", "sources"], timeout=300, cwd=tmpdir
+                    ["fedpkg", "--user", "hotness", "sources", "--offline"],
+                    timeout=300,
+                    cwd=tmpdir,
                 ),
                 mock.call(
                     [
