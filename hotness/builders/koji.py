@@ -298,7 +298,9 @@ class Koji(Builder):
         # Downloading requests-2.12.4-tests.tar.gz from https://src.fedoraproject.org/repo/pkgs
         # ####################################################################### 100.0%
         output = sp.check_output(
-            ["fedpkg", "--user", "hotness", "sources"], timeout=300, cwd=dist_git_path
+            ["fedpkg", "--user", "hotness", "sources", "--offline"],
+            timeout=300,
+            cwd=dist_git_path,
         )
         for line in output.decode("utf-8").splitlines():
             if line.startswith("Downloading"):
