@@ -4,6 +4,32 @@ Release notes
 
 .. towncrier release notes start
 
+1.6.0 (2026-10-27)
+==================
+
+Features
+--------
+
+* Provide updated "sources" file in the package update patch
+  (`#600 <https://github.com/fedora-infra/the-new-hotness/issues/600>`_)
+
+
+Bug Fixes
+---------
+
+* Update bug reference to rhbz#1234546 format
+  (`#599 <https://github.com/fedora-infra/the-new-hotness/issues/599>`_)
+
+* Download of files being stuck
+  (`#640 <https://github.com/fedora-infra/the-new-hotness/issues/640>`_)
+
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release.
+
+
 1.5.0 (2026-08-25)
 ==================
 
