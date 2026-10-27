@@ -219,9 +219,11 @@ class Koji(Builder):
             # new sources from bumping the specfile version. Some packages don't
             # use macros in the source URL(s). We want to detect these and notify
             # the packager on the bug we filed about the new version.
-            old_sources = self._dist_git_sources(tmp)
             try:
+                old_sources = self._dist_git_sources(tmp)
                 new_sources = self._spec_sources(specfile, tmp)
+            except sp.TimeoutExpired as exc:
+                raise BuilderException(str(exc), value=output)
             except DownloadException as exc:
                 # Attach the patch if DownloadException is thrown
                 raise BuilderException(str(exc), value=output)
@@ -296,7 +298,7 @@ class Koji(Builder):
         # Downloading requests-2.12.4-tests.tar.gz from https://src.fedoraproject.org/repo/pkgs
         # ####################################################################### 100.0%
         output = sp.check_output(
-            ["fedpkg", "--user", "hotness", "sources"], cwd=dist_git_path
+            ["fedpkg", "--user", "hotness", "sources"], timeout=300, cwd=dist_git_path
         )
         for line in output.decode("utf-8").splitlines():
             if line.startswith("Downloading"):
@@ -326,7 +328,9 @@ class Koji(Builder):
         """
         files = []
         try:
-            output = sp.check_output(["spectool", "-g", specfile_path], cwd=target_dir)
+            output = sp.check_output(
+                ["spectool", "-g", specfile_path], timeout=300, cwd=target_dir
+            )
             for line in output.decode("utf-8").splitlines():
                 if line.startswith("Downloaded"):
                     files.append(
