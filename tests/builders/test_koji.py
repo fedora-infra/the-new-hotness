@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import os
 import pytest
-from subprocess import CalledProcessError
+from subprocess import CalledProcessError, TimeoutExpired
 from unittest import mock
 
 from koji import GenericError
@@ -223,13 +223,16 @@ class TestKojiBuild:
                 mock.call(
                     ["git", "format-patch", "HEAD^"], cwd=tmpdir, stderr=mock.ANY
                 ),
-                mock.call(["fedpkg", "--user", "hotness", "sources"], cwd=tmpdir),
+                mock.call(
+                    ["fedpkg", "--user", "hotness", "sources"], timeout=300, cwd=tmpdir
+                ),
                 mock.call(
                     [
                         "spectool",
                         "-g",
                         str(tmpdir + "/test.spec"),
                     ],
+                    timeout=300,
                     cwd=tmpdir,
                 ),
                 mock.call(
@@ -364,13 +367,16 @@ class TestKojiBuild:
                 mock.call(
                     ["git", "format-patch", "HEAD^"], cwd=tmpdir, stderr=mock.ANY
                 ),
-                mock.call(["fedpkg", "--user", "hotness", "sources"], cwd=tmpdir),
+                mock.call(
+                    ["fedpkg", "--user", "hotness", "sources"], timeout=300, cwd=tmpdir
+                ),
                 mock.call(
                     [
                         "spectool",
                         "-g",
                         str(tmpdir + "/test.spec"),
                     ],
+                    timeout=300,
                     cwd=tmpdir,
                 ),
                 mock.call(
@@ -868,6 +874,87 @@ class TestKojiBuild:
         )
 
     @mock.patch("hotness.builders.koji.sp.check_output")
+    @mock.patch("hotness.builders.koji.koji")
+    @mock.patch("hotness.builders.koji.TemporaryDirectory")
+    def test_build_old_source_download_timeout(
+        self, mock_temp_dir, mock_koji, mock_check_output, tmpdir
+    ):
+        """
+        Assert that build fails when spectool throws error 5.
+        """
+        # Create temporary file
+        file = os.path.join(tmpdir, "Lectitio_Divinitatus")
+        with open(file, "w") as f:
+            f.write("The Emperor is God")
+
+        mock_temp_dir.return_value.__enter__.return_value = tmpdir
+
+        mock_check_output.side_effect = [
+            "git clone",
+            "rpmdev-bumpspec",
+            b"git status",
+            "git config",
+            "git config",
+            "git commit",
+            file.encode(),
+            TimeoutExpired("fedpkg", 300),
+        ]
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        opts = {"bz_id": 100}
+
+        with pytest.raises(BuilderException) as exc:
+            self.builder.build(package, opts)
+
+        assert exc.value.message == ("Command 'fedpkg' timed out after 300 seconds")
+        assert exc.value.value["patch"] == "The Emperor is God"
+        assert exc.value.value["patch_filename"] == os.path.join(
+            tmpdir, "Lectitio_Divinitatus"
+        )
+
+    @mock.patch("hotness.builders.koji.sp.check_output")
+    @mock.patch("hotness.builders.koji.koji")
+    @mock.patch("hotness.builders.koji.TemporaryDirectory")
+    def test_build_new_source_download_timeout(
+        self, mock_temp_dir, mock_koji, mock_check_output, tmpdir
+    ):
+        """
+        Assert that build fails when spectool throws error 5.
+        """
+        # Create temporary file
+        file = os.path.join(tmpdir, "Lectitio_Divinitatus")
+        with open(file, "w") as f:
+            f.write("The Emperor is God")
+
+        mock_temp_dir.return_value.__enter__.return_value = tmpdir
+
+        mock_check_output.side_effect = [
+            "git clone",
+            "rpmdev-bumpspec",
+            b"git status",
+            "git config",
+            "git config",
+            "git commit",
+            file.encode(),
+            b"Downloading Lectitio_Divinitatus",
+            TimeoutExpired("spectool", 300),
+        ]
+
+        # Prepare package
+        package = Package(name="test", version="1.0", distro="Fedora")
+        opts = {"bz_id": 100}
+
+        with pytest.raises(BuilderException) as exc:
+            self.builder.build(package, opts)
+
+        assert exc.value.message == ("Command 'spectool' timed out after 300 seconds")
+        assert exc.value.value["patch"] == "The Emperor is God"
+        assert exc.value.value["patch_filename"] == os.path.join(
+            tmpdir, "Lectitio_Divinitatus"
+        )
+
+    @mock.patch("hotness.builders.koji.sp.check_output")
     @mock.patch("hotness.builders.koji.TemporaryDirectory")
     def test_build_git_clone_error(self, mock_temp_dir, mock_check_output, tmpdir):
         """
@@ -1124,13 +1211,16 @@ class TestKojiBuild:
                 mock.call(
                     ["git", "format-patch", "HEAD^"], cwd=tmpdir, stderr=mock.ANY
                 ),
-                mock.call(["fedpkg", "--user", "hotness", "sources"], cwd=tmpdir),
+                mock.call(
+                    ["fedpkg", "--user", "hotness", "sources"], timeout=300, cwd=tmpdir
+                ),
                 mock.call(
                     [
                         "spectool",
                         "-g",
                         str(tmpdir + "/test.spec"),
                     ],
+                    timeout=300,
                     cwd=tmpdir,
                 ),
                 mock.call(
