@@ -757,7 +757,7 @@ class TestHotnessConsumerCall:
         exp_opts = {
             "body": {
                 "trigger": {"msg": message.body, "topic": message.topic},
-                "reason": "monitoring settings",
+                "reason": "monitoring settings - flatpak",
             }
         }
 
@@ -1124,7 +1124,7 @@ class TestHotnessConsumerCall:
         exp_opts = {
             "body": {
                 "trigger": {"msg": message.body, "topic": message.topic},
-                "reason": "monitoring settings",
+                "reason": "monitoring settings - flatpak",
             }
         }
 
@@ -1207,7 +1207,7 @@ class TestHotnessConsumerCall:
         exp_opts = {
             "body": {
                 "trigger": {"msg": message.body, "topic": message.topic},
-                "reason": "dist-git",
+                "reason": "dist-git - flatpak",
             }
         }
 
@@ -1238,7 +1238,7 @@ class TestHotnessConsumerCall:
         exp_opts = {
             "body": {
                 "trigger": {"msg": message.body, "topic": message.topic},
-                "reason": "retired",
+                "reason": "retired - flatpak",
             }
         }
 
@@ -1268,7 +1268,7 @@ class TestHotnessConsumerCall:
         exp_opts = {
             "body": {
                 "trigger": {"msg": message.body, "topic": message.topic},
-                "reason": "retired",
+                "reason": "retired - flatpak",
             }
         }
 
@@ -1306,7 +1306,7 @@ class TestHotnessConsumerCall:
         exp_opts = {
             "body": {
                 "trigger": {"msg": message.body, "topic": message.topic},
-                "reason": "not newer",
+                "reason": "not newer - flatpak",
             }
         }
 
@@ -1339,7 +1339,7 @@ class TestHotnessConsumerCall:
         exp_opts = {
             "body": {
                 "trigger": {"msg": message.body, "topic": message.topic},
-                "reason": "mdapi",
+                "reason": "mdapi - flatpak",
             }
         }
 
@@ -1429,6 +1429,65 @@ class TestHotnessConsumerCall:
 
         self.consumer.notifier_fedora_messaging.notify.assert_called_with(
             package, "update.bug.file", exp_opts
+        )
+
+    def test_call_anitya_update_multiple_mappings(self):
+        """
+        Assert that update message is correctly processed, if there are multiple mappings for
+        Fedora distribution.
+        """
+        message = create_message("anitya.project.version.update.v2", "fedora_mappings")
+        self.consumer.validator_pagure.validate.side_effect = [
+            {
+                "bugzilla": False,
+                "monitoring": True,
+                "all_versions": False,
+                "stable_only": False,
+                "scratch_build": False,
+                "retired": True,
+            },
+            {
+                "bugzilla": False,
+                "monitoring": True,
+                "all_versions": False,
+                "stable_only": False,
+                "scratch_build": False,
+                "retired": False,
+            },
+        ]
+        self.consumer.validator_mdapi.validate.side_effect = [
+            {
+                "newer": True,
+                "version": "0.16.0",
+                "release": 1,
+            }
+        ]
+        self.consumer.__call__(message)
+
+        assert self.consumer.validator_pagure.validate.call_count == 2
+        assert self.consumer.validator_mdapi.validate.call_count == 1
+        self.consumer.notifier_bugzilla.notify.assert_not_called()
+
+        exp_opts_1 = {
+            "body": {
+                "trigger": {"msg": message.body, "topic": message.topic},
+                "reason": "retired - flatpak",
+            }
+        }
+
+        exp_opts_2 = {
+            "body": {
+                "trigger": {"msg": message.body, "topic": message.topic},
+                "bug": {"bug_id": -1},
+                "package": "flatpak1",
+            }
+        }
+
+        self.consumer.notifier_fedora_messaging.notify.assert_has_calls(
+            [
+                mock.call(mock.ANY, "update.drop", exp_opts_1),
+                mock.call(mock.ANY, "update.bug.file", exp_opts_2),
+            ]
         )
 
     #

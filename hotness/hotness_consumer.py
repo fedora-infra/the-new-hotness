@@ -421,7 +421,9 @@ class HotnessConsumer(object):
                     opts = {
                         "body": {
                             "trigger": {"msg": message.body, "topic": message.topic},
-                            "reason": validation_output["reason"],
+                            "reason": validation_output["reason"]
+                            + " - "
+                            + mapping["package_name"],
                         }
                     }
 
@@ -429,7 +431,7 @@ class HotnessConsumer(object):
                         package=package, message="update.drop", opts=opts
                     )
                     fedora_messaging_use_case.notify(notify_request)
-                    return
+                    continue
 
                 scratch_build = validation_output["scratch_build"]
                 bugzilla = validation_output["bugzilla"]
