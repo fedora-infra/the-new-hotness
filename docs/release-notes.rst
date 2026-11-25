@@ -4,6 +4,22 @@ Release notes
 
 .. towncrier release notes start
 
+1.6.1 (2026-11-25)
+==================
+
+Bug Fixes
+---------
+
+* Multiple fedora mappings for one project are being ignored
+  (`#645 <https://github.com/fedora-infra/the-new-hotness/issues/645>`_)
+
+
+Contributors
+------------
+Many thanks to the contributors of bug reports, pull requests, and pull request
+reviews for this release:
+
+
 1.6.0 (2026-10-27)
 ==================
 
