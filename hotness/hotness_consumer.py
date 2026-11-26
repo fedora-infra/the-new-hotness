@@ -374,7 +374,10 @@ class HotnessConsumer(object):
         _logger.info("Handling anitya msg %r" % message.id)
         package = None
         fedora_messaging_use_case = NotifyUserUseCase(self.notifier_fedora_messaging)
-        latest_version = message.versions[0]
+        latest_version = "0.0"
+        if message.versions:
+            latest_version = message.versions[0]
+
         # Filter the stable versions only
         retrieved_stable_versions = [
             version

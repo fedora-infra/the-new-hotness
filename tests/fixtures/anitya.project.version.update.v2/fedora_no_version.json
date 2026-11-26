@@ -1,0 +1,59 @@
+{
+  "distro": null,
+  "message": {
+    "agent": "anitya",
+    "old_version": "0.99.3",
+    "packages": [
+      {
+        "distro": "Fedora",
+        "package_name": "flatpak"
+      },
+      {
+        "distro": "Mageia",
+        "package_name": "flatpak"
+      },
+      {
+        "distro": "Alpine",
+        "package_name": "flatpak"
+      },
+      {
+        "distro": "Arch Linux",
+        "package_name": "flatpak"
+      }
+    ],
+    "project": {
+      "backend": "GitHub",
+      "created_on": 1431706411.0,
+      "ecosystem": "http://flatpak.org/",
+      "homepage": "https://www.flatpak.org",
+      "id": 6377,
+      "name": "flatpak",
+      "regex": "",
+      "updated_on": 1539593867.0,
+      "version": "",
+      "version_url": "flatpak/flatpak",
+      "versions": []
+    },
+    "upstream_versions": [
+        "1.0.4",
+        "0.99.3"
+    ],
+    "versions": [],
+    "stable_versions": [
+      "1.0.4"
+    ]
+  },
+  "project": {
+    "backend": "GitHub",
+    "created_on": 1431706411.0,
+    "ecosystem": "http://flatpak.org/",
+    "homepage": "https://www.flatpak.org",
+    "id": 6377,
+    "name": "flatpak",
+    "regex": "",
+    "updated_on": 1539593867.0,
+    "version": "",
+    "version_url": "flatpak/flatpak",
+    "versions": []
+  }
+}

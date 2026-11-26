@@ -1490,6 +1490,47 @@ class TestHotnessConsumerCall:
             ]
         )
 
+    def test_call_anitya_update_no_version_on_project(self):
+        """
+        Assert that update message is correctly processed, when there are no versions
+        on the project yet.
+        """
+        message = create_message(
+            "anitya.project.version.update.v2", "fedora_no_version"
+        )
+        self.consumer.validator_pagure.validate.return_value = {
+            "bugzilla": False,
+            "monitoring": True,
+            "all_versions": False,
+            "stable_only": False,
+            "scratch_build": False,
+            "retired": False,
+        }
+        self.consumer.validator_mdapi.validate.return_value = {
+            "newer": True,
+            "version": "0.16.0",
+            "release": 1,
+        }
+        self.consumer.__call__(message)
+
+        assert self.consumer.validator_pagure.validate.call_count == 1
+        assert self.consumer.validator_mdapi.validate.call_count == 1
+        self.consumer.notifier_bugzilla.notify.assert_not_called()
+
+        exp = {
+            "body": {
+                "trigger": {"msg": message.body, "topic": message.topic},
+                "bug": {"bug_id": -1},
+                "package": "flatpak",
+            }
+        }
+
+        self.consumer.notifier_fedora_messaging.notify.assert_has_calls(
+            [
+                mock.call(mock.ANY, "update.bug.file", exp),
+            ]
+        )
+
     #
     #  buildsys.task.state.change topic
     #
